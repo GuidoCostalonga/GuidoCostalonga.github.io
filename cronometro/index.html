@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cronometro</title>
+<style>
+  :root {
+    --bg: #0a2547;
+    --card: #0f2f57;
+    --accent: #7fb4e6;
+    --accent-2: #3fbf72;
+    --danger: #ff6b6b;
+    --text: #f2f6ff;
+    --muted: #9db3d1;
+    --border: rgba(255,255,255,.12);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  /* Pila di font consigliati per la dislessia: sans-serif con lettere ben distinte */
+  body {
+    font-family: "Comic Sans MS", "Trebuchet MS", Verdana, Tahoma, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    letter-spacing: .5px;
+    word-spacing: 2px;
+  }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 28px 40px 32px;
+    width: 100%;
+    max-width: 700px;
+    box-shadow: 0 20px 50px rgba(0,0,0,.35);
+    text-align: center;
+  }
+  .logo {
+    width: clamp(120px, 20vw, 180px);
+    height: auto;
+    margin: 0 auto 14px;
+    display: block;
+  }
+  h1 {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 18px;
+  }
+  .display {
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+    letter-spacing: 3px;
+    margin-bottom: 22px;
+    user-select: none;
+    line-height: 1.05;
+  }
+  .display .main { font-size: clamp(64px, 15vw, 128px); }
+  .display .ms { font-size: clamp(30px, 7vw, 58px); color: var(--accent); }
+  .clock {
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: var(--accent);
+    margin: -8px 0 24px;
+    user-select: none;
+  }
+  .clock .label {
+    display: block;
+    font-size: 13px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+  .clock .value { font-size: clamp(28px, 6vw, 44px); }
+  .controls {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  button {
+    font: inherit;
+    font-weight: 700;
+    font-size: 18px;
+    color: var(--text);
+    background: rgba(255,255,255,.08);
+    border: 1px solid var(--border);
+    padding: 14px 26px;
+    border-radius: 14px;
+    cursor: pointer;
+    transition: transform .05s ease, background .2s ease, opacity .2s ease;
+    min-width: 128px;
+  }
+  button:hover { background: rgba(255,255,255,.16); }
+  button:active { transform: scale(.96); }
+  button:disabled { opacity: .4; cursor: not-allowed; }
+  #startStop.running { background: var(--danger); border-color: transparent; color: #fff; }
+  #startStop.idle { background: var(--accent-2); border-color: transparent; color: #fff; }
+  .laps {
+    margin-top: 20px;
+    text-align: left;
+    max-height: 150px;
+    overflow-y: auto;
+  }
+  .laps:empty { display: none; }
+  .lap {
+    display: flex;
+    justify-content: space-between;
+    padding: 14px 8px;
+    border-bottom: 1px solid rgba(255,255,255,.06);
+    font-variant-numeric: tabular-nums;
+    font-size: 20px;
+  }
+  .lap .n { color: var(--muted); }
+  .lap.best { color: var(--accent-2); }
+  .lap.worst { color: var(--danger); }
+</style>
+</head>
+<body>
+  <div class="card">
+    <img class="logo" src="logo.png" alt="Stemma del Comune"
+         onerror="this.style.display='none'">
+    <h1>Cronometro</h1>
+    <div class="display">
+      <span class="main" id="main">00:00</span><span class="ms" id="ms">.00</span>
+    </div>
+    <div class="clock">
+      <span class="label">Ora attuale</span>
+      <span class="value" id="clock">--:--:--</span>
+    </div>
+    <div class="controls">
+      <button id="startStop" class="idle">Avvia</button>
+      <button id="lap" disabled>Giro</button>
+      <button id="reset" disabled>Azzera</button>
+    </div>
+    <div class="laps" id="laps"></div>
+  </div>
+
+<script>
+  const mainEl = document.getElementById('main');
+  const msEl = document.getElementById('ms');
+  const startStopBtn = document.getElementById('startStop');
+  const lapBtn = document.getElementById('lap');
+  const resetBtn = document.getElementById('reset');
+  const lapsEl = document.getElementById('laps');
+
+  let startTime = 0;      // timestamp di riferimento
+  let elapsed = 0;        // ms accumulati quando in pausa
+  let rafId = null;
+  let running = false;
+  let laps = [];          // tempi totali ad ogni giro
+  let lastLapTime = 0;
+
+  function format(ms) {
+    const totalMs = Math.floor(ms);
+    const centis = Math.floor((totalMs % 1000) / 10);
+    const totalSec = Math.floor(totalMs / 1000);
+    const s = totalSec % 60;
+    const m = Math.floor(totalSec / 60) % 60;
+    const h = Math.floor(totalSec / 3600);
+    const pad = (n) => String(n).padStart(2, '0');
+    const main = h > 0 ? `${pad(h)}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`;
+    return { main, ms: '.' + pad(centis) };
+  }
+
+  function render() {
+    const now = running ? (performance.now() - startTime + elapsed) : elapsed;
+    const f = format(now);
+    mainEl.textContent = f.main;
+    msEl.textContent = f.ms;
+    if (running) rafId = requestAnimationFrame(render);
+  }
+
+  function start() {
+    running = true;
+    startTime = performance.now();
+    startStopBtn.textContent = 'Ferma';
+    startStopBtn.classList.remove('idle');
+    startStopBtn.classList.add('running');
+    lapBtn.disabled = false;
+    resetBtn.disabled = false;
+    render();
+  }
+
+  function stop() {
+    running = false;
+    elapsed += performance.now() - startTime;
+    cancelAnimationFrame(rafId);
+    startStopBtn.textContent = 'Riprendi';
+    startStopBtn.classList.remove('running');
+    startStopBtn.classList.add('idle');
+    render();
+  }
+
+  function reset() {
+    running = false;
+    cancelAnimationFrame(rafId);
+    elapsed = 0;
+    laps = [];
+    lastLapTime = 0;
+    startStopBtn.textContent = 'Avvia';
+    startStopBtn.classList.remove('running');
+    startStopBtn.classList.add('idle');
+    lapBtn.disabled = true;
+    resetBtn.disabled = true;
+    lapsEl.innerHTML = '';
+    render();
+  }
+
+  function addLap() {
+    const total = performance.now() - startTime + elapsed;
+    const split = total - lastLapTime;
+    lastLapTime = total;
+    laps.push({ split, total });
+    renderLaps();
+  }
+
+  function renderLaps() {
+    if (laps.length === 0) { lapsEl.innerHTML = ''; return; }
+    let best = Infinity, worst = -Infinity;
+    if (laps.length > 1) {
+      for (const l of laps) { best = Math.min(best, l.split); worst = Math.max(worst, l.split); }
+    }
+    lapsEl.innerHTML = laps.map((l, i) => {
+      let cls = 'lap';
+      if (laps.length > 1 && l.split === best) cls += ' best';
+      else if (laps.length > 1 && l.split === worst) cls += ' worst';
+      const sf = format(l.split);
+      const tf = format(l.total);
+      return `<div class="${cls}">
+        <span class="n">Giro ${i + 1}</span>
+        <span>${sf.main}${sf.ms}</span>
+        <span class="n">${tf.main}${tf.ms}</span>
+      </div>`;
+    }).reverse().join('');
+  }
+
+  startStopBtn.addEventListener('click', () => running ? stop() : start());
+  lapBtn.addEventListener('click', () => { if (running) addLap(); });
+  resetBtn.addEventListener('click', reset);
+
+  // Barra spaziatrice = avvia/ferma, L = giro, R = azzera
+  document.addEventListener('keydown', (e) => {
+    if (e.code === 'Space') { e.preventDefault(); running ? stop() : start(); }
+    else if (e.key.toLowerCase() === 'l' && running) addLap();
+    else if (e.key.toLowerCase() === 'r') reset();
+  });
+
+  render();
+
+  // Orologio: ora corrente aggiornata ogni secondo
+  const clockEl = document.getElementById('clock');
+  function updateClock() {
+    const now = new Date();
+    const pad = (n) => String(n).padStart(2, '0');
+    clockEl.textContent = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+  }
+  updateClock();
+  setInterval(updateClock, 1000);
+</script>
+</body>
+</html>

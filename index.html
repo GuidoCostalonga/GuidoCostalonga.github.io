@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Guide, mappe e strumenti — @ginopizza</title>
+<meta name="description" content="Guide interattive, mappe e piccoli strumenti: Berlino, Friuli Venezia Giulia, scuola e DSA, giochi.">
+<style>
+:root{
+  --bg:#faf8f5; --panel:#ffffff; --ink:#1b1a18; --muted:#6b6862;
+  --line:#e6e1d9; --accent:#9a3412; --accent-soft:#fdf1ea; --shadow:rgba(27,26,24,.07);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#16150f; --panel:#1f1e18; --ink:#f2efe8; --muted:#a29d92;
+    --line:#33312a; --accent:#f0915e; --accent-soft:#2a2119; --shadow:rgba(0,0,0,.4);
+  }
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Inter,Roboto,sans-serif;
+  line-height:1.55; -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+header{padding:72px 0 40px;border-bottom:1px solid var(--line)}
+h1{
+  font-size:clamp(2.1rem,5.5vw,3.4rem); line-height:1.08; margin:0 0 14px;
+  letter-spacing:-.025em; font-weight:660;
+}
+h1 em{font-style:normal;color:var(--accent)}
+.lede{margin:0;max-width:56ch;color:var(--muted);font-size:1.06rem}
+nav{display:flex;flex-wrap:wrap;gap:8px;padding:26px 0 6px;position:sticky;top:0;background:var(--bg);z-index:5}
+nav button{
+  font:inherit;font-size:.88rem;cursor:pointer;padding:7px 15px;border-radius:999px;
+  border:1px solid var(--line);background:transparent;color:var(--muted);transition:.16s;
+}
+nav button:hover{color:var(--ink);border-color:var(--ink)}
+nav button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+@media (prefers-color-scheme:dark){nav button[aria-pressed="true"]{color:#16150f}}
+section{padding:34px 0 0}
+h2{
+  font-size:.78rem;text-transform:uppercase;letter-spacing:.14em;color:var(--muted);
+  font-weight:600;margin:0 0 18px;
+}
+.grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fill,minmax(268px,1fr))}
+.card{
+  display:block;text-decoration:none;color:inherit;background:var(--panel);
+  border:1px solid var(--line);border-radius:14px;padding:22px 22px 20px;
+  transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease;
+}
+.card:hover{transform:translateY(-3px);box-shadow:0 10px 28px var(--shadow);border-color:var(--accent)}
+.ico{font-size:1.5rem;line-height:1;display:block;margin-bottom:12px}
+.card h3{margin:0 0 6px;font-size:1.06rem;font-weight:620;letter-spacing:-.01em}
+.card p{margin:0;font-size:.9rem;color:var(--muted)}
+footer{
+  margin-top:72px;padding:30px 0 56px;border-top:1px solid var(--line);
+  color:var(--muted);font-size:.86rem;display:flex;flex-wrap:wrap;gap:6px 18px;justify-content:space-between;
+}
+footer a{color:var(--accent);text-decoration:none}
+footer a:hover{text-decoration:underline}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>Guide interattive, mappe<br>e <em>piccoli strumenti</em>.</h1>
+  <p class="lede">Cose che ho costruito perché mi servivano: guide di viaggio, mappe del Friuli, strumenti per la scuola e qualche gioco. Funzionano tutte dal browser, senza installare niente.</p>
+</header>
+
+<nav id="filtri">
+  <button aria-pressed="true" data-cat="tutti">Tutti</button>
+  <button aria-pressed="false" data-cat="berlino">Berlino</button>
+  <button aria-pressed="false" data-cat="fvg">Friuli</button>
+  <button aria-pressed="false" data-cat="scuola">Scuola e DSA</button>
+  <button aria-pressed="false" data-cat="giochi">Giochi e mappe</button>
+</nav>
+
+<section data-cat="berlino">
+  <h2>Berlino</h2>
+  <div class="grid">
+    <a class="card" href="/berlino-gratis-al-coperto/">
+      <span class="ico">☔</span>
+      <h3>Berlino gratis al coperto</h3>
+      <p>47 attività gratuite al riparo dalla pioggia, con mappa, foto e filtri.</p>
+    </a>
+    <a class="card" href="/berlino-attrazioni-gratuite/">
+      <span class="ico">🎟️</span>
+      <h3>Attrazioni gratuite</h3>
+      <p>29 attrazioni a costo zero: descrizioni, mappa e fermate dei mezzi.</p>
+    </a>
+    <a class="card" href="/berlino-ristoranti-bambini/">
+      <span class="ico">🍟</span>
+      <h3>Ristoranti per bambini</h3>
+      <p>I 50 locali dove portare i figli senza rimpiangerlo.</p>
+    </a>
+    <a class="card" href="/ristoranti-berlino/">
+      <span class="ico">🍽️</span>
+      <h3>Ristoranti di Berlino</h3>
+      <p>Mappa completa con filtri per zona, cucina e fascia di prezzo.</p>
+    </a>
+  </div>
+</section>
+
+<section data-cat="fvg">
+  <h2>Friuli Venezia Giulia</h2>
+  <div class="grid">
+    <a class="card" href="/interventi-famiglia-fvg/">
+      <span class="ico">👪</span>
+      <h3>Interventi per la famiglia</h3>
+      <p>Le 24 misure regionali: importi, requisiti, scadenze e fonti ufficiali.</p>
+    </a>
+    <a class="card" href="/vademecum-proloco/">
+      <span class="ico">📗</span>
+      <h3>Vademecum Pro Loco 2026</h3>
+      <p>Contributi, agevolazioni fiscali e adempimenti delle Pro Loco.</p>
+    </a>
+    <a class="card" href="/roveredo-in-piano/">
+      <span class="ico">📍</span>
+      <h3>Roveredo in Piano</h3>
+      <p>Mappa del comune, in provincia di Pordenone.</p>
+    </a>
+  </div>
+</section>
+
+<section data-cat="scuola">
+  <h2>Scuola e DSA</h2>
+  <div class="grid">
+    <a class="card" href="/english-quest/">
+      <span class="ico">🎮</span>
+      <h3>English Quest</h3>
+      <p>Imparare l'inglese giocando: audio su ogni parola, carattere ad alta leggibilità.</p>
+    </a>
+    <a class="card" href="/studio-dsa-offline/">
+      <span class="ico">🧰</span>
+      <h3>Studio DSA offline</h3>
+      <p>Strumento compensativo per le superiori: lettura, sintesi, matematica passo passo.</p>
+    </a>
+    <a class="card" href="/dsa-study-coach/">
+      <span class="ico">📖</span>
+      <h3>DSA Study Coach</h3>
+      <p>Lettura assistita dei PDF con profili personalizzati. Funziona anche offline.</p>
+    </a>
+    <a class="card" href="/parola-del-giorno/">
+      <span class="ico">✏️</span>
+      <h3>La parola del giorno</h3>
+      <p>Una parola italiana al giorno, con significato ed esempi.</p>
+    </a>
+  </div>
+</section>
+
+<section data-cat="giochi">
+  <h2>Giochi e mappe</h2>
+  <div class="grid">
+    <a class="card" href="/Pordenone_wars/">
+      <span class="ico">🗺️</span>
+      <h3>Pordenone Wars</h3>
+      <p>Conquista territoriale sui 50 Comuni della provincia, confini e adiacenze reali.</p>
+    </a>
+    <a class="card" href="/ginopizza-battle-royale/">
+      <span class="ico">🍕</span>
+      <h3>Ginopizza Battle Royale</h3>
+      <p>Arcade da browser. Esattamente quello che sembra.</p>
+    </a>
+    <a class="card" href="/stadi-europa/">
+      <span class="ico">⚽</span>
+      <h3>Stadi d'Europa</h3>
+      <p>490 stadi di prima e seconda divisione dei 15 campionati principali.</p>
+    </a>
+    <a class="card" href="/cronometro/">
+      <span class="ico">⏱️</span>
+      <h3>Cronometro</h3>
+      <p>Un cronometro. Si apre e parte.</p>
+    </a>
+  </div>
+</section>
+
+<footer>
+  <span>Fatto da <strong>@ginopizza</strong></span>
+  <span><a href="https://github.com/GuidoCostalonga">Codice sorgente su GitHub</a></span>
+</footer>
+
+</div>
+<script>
+const nav = document.getElementById('filtri');
+nav.addEventListener('click', e => {
+  const b = e.target.closest('button');
+  if (!b) return;
+  nav.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+  const cat = b.dataset.cat;
+  document.querySelectorAll('section[data-cat]').forEach(s => {
+    s.hidden = cat !== 'tutti' && s.dataset.cat !== cat;
+  });
+});
+</script>
+</body>
+</html>

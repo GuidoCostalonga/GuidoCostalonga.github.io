@@ -1,0 +1,108 @@
+========================================================
+ STUDIO DSA OFFLINE — componenti di terze parti
+========================================================
+
+L'applicazione usa UNA SOLA libreria esterna, inclusa
+fisicamente nella cartella del progetto. Nessuna risorsa
+viene scaricata da Internet in nessun momento.
+
+
+1) PDF.js
+   --------------------------------------------------
+   Nome:      PDF.js (pdf.js + pdf.worker.js)
+   Versione:  3.11.174
+   Autore:    Mozilla Foundation e collaboratori
+   Licenza:   Apache License 2.0
+   File:      assets/pdfjs/pdf.min.js
+              assets/pdfjs/pdf.worker.min.js
+              (nella versione monofile sono incorporati dentro
+               studio-dsa-offline.html come blocchi
+               <script type="text/plain">)
+   A cosa serve:
+              visualizzare le pagine dei PDF ed estrarre il
+              livello di testo, in modo che il testo possa
+              essere selezionato, letto ad alta voce e
+              riscritto in modalità DSA.
+
+   Testo integrale della licenza Apache 2.0:
+   la nota di licenza completa è conservata all'inizio dei
+   file pdf.min.js e pdf.worker.min.js, come richiesto dalla
+   licenza stessa (sezione 4). La licenza è disponibile anche
+   nel repository ufficiale del progetto PDF.js.
+
+
+2) Tutto il resto
+   --------------------------------------------------
+   Motore matematico, interfaccia, sintesi vocale, mappe
+   concettuali, flashcard, righello di lettura, grafici,
+   salvataggio dati: scritti apposta per questa applicazione
+   in HTML5, CSS3 e JavaScript, senza altre librerie.
+
+   In particolare NON sono usati: math.js, Nerdamer,
+   Algebrite, MathJax, KaTeX, jQuery, Bootstrap, Tailwind,
+   React, Vue, Tesseract.js.
+   Il motore matematico è originale: lavora in modo esatto
+   con le frazioni e produce i passaggi didattici in italiano,
+   cosa che le librerie generiche non fanno.
+
+
+3) Caratteri (font)
+   --------------------------------------------------
+   Nessun font viene incluso o scaricato.
+   Si usano solo i caratteri già presenti nel sistema
+   operativo (system-ui, Verdana, Tahoma, Georgia,
+   carattere a larghezza fissa), scelti dall'utente nelle
+   Impostazioni.
+
+
+4) Icone
+   --------------------------------------------------
+   Emoji del sistema operativo e forme disegnate con CSS/SVG.
+   Le due icone PNG dell'applicazione (assets/icon-192.png e
+   assets/icon-512.png) sono state generate per questo
+   progetto.
+
+
+5) OCR — funzione NON inclusa (scelta, non impossibilità)
+   --------------------------------------------------
+   Il riconoscimento ottico dei caratteri (per i PDF che sono
+   scansioni) richiederebbe Tesseract.js insieme al modello
+   linguistico italiano. Pesi verificati ad agosto 2026:
+
+       tesseract.js 7.0.0 (i due file che servono)   ~0,6 MB
+       tesseract.js-core 6.1.2
+         tesseract-core-simd-lstm.wasm                2,8 MB
+       ita.traineddata (tessdata_fast)                2,6 MB
+       ------------------------------------------------------
+       totale                                        ~6 MB
+
+   (Il modello "standard" ita.traineddata pesa invece 15,2 MB
+   e quello "best" 8,5 MB: più precisi, molto più pesanti.)
+
+   Sarebbe quindi tecnicamente fattibile, e i file starebbero
+   fisicamente nel progetto senza contattare Internet all'uso.
+   Non è stato incluso per tre motivi concreti:
+     - la versione in un unico file passerebbe da 1,9 MB a
+       circa 10 MB (il base64 gonfia i dati del 33%), con
+       tempi di apertura pesanti su iPhone e iPad;
+     - il riconoscimento richiede 10-40 secondi per pagina su
+       un telefono;
+     - sulle formule matematiche sbaglia quasi sempre.
+
+   Al suo posto l'applicazione riconosce le pagine senza testo,
+   lo dichiara apertamente e propone le alternative.
+
+   Alternativa consigliata, che non costa niente: quasi tutti i
+   dispositivi hanno già un OCR italiano offline, migliore di
+   Tesseract.
+     - iPhone / iPad e Mac:  "Testo attivo" (tieni premuto sul
+       testo di uno screenshot e copialo)
+     - Windows 11:  Strumento di cattura -> "Azioni di testo"
+     - Android recenti:  Google Lens, riconoscimento sul
+       dispositivo
+   Il testo riconosciuto si incolla poi nell'applicazione con
+   "Scrivo io il testo di questa pagina", e da lì funziona
+   tutto: modalità DSA, lettura ad alta voce, flashcard,
+   appunti, mappe.
+
+========================================================
