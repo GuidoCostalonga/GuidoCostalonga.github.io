@@ -47,5 +47,20 @@
       .bindPopup('<b>Roveredo in Piano</b><br>Provincia di Pordenone (FVG)<br>CAP 33080')
       .openPopup();
   </script>
+
+<!-- tasto home: torna alla pagina principale del sito (compare solo quando la pagina è online) -->
+<style>
+#tasto-home{position:fixed;z-index:9999;display:none;align-items:center;gap:8px;
+  left:calc(14px + env(safe-area-inset-left));bottom:calc(14px + env(safe-area-inset-bottom));
+  background:#084270;color:#f8f06d;text-decoration:none;letter-spacing:.06em;text-transform:uppercase;
+  font:600 13px/1 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  padding:11px 15px;border-radius:24px;box-shadow:0 3px 12px rgba(0,0,0,.28);
+  -webkit-tap-highlight-color:rgba(248,240,109,.35);}
+#tasto-home:hover{background:#f8f06d;color:#084270;}
+#tasto-home svg{flex:none;}
+@media print{#tasto-home{display:none!important;}}
+</style>
+<a id="tasto-home" href="https://guidocostalonga.github.io/" aria-label="Torna alla pagina principale"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10.5V20h14v-9.5"/></svg>Home</a>
+<script>if(location.protocol.indexOf('http')===0){document.getElementById('tasto-home').style.display='inline-flex';}</script>
 </body>
 </html>
