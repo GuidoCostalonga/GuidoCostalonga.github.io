@@ -3,14 +3,8 @@
 Homepage-vetrina che raccoglie guide, mappe e strumenti pubblicati su GitHub Pages.
 
 Ogni progetto vive nel suo repository e viene servito in una sottocartella del
-dominio (`/english-quest/`, `/berlino-gratis-al-coperto/`, ...). Qui dentro
-stanno solo la homepage e le pagine che non hanno un repository proprio:
-
-- `cronometro/`
-- `dsa-study-coach/`
-- `ristoranti-berlino/`
-- `roveredo-in-piano/`
-- `studio-dsa-offline/`
+dominio (`/english-quest/`, `/interventi-famiglia-fvg/`, ...). Qui dentro stanno
+solo la homepage e `roveredo-in-piano/`, che non ha un repository proprio.
 
 Per collegare un dominio personalizzato basta aggiungere un file `CNAME` con
 dentro il dominio, e impostarlo in Settings → Pages.
