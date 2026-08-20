@@ -46,6 +46,10 @@ nav .solo{display:block;width:100%;text-align:left;font-family:'Nexa Black',sans
   color:var(--blu);cursor:pointer;text-decoration:none;}
 nav .solo:hover{background:var(--grigio);}
 nav .solo.on{background:var(--blu);color:var(--giallo);}
+nav .pag{display:block;width:100%;text-align:left;font-family:'Nexa Black',sans-serif;word-spacing:.16em;font-size:12.5px;
+  text-transform:uppercase;padding:11px 10px;border-radius:8px;background:none;color:var(--blu);text-decoration:none;}
+nav .pag:hover{background:var(--grigio);}
+nav .sep{height:1px;background:var(--bordo);margin:9px 6px;}
 nav .conta{float:right;opacity:.55;font-size:11px;}
 nav .solo.on .conta{opacity:.85;}
 main{flex:1;min-width:0;}
@@ -126,6 +130,8 @@ footer{background:var(--blu);color:#fff;}
     <button class="solo" data-cat="fvg">Friuli Venezia Giulia<span class="conta">3</span></button>
     <button class="solo" data-cat="scuola">Scuola e DSA<span class="conta">1</span></button>
     <button class="solo" data-cat="mappe">Mappe e giochi<span class="conta">2</span></button>
+  <div class="sep"></div>
+    <a class="pag" href="/chi-sono/">Chi sono</a>
   </nav>
 
   <main id="main">
