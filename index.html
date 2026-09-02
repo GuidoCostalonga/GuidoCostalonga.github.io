@@ -127,6 +127,10 @@ footer{background:var(--blu);color:#fff;}
   .tendine{order:4;width:100%;gap:8px}
   .tendina{flex:1 1 0;max-width:none}
 }
+@media(max-width:900px){
+  /* da telefono la testata resta incollata in alto: appena si scorre la ricerca si toglie di mezzo */
+  header.rimpicciolita .hsearch{display:none}
+}
 </style>
 <script type="application/ld+json">
 {
@@ -379,6 +383,20 @@ burger.addEventListener('click', () => {
     const b=document.querySelector('nav .solo[data-cat="'+sez.value+'"]');
     if(b) b.click();
   });
+})();
+/* la ricerca sparisce quando si scorre, ma non mentre la si sta usando */
+(function(){
+  const h=document.querySelector('header'), q=document.getElementById('q');
+  if(!h||!q) return;
+  let statoPrec=null;
+  function aggiorna(){
+    const inUso = document.activeElement===q || q.value.trim()!=='';
+    const giu = !inUso && (window.scrollY||document.documentElement.scrollTop||0) > 80;
+    if(giu!==statoPrec){ statoPrec=giu; h.classList.toggle('rimpicciolita', giu); }
+  }
+  addEventListener('scroll', aggiorna, {passive:true});
+  ['focus','blur','input'].forEach(e=>q.addEventListener(e, aggiorna));
+  aggiorna();
 })();
 </script>
 </body>
