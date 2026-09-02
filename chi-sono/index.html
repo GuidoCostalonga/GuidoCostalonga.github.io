@@ -109,6 +109,20 @@ footer{background:var(--blu);color:#fff;}
   .hero h2{font-size:26px;}
   h2.tit{font-size:21px;}
 }
+/* ---------- tendine della testata: pagine del sito e sezioni della pagina ---------- */
+.tendine{flex:0 0 auto;display:flex;align-items:center;gap:8px}
+.tendina{appearance:none;-webkit-appearance:none;-moz-appearance:none;
+  background:rgba(255,255,255,.16) url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8' fill='none' stroke='%23fff' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M1 1.8 6 6.4 11 1.8'/%3E%3C/svg%3E") no-repeat right 13px center/11px 8px;
+  color:#fff;border:0;border-radius:22px;padding:9px 34px 9px 15px;max-width:230px;
+  font-family:'Manrope',sans-serif;font-weight:800;font-size:12px;text-transform:uppercase;letter-spacing:.04em;
+  line-height:1.2;cursor:pointer;text-overflow:ellipsis;min-width:0}
+.tendina:hover{background-color:rgba(255,255,255,.28)}
+.tendina:focus-visible{outline:2px solid var(--giallo);outline-offset:2px}
+.tendina option{background:#fff;color:var(--blu);font-weight:400;text-transform:none;letter-spacing:0}
+@media(max-width:900px){
+  .tendine{order:4;width:100%;gap:8px}
+  .tendina{flex:1 1 0;max-width:none}
+}
 </style>
 <style>
 /* ---------- PAGINA CHI SONO ---------- */
@@ -167,6 +181,9 @@ footer{background:var(--blu);color:#fff;}
       <h1 class="titolo">Guido Costalonga</h1>
     </div>
     
+    <div class="tendine">
+      <select id="vai" class="tendina" aria-label="Vai a un'altra pagina del sito"><option value="" selected>&#9776; Vai a…</option><option value="/">Home</option><option value="/truffe/">Truffe, come riconoscerle</option><option value="/interventi-famiglia-fvg/">Il FVG per le famiglie</option><option value="/vademecum-proloco/">Pro Loco del FVG</option><option value="/roveredo-in-piano/">Roveredo in Piano</option><option value="/english-quest/">English Quest</option><option value="/pordenone-wars/">Pordenone Wars</option><option value="/stadi-europa/">Gli stadi d'Europa</option></select>
+    </div>
   </div>
 </header>
 
@@ -211,4 +228,12 @@ footer{background:var(--blu);color:#fff;}
 <script>
 var b=document.getElementById('burger'),n=document.getElementById('nav');
 if(b&&n){b.addEventListener('click',function(){var o=n.classList.toggle('show');b.classList.toggle('aperto',o);document.body.classList.toggle('bloccato',o);});}
+/* ---------- tendine della testata ---------- */
+(function(){
+  const vai=document.getElementById('vai');
+  if(vai) vai.addEventListener('change',()=>{ const v=vai.value; vai.selectedIndex=0; if(v) location.href=v; });
+  const sez=document.getElementById('sez');
+  if(!sez) return;
+
+})();
 </script></body></html>
