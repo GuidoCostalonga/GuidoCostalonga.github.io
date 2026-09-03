@@ -280,8 +280,24 @@ const SHOPDEF=[
   {k:'party',n:'Party Shop',    e:'🎆', c:'#e05bb0', items:['fuochi','spray','molla','gelato'],         count:4},
   {k:'ferr', n:'Ferramenta',    e:'🛠️', c:'#8d7f6a', items:['spray','chiavi','faro','molla'],           count:3},
   {k:'benz', n:'Distributore',  e:'⛽', c:'#5f6cc4', items:['bibita','panino','bende','chiavi'],        count:4},
-  {k:'off',  n:'Officina',      e:'🔧', c:'#9aa3ad', items:['V:auto','V:sport','V:super','V:moto','V:camion','chiavi'], count:4},
+  {k:'off',  n:'Officina',      e:'🔧', c:'#9aa3ad', items:['chiavi','faro','spray'],                    count:4},
+  {k:'conc', n:'Concessionaria', e:'🏎️', c:'#ff8a3d', items:[],                                           count:3},
 ];
+/* --- catalogo della concessionaria: modello, carrozzeria e prezzo --- */
+const MODELLI=[
+  {id:'berlina',tipo:'auto', va:'berlina',n:'Berlina',        e:'🚗', p:1500, d:'4 posti, comoda e solida'},
+  {id:'suv',    tipo:'auto', va:'suv',    n:'SUV',            e:'🚙', p:2400, d:'4 posti, alta da terra'},
+  {id:'furgone',tipo:'auto', va:'furgone',n:'Furgone',        e:'🚐', p:2100, d:'Per il trasporto merci'},
+  {id:'moto',   tipo:'moto',              n:'Moto',           e:'🏍️', p:900,  d:'Scattante e sfila nel traffico'},
+  {id:'sport',  tipo:'sport',             n:'Coupé sportiva', e:'🏎️', p:6800, d:'2 posti, tiene bene in curva'},
+  {id:'super',  tipo:'super',             n:'Supercar',       e:'🏎️', p:24000,d:'2 posti, la piu\' veloce'},
+  {id:'camion', tipo:'camion',            n:'Autoarticolato', e:'🚛', p:3200, d:'Serve per il trasporto merci'},
+  {id:'eli',    tipo:'eli',               n:'Elicottero',     e:'🚁', p:6500, d:'Decolla da fermo'},
+  {id:'aereo',  tipo:'aereo',             n:'Caccia',         e:'✈️', p:9500, d:'Va fortissimo, serve pista'},
+];
+const COLORI=['#c8453a','#2f6fc0','#f0c419','#2c9c5a','#eceff2','#22262c','#e07b2a','#8a44c8'];
+let colScelto=0;
+const MAXGARAGE=8;
 const HANGAR={k:'hangar',n:'Hangar 7',e:'✈️',c:'#7a86ff',items:['V:eli','V:aereo','para','jet']};
 
 const ITEMS={
@@ -377,7 +393,8 @@ function genCity(){
               party:['Festa!','Coriandoli','BoomShop','Stelle Filanti'],
               ferr:['Il Chiodo','Ferramenta Bassi','Utensili & Co'],
               benz:['Area Servizio Nord','Pit Stop','Benzinaio Sud','Rifornimento Est'],
-              off:['Officina Rossi','Garage 22','MotorHub','Carrozzeria Blu']};
+              off:['Officina Rossi','Garage 22','MotorHub','Carrozzeria Blu'],
+              conc:['Auto Palace','Motori & Co','Regina Motors']};
   for(const def of SHOPDEF)
     for(let n=0;n<def.count&&ci<cand.length;n++,ci++)
       mkShop(cand[ci],def,def.n+' "'+(NOMI[def.k]?NOMI[def.k][n%NOMI[def.k].length]:'City')+'"');
@@ -425,6 +442,21 @@ function roadPoint(){
   return vert?{x:g*CELL+ROAD/2+R(-4,4),y:R(10,WSIZE-10)}
              :{x:R(10,WSIZE-10),y:g*CELL+ROAD/2+R(-4,4)};
 }
+function etichetta(g){                                  // nome ed emoji del mezzo posseduto
+  if(g.n&&g.e) return g;
+  const m=MODELLI.find(x=>x.tipo===g.type&&(x.va?x.va===g.variante:true))||
+          MODELLI.find(x=>x.tipo===g.type);
+  const d=VEHDEF[g.type];
+  g.n=m?m.n:(d?d.n:'Veicolo'); g.e=m?m.e:(d?d.e:'🚗');
+  return g;
+}
+function aggiungiAlGarage(tipo,col,variante,nome,emo){
+  if(P.garage.length>=MAXGARAGE){
+    toast('🏠 Garage pieno: vendine uno in concessionaria',2600); return null;
+  }
+  const g={type:tipo,col:col,variante:variante||'berlina',danno:0,n:nome,e:emo};
+  etichetta(g); P.garage.push(g); return g;
+}
 function spawnVehicle(type,x,y,ang){
   const d=VEHDEF[type];
   const v={type,d,x,y,z:0,ang:ang||0,sp:0,vz:0,rot:0,col:d.col,danno:0,botte:[]};
@@ -437,7 +469,9 @@ const EYE=1.68;
 const P={x:8*CELL+CELL/2+8,y:8*CELL+CELL/2+14,z:0,vz:0,vx:0,vy:0,
   yaw:-Math.PI/2,pitch:-0.04,energia:100,vita:100,cibo:100,soldi:320,veh:null,
   boost:0,spring:0,bob:0,hurt:0,step:0,ultimoDanno:-99,
-  mia:{type:'auto',col:'#c8453a',variante:'berlina',danno:0}, telAttesa:0, nome:'Giocatore'};
+  garage:[{type:'auto',col:'#c8453a',variante:'berlina',danno:0,n:'Berlina',e:'🚗'}],
+  telAttesa:0, nome:'Giocatore'};
+P.mia=P.garage[0];
 const EQ={scarpe:false,skate:false,jet:false,para:false,gps:false,faro:false};
 const inv=new Array(10).fill(null);
 let sel=0, job=null, paused=true, tempo=0, tps=false, lastCrash=-9, ultimoClacson=-9;
@@ -682,11 +716,12 @@ function openShop(s){
     b.disabled=!(v&&v.danno>0&&P.soldi>=costo);
     b.addEventListener('click',()=>{
       P.soldi-=costo; riparaSubito(v);
-      if(v.personale) P.mia.danno=0;
+      if(v.personale&&P.mia) P.mia.danno=0;
       toast('🔧 Veicolo riparato'); beep(760,.12,'square'); shopSub(); updHUD(); openShop(s);
     });
     row.appendChild(b); list.appendChild(row);
   }
+  if(s.def.k==='conc') concessionaria(list,s);
   for(const id of s.items){
     const isV=id.startsWith('V:'), k2=isV?id.slice(2):id, d=isV?VEHDEF[k2]:ITEMS[k2];
     const row=document.createElement('div'); row.className='row';
@@ -696,15 +731,74 @@ function openShop(s){
   }
   $shop.classList.add('show'); beep(520,.08,'triangle');
 }
+function concessionaria(list,s){
+  /* scelta del colore */
+  const rc=document.createElement('div'); rc.className='row';
+  rc.innerHTML='<div class="em">🎨</div><div class="tx"><b>Colore</b><span>Scegli, poi tocca il prezzo</span></div>';
+  const box=document.createElement('div');
+  box.style.cssText='display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end;max-width:52%';
+  COLORI.forEach((c,i)=>{
+    const b=document.createElement('button');
+    b.style.cssText='width:24px;height:24px;padding:0;border-radius:50%;background:'+c+
+      ';border:'+(i===colScelto?'3px solid #fff':'2px solid rgba(0,0,0,.4)');
+    b.addEventListener('click',()=>{ colScelto=i; beep(620,.05,'triangle'); openShop(s); });
+    box.appendChild(b);
+  });
+  rc.appendChild(box); list.appendChild(rc);
+  /* modelli in vendita */
+  for(const m of MODELLI){
+    const d=VEHDEF[m.tipo];
+    const r=document.createElement('div'); r.className='row';
+    r.innerHTML='<div class="em">'+m.e+'</div><div class="tx"><b>'+m.n+'</b><span>'+
+      m.d+' · '+Math.round(d.max*3.6)+' km/h</span></div>';
+    const b=document.createElement('button'); b.className='buy';
+    b.textContent=m.p+' €'; b.disabled=P.soldi<m.p||P.garage.length>=MAXGARAGE;
+    b.addEventListener('click',()=>{
+      if(P.soldi<m.p){ toast('💸 Non hai abbastanza soldi'); return; }
+      const g=aggiungiAlGarage(m.tipo,COLORI[colScelto],m.va||'berlina',m.n,m.e);
+      if(!g) return;
+      P.soldi-=m.p;
+      toast('🎉 '+m.n+' comprata! Chiamala col telefono 📱',3000);
+      beep(760,.12,'square'); shopSub(); updHUD(); openShop(s);
+    });
+    r.appendChild(b); list.appendChild(r);
+  }
+  /* rivendita di quel che si ha in garage */
+  for(const g of P.garage.slice()){
+    etichetta(g);
+    const m=MODELLI.find(x=>x.n===g.n)||{p:VEHDEF[g.type]?VEHDEF[g.type].p:500};
+    const val=Math.max(50,Math.round(m.p*0.5*(1-(g.danno||0)/200)));
+    const r=document.createElement('div'); r.className='row';
+    const unico=P.garage.length<=1;
+    r.innerHTML='<div class="em">'+g.e+'</div><div class="tx"><b>Vendi la tua '+g.n+
+      '</b><span>'+(unico?"È l'unico mezzo che hai: non si vende"
+                         :'Danni '+Math.round(g.danno||0)+'% · in garage ne restano '+(P.garage.length-1))+
+      '</span></div>';
+    const b=document.createElement('button'); b.className='buy'; b.disabled=unico;
+    if(!unico) b.style.background='#8a4b2f';
+    b.textContent=val+' €';
+    b.addEventListener('click',()=>{
+      const fuori=vehicles.find(v=>v.personale);
+      if(fuori&&P.mia===g){ const i=vehicles.indexOf(fuori); if(i>=0) vehicles.splice(i,1); }
+      const i2=P.garage.indexOf(g); if(i2>=0) P.garage.splice(i2,1);
+      if(P.mia===g) P.mia=P.garage[0]||null;
+      P.soldi+=val; toast('💰 Venduta la '+g.n+' per '+val+' €');
+      beep(520,.12,'square'); shopSub(); updHUD(); openShop(s);
+    });
+    r.appendChild(b); list.appendChild(r);
+  }
+}
 function shopSub(){document.getElementById('shopSub').textContent='Hai '+Math.floor(P.soldi)+' € — tocca il prezzo per comprare';}
 function compra(id,d){
   if(P.soldi<d.p){toast('💸 Non hai abbastanza soldi');return;}
   if(id.startsWith('V:')){
     const t=id.slice(2), p=nearRoadFree(P.x,P.y);
+    const g=aggiungiAlGarage(t,VEHDEF[t].col,'berlina');
+    if(!g) return;
     const nv=spawnVehicle(t,p.x,p.y,rnd()*TAU); P.soldi-=d.p;
     for(const ov of vehicles) if(ov!==nv) ov.personale=false;
-    nv.personale=true;
-    P.mia={type:t,col:nv.col,variante:nv.variante||'berlina',danno:0};
+    nv.personale=true; nv.col=g.col;
+    P.mia=g;
     toast('🎉 '+d.n+' comprato! È qui fuori.'); closeShop();
   } else {
     if(!addItem(id,1)) return;
@@ -743,20 +837,30 @@ function apriTelefono(){
     const b=document.createElement('button'); b.className='buy'; b.textContent=tasto; b.disabled=!attivo;
     b.addEventListener('click',fn); r.appendChild(b); L.appendChild(r);
   };
-  /* auto personale */
-  const mia=P.mia, giaFuori=vehicles.find(v=>v.personale);
+  /* garage: ogni mezzo comprato si fa portare qui */
+  const giaFuori=vehicles.find(v=>v.personale);
   const attesa=Math.max(0,(P.telAuto||0)-tempo);
-  riga('🚗','La mia '+VEHDEF[mia.type].n,
-       'Danni '+Math.round(mia.danno||0)+'% · te la portano dove sei'+(attesa>0?' · fra '+Math.ceil(attesa)+'s':''),
-       attesa>0?Math.ceil(attesa)+'s':'CHIAMA', attesa<=0, ()=>{
-    if(giaFuori){ mia.danno=giaFuori.danno||0; const i=vehicles.indexOf(giaFuori); if(i>=0) vehicles.splice(i,1); }
-    const p=nearRoadFree(P.x,P.y);
-    const v=spawnVehicle(mia.type,p.x,p.y,P.yaw);
-    v.col=mia.col; v.variante=mia.variante; v.danno=mia.danno||0; v.personale=true;
-    P.telAuto=tempo+25;
-    toast('🚗 La tua '+VEHDEF[mia.type].n+' è arrivata qui fuori'); beep(660,.12,'square');
-    chiudiTelefono();
-  });
+  if(!P.garage.length)
+    riga('🏎️','Garage vuoto','Compra un mezzo in concessionaria 🏎️','—',false,()=>{});
+  for(const g of P.garage){
+    etichetta(g);
+    const fuori=(giaFuori&&P.mia===g);
+    riga(g.e,'La mia '+g.n,
+         'Danni '+Math.round(g.danno||0)+'% · '+(fuori?'ce l\'hai gia\' fuori':'te la portano dove sei')+
+         (attesa>0?' · fra '+Math.ceil(attesa)+'s':''),
+         attesa>0?Math.ceil(attesa)+'s':(fuori?'RICHIAMA':'CHIAMA'), attesa<=0, ()=>{
+      if(giaFuori){                                   // quella di prima torna in garage
+        if(P.mia) P.mia.danno=giaFuori.danno||0;
+        const i=vehicles.indexOf(giaFuori); if(i>=0) vehicles.splice(i,1);
+      }
+      const p=nearRoadFree(P.x,P.y);
+      const v=spawnVehicle(g.type,p.x,p.y,P.yaw);
+      v.col=g.col; v.variante=g.variante; v.danno=g.danno||0; v.personale=true;
+      P.mia=g; P.telAuto=tempo+25;
+      toast(g.e+' La tua '+g.n+' è arrivata qui fuori'); beep(660,.12,'square');
+      chiudiTelefono();
+    });
+  }
   /* meccanico */
   const v=veicoloVicino();
   const costo=v?costoRiparazione(v,4,30):0;
@@ -807,6 +911,14 @@ function apriTelefono(){
   if(off) riga('🗺️','Officina più vicina', off.name+' · '+Math.round(od)+' m (ripara a metà prezzo)','SEGNA',true,()=>{
     job={from:off,to:off,stage:1,reward:0,officina:true};
     toast('🧭 Officina segnata sulla bussola'); chiudiTelefono();
+  });
+  /* concessionaria piu' vicina */
+  let cnc=null,cd=1e9;
+  for(const sh of shops) if(sh.def.k==='conc'){const d=dist(P.x,P.y,sh.x,sh.y); if(d<cd){cd=d;cnc=sh;}}
+  if(cnc) riga('\u{1F3CE}\uFE0F','Concessionaria più vicina',
+               cnc.name+' · '+Math.round(cd)+' m (qui si comprano i mezzi)','SEGNA',true,()=>{
+    job={from:cnc,to:cnc,stage:1,reward:0,officina:true};
+    toast('🧭 Concessionaria segnata sulla bussola'); chiudiTelefono();
   });
   $tel.classList.add('show');
   beep(880,.05,'sine',.03);
@@ -3485,7 +3597,7 @@ function statoDaSalvare(){
     job:job?{f:shops.indexOf(job.from),t:shops.indexOf(job.to),s:job.stage,r:job.reward,k:job.tipo||'consegna'}:null,
     veh:vehicles.map(v=>[v.type,Math.round(v.x*10)/10,Math.round(v.y*10)/10,Math.round(v.z*10)/10,
                          Math.round(v.ang*100)/100,Math.round(v.danno||0),v.personale?1:0,v.variante||'']),
-    mia:P.mia,
+    garage:P.garage, miaIdx:Math.max(0,P.garage.indexOf(P.mia)),
     mon:mon,cas:cas,t:Date.now()};
 }
 function salva(){
@@ -3508,7 +3620,10 @@ function applicaSalvataggio(d){
       const nv=spawnVehicle(v[0],v[1],v[2],v[4]); nv.z=v[3];
       nv.danno=v[5]||0; nv.personale=!!v[6]; if(v[7]) nv.variante=v[7];
     }
-    if(d.mia) P.mia=d.mia;
+    if(Array.isArray(d.garage)&&d.garage.length){
+      P.garage=d.garage.map(g=>etichetta(g));
+      P.mia=P.garage[Math.min(d.miaIdx||0,P.garage.length-1)];
+    } else if(d.mia){ P.garage=[etichetta(d.mia)]; P.mia=P.garage[0]; }
     coins.length=0;
     for(let i=0;i<d.mon.length;i+=3) coins.push({x:d.mon[i],y:d.mon[i+1],t:rnd()*TAU,v:d.mon[i+2]});
     crates.length=0;
