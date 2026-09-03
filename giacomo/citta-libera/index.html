@@ -278,7 +278,7 @@ const segni=[];                                      // buchi dei proiettili
 function suAsfalto(x,y){                             // le strade stanno nei primi ROAD metri di ogni cella
   return (x-Math.floor(x/CELL)*CELL)<ROAD || (y-Math.floor(y/CELL)*CELL)<ROAD;
 }
-const AIRG=GRID-3;
+const AIRG=GRID-3, CENTRO=Math.floor(GRID/2);   // piazza centrale: si parte da li'
 const airfield={x:AIRG*CELL,y:AIRG*CELL,w:CELL*3,h:CELL*3};
 const cellB=new Array(GRID*GRID); for(let i=0;i<cellB.length;i++) cellB[i]=[];
 const coins=[], crates=[], vehicles=[], peds=[], traffic=[], decals=[], parts=[];
@@ -370,7 +370,7 @@ function genCity(){
   for(let gy=0;gy<GRID;gy++)for(let gx=0;gx<GRID;gx++){
     if(gx>=AIRG&&gy>=AIRG) continue;                       // area aeroporto
     const bx=gx*CELL+ROAD, by=gy*CELL+ROAD;
-    if(gx===8&&gy===8){ parks.push({x:bx,y:by,w:BS,h:BS,plaza:true}); continue; }
+    if(gx===CENTRO&&gy===CENTRO){ parks.push({x:bx,y:by,w:BS,h:BS,plaza:true}); continue; }
     const r=rnd();
     if(r<0.11){
       parks.push({x:bx,y:by,w:BS,h:BS,plaza:false});
@@ -465,7 +465,7 @@ function genCity(){
       dir:lane<0?(vert?-1:1):(vert?1:-1),col:`hsl(${RI(0,360)},${RI(25,55)}%,${RI(42,62)}%)`,
       type:rnd()<0.15?'camion':'auto'});
   }
-  for(let i=0;i<150;i++){
+  for(let i=0;i<240;i++){
     const gx=RI(0,GRID-1), gy=RI(0,GRID-1);
     if(gx>=AIRG&&gy>=AIRG) continue;
     peds.push({gx,gy,t:rnd(),sp:R(0.0022,0.005)*(rnd()<0.5?-1:1),
@@ -481,7 +481,19 @@ function genCity(){
                      c:hash2(gx,gy+3)<0.5?'#3f7a4a':'#3f5f8a'});
   }
   for(const pk of parks){
-    if(pk.plaza) continue;
+    if(pk.plaza){                                    // piazza: panchine e verde attorno alla fontana
+      const cx=pk.x+pk.w*0.5, cy=pk.y+pk.h*0.5;
+      for(let i=0;i<8;i++){
+        const a=i/8*TAU;
+        panchine.push({x:cx+Math.cos(a)*13,y:cy+Math.sin(a)*13,a:a+Math.PI*0.5});
+      }
+      for(let i=0;i<4;i++){
+        const a=(i+0.5)/4*TAU;
+        trees.push({x:cx+Math.cos(a)*19,y:cy+Math.sin(a)*19,h:R(6,8),r:R(2.4,3.2)});
+        lamps.push({x:cx+Math.cos(a+0.8)*20,y:cy+Math.sin(a+0.8)*20});
+      }
+      continue;
+    }
     for(let i=0;i<3;i++){
       const h1=hash2(pk.x+i*7,pk.y), h2=hash2(pk.y+i*11,pk.x);
       panchine.push({x:pk.x+5+h1*(pk.w-10),y:pk.y+5+h2*(pk.h-10),a:h1<0.5?0:Math.PI*0.5});
@@ -540,6 +552,7 @@ cv.addEventListener('pointerdown',e=>{
   if(e.pointerType==='mouse') return;          // il mouse ha i suoi comandi (vedi sotto)
   if(e.clientX<VW*0.5&&!joy.on){
     joy.on=true; joy.id=e.pointerId; joy.ox=e.clientX; joy.oy=e.clientY; joy.vx=joy.vy=joy.m=0;
+    if(typeof fermaPilota==='function') fermaPilota('🧭 Pilota automatico spento: guidi tu');
     ring.style.display=knob.style.display='block';
     ring.style.left=(e.clientX-59)+'px'; ring.style.top=(e.clientY-59)+'px';
     knob.style.left=(e.clientX-26)+'px'; knob.style.top=(e.clientY-26)+'px';
@@ -585,7 +598,8 @@ function turn(dyaw,dpitch){
 }
 function hold(id,name){
   const el=document.getElementById(id);
-  const dn=e=>{e.preventDefault();key[name]=true;el.classList.add('down');audioOn();};
+  const dn=e=>{e.preventDefault();key[name]=true;el.classList.add('down');audioOn();
+    if(name==='C'&&typeof fermaPilota==='function') fermaPilota('🧭 Pilota automatico spento: guidi tu');};
   const up=e=>{e.preventDefault();key[name]=false;el.classList.remove('down');};
   el.addEventListener('pointerdown',dn); el.addEventListener('pointerup',up);
   el.addEventListener('pointercancel',up); el.addEventListener('pointerleave',up);
@@ -600,6 +614,8 @@ document.getElementById('bB').addEventListener('pointerdown',e=>{e.preventDefaul
 }
 addEventListener('keydown',e=>{
   const k=e.key.toLowerCase();
+  if('wasd'.indexOf(k)>=0||k.startsWith('arrow')||k==='shift')
+    if(typeof fermaPilota==='function') fermaPilota('🧭 Pilota automatico spento: guidi tu');
   if(k==='w'||k==='arrowup')key.up=1; if(k==='s'||k==='arrowdown')key.dn=1;
   if(k==='a'||k==='arrowleft')key.lf=1; if(k==='d'||k==='arrowright')key.rt=1;
   if(k===' '){key.A=true;e.preventDefault();}
@@ -1194,12 +1210,11 @@ function apriTelefono(){
       vicino('conc','🏎️','Concessionaria');
       vicino('imm','🏠','Agenzia Case');
       vicino('alim','🛒','Alimentari');
-      mete.push(['✈️','Aeroporto','pista e hangar',airfield.x+40,airfield.y+30]);
+      mete.push(['✈️','Aeroporto','pista e hangar',airfield.x-10,airfield.y+CELL*0.5]);
       for(const m of mete){
         const dd=Math.round(dist(P.x,P.y,m[3],m[4]));
         riga(m[0],'Portami: '+m[1],m[2]+' · '+dd+' m','VAI',true,()=>{
-          autoGuida={x:m[3],y:m[4],nome:m[1]};
-          toast('🧭 Ti porto a '+m[1]+' · rilassati',2800); beep(700,.1,'triangle');
+          portamiA(m[3],m[4],m[1]);
           chiudiTelefono();
         });
       }
@@ -1337,12 +1352,25 @@ function drawBigMap(){
   if(job){const t=job.stage===0?job.from:job.to;
     bctx.fillStyle='#ffd34d';bctx.beginPath();bctx.arc(t.x*k,my(t.y),9,0,TAU);bctx.fill();
     bctx.strokeStyle='#000';bctx.lineWidth=2;bctx.stroke();}
+  for(const g of altri.values()){                    // gli amici collegati
+    const p=g.rend||g.ora; if(!p) continue;
+    const X=p.x*k, Y=my(p.y);
+    bctx.fillStyle='#fff'; bctx.beginPath(); bctx.arc(X,Y,8,0,TAU); bctx.fill();
+    bctx.fillStyle=g.col;  bctx.beginPath(); bctx.arc(X,Y,6,0,TAU); bctx.fill();
+    bctx.fillStyle='rgba(8,10,14,.72)';
+    bctx.font='700 11px system-ui'; bctx.textAlign='center'; bctx.textBaseline='middle';
+    const w=bctx.measureText(g.nome).width+10;
+    if(bctx.roundRect){ bctx.beginPath(); bctx.roundRect(X-w*0.5,Y-22,w,15,7); bctx.fill(); }
+    else bctx.fillRect(X-w*0.5,Y-22,w,15);
+    bctx.fillStyle='#fff'; bctx.fillText(g.nome,X,Y-14);
+  }
   cone(bctx,P.x*k,my(P.y),-P.yaw,34);
   bctx.fillStyle='#ff3b30'; bctx.beginPath(); bctx.arc(P.x*k,my(P.y),8,0,TAU); bctx.fill();
   bctx.strokeStyle='#fff'; bctx.lineWidth=2.5; bctx.stroke();
-  document.getElementById('mapSub').textContent=EQ.gps
+  document.getElementById('mapSub').textContent=(altri.size?('🟢 '+altri.size+' amici collegati · '):'')
+    +(EQ.gps
     ?'🔴 tu · 🟡 obiettivo · puntini = negozi · quadretti = veicoli'
-    :'🔴 tu · 🟡 obiettivo · compra il 📡 GPS per vedere tutti i negozi';
+    :'🔴 tu · 🟡 obiettivo · compra il 📡 GPS per vedere tutti i negozi');
 }
 const $mini=document.getElementById('mini'), mctx=$mini.getContext('2d');
 function drawMini(){
@@ -1886,10 +1914,7 @@ function updateFoot(ix,iy,im,dt){
   solve(P,0.42);
 }
 function updateVehicle(v,ix,iy,dt){
-  if(autoGuida&&!v.d.air){
-    if(Math.abs(ix)>0.3||Math.abs(iy)>0.3||key.C) fermaPilota('🧭 Pilota automatico spento: guidi tu');
-    else { const c=comandiAuto(v,dt); ix=c.ix; iy=c.iy; }
-  }
+  if(autoGuida&&!v.d.air){ const c=comandiAuto(v,dt); ix=c.ix; iy=c.iy; }
   const d=v.d, thr=-iy, steer=ix;
   const eff=1-(v.danno||0)/100*0.75;                       // motore acciaccato
   const fori=gommeARota(v);
@@ -4327,10 +4352,19 @@ function ostacoloDavanti(v){                         // quanto spazio libero ho 
     if(lato>raggio+v.d.w*0.5) return;
     libero=Math.min(libero,avanti);
   };
-  for(const o of vehicles){ if(o===v) continue; if(o.z>2) continue; guarda(o.x,o.y,o.d.w*0.6); }
+  for(const o of vehicles){ if(o===v) continue; if(o.z>2) continue; guarda(o.x,o.y,o.d.w*0.75); }
   for(const c of traffic){
     const x=c.vert?c.line:c.pos, y=c.vert?c.pos:c.line;
-    guarda(x,y,VEHDEF[c.type].w*0.6);
+    guarda(x,y,VEHDEF[c.type].w*0.75);
+    /* chi arriva di traverso all'incrocio: gli si da' la precedenza */
+    const dx=x-v.x, dy=y-v.y, dd=Math.hypot(dx,dy);
+    if(dd<22){
+      const suoX=c.vert?0:c.dir, suoY=c.vert?c.dir:0;
+      const mioX=Math.cos(v.ang), mioY=Math.sin(v.ang);
+      const trasverso=Math.abs(suoX*mioX+suoY*mioY)<0.5;
+      const avanti=dx*mioX+dy*mioY;
+      if(trasverso&&avanti>-3&&(c.v||0)>1.5) libero=Math.min(libero,Math.max(6,dd-4));
+    }
   }
   for(const p of peds){ if(p.giu) continue; const q=pedPos(p); guarda(q[0],q[1],0.7); }
   return libero;
@@ -4338,23 +4372,45 @@ function ostacoloDavanti(v){                         // quanto spazio libero ho 
 function comandiAuto(v,dt){                          // restituisce lo sterzo e il gas del pilota
   const meta=autoGuida;
   const d=Math.hypot(meta.x-v.x,meta.y-v.y);
-  if(d<8){
+  const bloccato=(v._bloccoAuto||0);
+  if(d<40){ if(!meta.t0) meta.t0=tempo; } else meta.t0=0;
+  const giraInTondo=(meta.t0&&tempo-meta.t0>18);
+  if(d<14||(d<45&&(bloccato>6||giraInTondo))){
     autoGuida=null;
-    toast('🧭 Arrivato: '+meta.nome,2600); beep(880,.14,'square');
+    toast(d<14?('🧭 Arrivato: '+meta.nome):('🧭 Ti lascio qui, '+meta.nome+' è a due passi'),2600);
+    beep(880,.14,'square');
     return {ix:0, iy:0.6};
   }
-  const w=prossimoWaypoint(v,meta);
+  if(bloccato>7&&!meta.dev){                         // incastrato: provo un'altra strada
+    const q=nearRoadFree(clamp(v.x+R(-70,70),8,WSIZE-8),clamp(v.y+R(-70,70),8,WSIZE-8));
+    meta.dev={x:q.x,y:q.y,t:tempo};
+    v._bloccoAuto=0;
+  }
+  if(meta.dev&&(tempo-meta.dev.t>14||Math.hypot(meta.dev.x-v.x,meta.dev.y-v.y)<14)) meta.dev=null;
+  const w=prossimoWaypoint(v,meta.dev||meta);
   const voluto=Math.atan2(w.y-v.y,w.x-v.x);
   const err=angDelta(v.ang,voluto);
   let ix=clamp(-err*1.7,-1,1);                       // nel motore lo sterzo positivo gira dall'altra parte
-  let vmax=Math.min(v.d.max*0.60,19);
+  let vmax=Math.min(v.d.max*0.72,21);
   const dw=Math.hypot(w.x-v.x,w.y-v.y);
   if(Math.abs(err)>0.35) vmax=Math.min(vmax,7);      // in curva si rallenta
   if(dw<14) vmax=Math.min(vmax,10);
   if(d<26) vmax=Math.min(vmax,Math.max(3,d*0.42));   // arrivo morbido
   const sem=semaforoDavanti(v);
-  if(sem&&(sem.st===0||(sem.st===1&&sem.d>8)))
-    vmax=Math.min(vmax,Math.sqrt(2*3.2*Math.max(0,sem.d-2.5)));
+  let rossoOra=false;
+  if(sem){
+    if(sem.st===0||(sem.st===1&&sem.d>8)){
+      rossoOra=true;
+      v._attesaRosso=(v._attesaRosso||0)+dt;
+      /* i semafori di questa citta' durano parecchio: dopo un po', se non passa
+         nessuno di traverso, si va lo stesso a passo d'uomo */
+      const libero=ostacoloDavanti(v)>16;
+      if(v._attesaRosso<7||!libero)
+        vmax=Math.min(vmax,Math.sqrt(2*3.2*Math.max(0,sem.d-2.5)));
+      else vmax=Math.min(vmax,6);
+    } else if(sem.d<18) vmax=Math.min(vmax,11);      // in incrocio si passa piano comunque
+  }
+  if(!rossoOra) v._attesaRosso=0;
   const lib=ostacoloDavanti(v);
   if(lib<22) vmax=Math.min(vmax,Math.max(0,(lib-5)*0.8));
   if(gommeARota(v)) vmax=Math.min(vmax,8);
@@ -4378,6 +4434,11 @@ function comandiAuto(v,dt){                          // restituisce lo sterzo e 
   } else { v._bloccoAuto=0; v._latoSorp=null; }
   return {ix,iy};
 }
+function portamiA(x,y,nome){                         // la meta si sposta sulla strada piu' vicina
+  const q=nearRoadFree(clamp(x,8,WSIZE-8),clamp(y,8,WSIZE-8));
+  autoGuida={x:q.x,y:q.y,nome,vero:{x,y},t0:0};
+  toast('🧭 Ti porto a '+nome+' · rilassati',2800); beep(700,.1,'triangle');
+}
 function fermaPilota(msg){
   if(!autoGuida) return;
   autoGuida=null;
@@ -4395,7 +4456,7 @@ function prossimoWaypoint(v,meta){                   // si viaggia lungo le stra
     return (Math.abs(meta.x-v.x)>Math.abs(meta.y-v.y))?{x:mrx,y:ry}:{x:rx,y:mry};
   if(suVert) return {x:rx,y:mry};
   if(suOriz) return {x:mrx,y:ry};
-  return {x:rx,y:ry};                                // rientro sulla strada piu' vicina
+  const q=nearRoadFree(v.x,v.y); return {x:q.x,y:q.y};   // rientro sulla strada piu' vicina
 }
 function guidaServizio(m,dt){
   const v=m.v;
