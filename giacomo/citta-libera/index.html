@@ -146,6 +146,7 @@ html,body{margin:0;padding:0;height:100%;overflow:hidden;background:#0e1013;
       <div class="sbtn" id="btnTel">📱</div>
       <div class="sbtn" id="btnView">👁️</div>
       <div class="sbtn" id="btnMap">🗺️</div>
+      <div class="sbtn" id="btnNet">🌐</div>
       <div class="sbtn" id="btnFull">⛶</div>
       <div class="sbtn" id="btnHelp">❓</div>
     </div>
@@ -178,6 +179,13 @@ html,body{margin:0;padding:0;height:100%;overflow:hidden;background:#0e1013;
   <h2>📱 Telefono</h2>
   <div class="sub" id="telSub"></div>
   <div id="telList"></div>
+</div>
+
+<div class="ov" id="net">
+  <div class="close" id="netClose">✕</div>
+  <h2>🌐 Gioca con gli amici</h2>
+  <div class="sub" id="netSub">Stessa stanza = stessa città, vi vedete muovere in tempo reale</div>
+  <div id="netList"></div>
 </div>
 
 <div class="ov" id="map">
@@ -770,6 +778,11 @@ function proiettile(x,y,z,yaw,pit,A,scia){
     if(Math.abs(q[0]-x)>A.gitt||Math.abs(q[1]-y)>A.gitt) continue;
     prova(q[0],q[1],0,1.8,0.42,p,'ped');
   }
+  for(const g of altri.values()){
+    const p=g.rend; if(!p) continue;
+    if(p.v) prova(p.x,p.y,p.z,p.z+(VEHDEF[p.v]?VEHDEF[p.v].h:1.5),1.1,g,'rete');
+    else    prova(p.x,p.y,p.z,p.z+1.85,0.45,g,'rete');
+  }
   for(const v of vehicles){
     if(v===P.veh) continue;
     prova(v.x,v.y,v.z,v.z+v.d.h,Math.max(1.0,v.d.w*0.6),v,'veh');
@@ -783,7 +796,16 @@ function proiettile(x,y,z,yaw,pit,A,scia){
   if(scia&&parts.length<420)                        // scia luminosa del colpo
     for(let t=2;t<fine;t+=3.2)
       parts.push({x:x+dx*t,y:y+dy*t,z:z+dz*t,vx:0,vy:0,vz:0,life:.05,c:'#ffe9a8',r:.045});
-  if(tipo==='ped') feriscoPedone(bersaglio,A.dan,ix,iy,iz);
+  if(tipo==='rete'){
+    const dentro=bersaglio.rend&&bersaglio.rend.v;
+    inviaColpo(bersaglio.id, dentro?A.dan*0.45:A.dan);
+    if(parts.length<420)
+      for(let k=0;k<6;k++)
+        parts.push({x:ix,y:iy,z:iz,vx:R(-1.6,1.6),vy:R(-1.6,1.6),vz:R(0.4,2.2),
+                    life:R(.2,.45),c:dentro?'#ffd28a':'#b4262a',r:R(.05,.09)});
+    beep(880,.05,'square',.04);
+  }
+  else if(tipo==='ped') feriscoPedone(bersaglio,A.dan,ix,iy,iz);
   else if(tipo==='veh'){ ammacca(bersaglio,A.dan*0.55,1); scintille(ix,iy,iz,'#ffd28a'); }
   else if(tipo==='traf'){ scintille(ix,iy,iz,'#ffd28a'); bersaglio.v=Math.max(0,(bersaglio.v||0)*0.6); }
   else if(muro) scintille(ix,iy,iz,'#cfd3d8');
@@ -1154,6 +1176,12 @@ function drawMini(){
     mctx.fillStyle=v.d.air?'#7a86ff':'#fff'; mctx.fillRect(q[0]-3,q[1]-3,6,6);}
   for(const s of shops){const q=to(s.x,s.y); if(q[0]<0||q[1]<0||q[0]>S||q[1]>S)continue;
     mctx.fillStyle=s.c; mctx.beginPath(); mctx.arc(q[0],q[1],5,0,TAU); mctx.fill();}
+  for(const g of altri.values()){
+    const p=g.rend||g.ora; if(!p) continue;
+    const q=to(p.x,p.y); if(q[0]<0||q[1]<0||q[0]>S||q[1]>S) continue;
+    mctx.fillStyle='#fff'; mctx.beginPath(); mctx.arc(q[0],q[1],6,0,TAU); mctx.fill();
+    mctx.fillStyle=g.col;  mctx.beginPath(); mctx.arc(q[0],q[1],4,0,TAU); mctx.fill();
+  }
   cone(mctx,S/2,S/2,-P.yaw,42);
   mctx.fillStyle='#ff3b30'; mctx.beginPath(); mctx.arc(S/2,S/2,6,0,TAU); mctx.fill();
   mctx.strokeStyle='#fff'; mctx.lineWidth=2.5; mctx.stroke();
@@ -1573,6 +1601,7 @@ function update(dt){
     P.pitch=clamp(P.pitch-q,-1.25,1.25); P.recupero-=q;
   }
   aggiornaLuce(dt);
+  inviaStato();
   updJob(); updCam(dt); updHUD(); updPrompt(); engineSound();
 }
 function updateFoot(ix,iy,im,dt){
@@ -3443,6 +3472,22 @@ function disegnaScena(){
     const passo=p.fuga>0?(tempo*15+p.t*20):(tempo*7+p.t*20);
     disegnaPersona(q[0],q[1],0,pedAng(p),fermo?0:passo,p.col,pelle,d<35); lastObjs++;
   }
+  for(const g of altri.values()){                              // gli amici collegati
+    const p=posaAltro(g); if(!p) continue;
+    g.rend=p;
+    const d=dist2cam(p.x,p.y);
+    if(d>Math.max(340,FAR)) continue;
+    if(p.v&&VEHDEF[p.v]){
+      if(!g._v) g._v={type:p.v,d:VEHDEF[p.v],x:0,y:0,z:0,ang:0,sp:0,rot:0,wroll:0,col:'#c8453a',danno:0,botte:[]};
+      const v=g._v;
+      v.type=p.v; v.d=VEHDEF[p.v]; v.col=p.c||VEHDEF[p.v].col; v.variante=p.va||'berlina';
+      v.x=p.x; v.y=p.y; v.z=p.z; v.ang=p.a; v.sp=p.sp;
+      v.wroll=(v.wroll||0)+p.sp*0.016/0.32; v.rot+=0.4;
+      disegnaVeicolo(v,d); lastObjs++;
+    } else {
+      disegnaPersona(p.x,p.y,p.z,p.a,p.b,g.col,PELLI[g.id%PELLI.length],d<40); lastObjs++;
+    }
+  }
   if(tps&&!P.veh&&CAM.dist>1.3) disegnaPersona(P.x,P.y,P.z,P.yaw,P.bob*2,P.hurt>0?'#d0453c':'#3d7fd6',PELLI[0],true);
   {
     const arma=armaInMano();
@@ -3788,6 +3833,37 @@ function drawCompass(){
   ctx.fillText(scritta,cx,cy+24);
 }
 
+function suSchermo(x,y,z){                            // dal mondo ai pixel dell'interfaccia
+  const a=MVP[0]*x+MVP[4]*y+MVP[8]*z+MVP[12];
+  const b=MVP[1]*x+MVP[5]*y+MVP[9]*z+MVP[13];
+  const w=MVP[3]*x+MVP[7]*y+MVP[11]*z+MVP[15];
+  if(w<=0.08) return null;
+  return [(a/w*0.5+0.5)*VW, (1-(b/w*0.5+0.5))*VH];
+}
+function targhette(){                                 // nome e vita degli altri giocatori
+  if(!altri.size) return;
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  for(const g of altri.values()){
+    const p=g.rend; if(!p) continue;
+    const d=Math.hypot(p.x-P.x,p.y-P.y);
+    if(d>140) continue;
+    const alt=p.v?(VEHDEF[p.v]?VEHDEF[p.v].h+0.9:2.4):2.15;
+    const q=suSchermo(p.x,p.y,p.z+alt); if(!q) continue;
+    if(q[0]<-60||q[0]>VW+60||q[1]<0||q[1]>VH) continue;
+    const nome=g.nome+' · '+Math.round(d)+' m';
+    ctx.font='700 11px system-ui';
+    const w=Math.max(54,ctx.measureText(nome).width+16);
+    ctx.fillStyle='rgba(10,13,18,.55)';
+    ctx.beginPath();
+    if(ctx.roundRect) ctx.roundRect(q[0]-w*0.5,q[1]-10,w,20,10); else ctx.rect(q[0]-w*0.5,q[1]-10,w,20);
+    ctx.fill();
+    ctx.fillStyle='rgba(255,255,255,.92)'; ctx.fillText(nome,q[0],q[1]-1);
+    const bw=w-14, vv=clamp(g.vita/100,0,1);          // barretta della vita
+    ctx.fillStyle='rgba(255,255,255,.18)'; ctx.fillRect(q[0]-bw*0.5,q[1]+7,bw,3);
+    ctx.fillStyle=vv>0.5?'#4fd07a':(vv>0.25?'#e8c21a':'#e2554e');
+    ctx.fillRect(q[0]-bw*0.5,q[1]+7,bw*vv,3);
+  }
+}
 /* ---------- il fotogramma ---------- */
 let glPronto=false;
 function initGL(){
@@ -3851,6 +3927,7 @@ function render(){
   /* sovrimpressioni */
   ctx.clearRect(0,0,VW,VH);
   drawCockpit();
+  targhette();
   if(EQ.faro&&!P.veh){
     const g=ctx.createRadialGradient(VW*0.5,VH*0.62,10,VW*0.5,VH*0.62,VH*0.75);
     g.addColorStop(0,'rgba(255,244,200,.14)'); g.addColorStop(1,'rgba(255,244,200,0)');
@@ -3866,6 +3943,177 @@ function render(){
   }
   if(P.hurt>0){ctx.fillStyle='rgba(190,40,30,'+(P.hurt*0.16)+')';ctx.fillRect(0,0,VW,VH);}
 }
+
+/* ===================== GIOCO ONLINE ===================== */
+const SERVER='wss://citta-libera-online.guidocostalonga.workers.dev/w/';
+const RITARDO=0.12;                                  // si disegna 120 ms indietro: movimento liscio
+let ws=null, ioId=0, stanza='', statoRete='spento', ultimoInvio=0, ultimoErrore='';
+const altri=new Map();
+try{ stanza=(localStorage.getItem('cittaLiberaStanza')||''); }catch(e){}
+
+function codiceACaso(){
+  const L='ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let c='';
+  for(let i=0;i<4;i++) c+=L[Math.floor(Math.random()*L.length)];
+  return c;
+}
+function entraStanza(cod){
+  cod=(''+cod).toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,6);
+  if(cod.length<3){ toast('🌐 Il codice ha almeno 3 caratteri'); return; }
+  esciStanza(true);
+  stanza=cod; statoRete='collego'; ultimoErrore='';
+  try{ localStorage.setItem('cittaLiberaStanza',cod); }catch(e){}
+  try{ ws=new WebSocket(SERVER+cod); }
+  catch(e){ statoRete='errore'; ultimoErrore='collegamento rifiutato'; pannelloRete(); return; }
+  ws.addEventListener('open',()=>{
+    statoRete='dentro';
+    ws.send(JSON.stringify({t:'entro',nome:P.nome||'Giocatore'}));
+    toast('🌐 Sei nella stanza '+cod);
+    pannelloRete();
+  });
+  ws.addEventListener('message',ev=>{
+    let m; try{ m=JSON.parse(ev.data); }catch(e){ return; }
+    messaggioRete(m);
+  });
+  ws.addEventListener('close',()=>{
+    if(statoRete!=='spento'){ statoRete='caduto'; toast('🌐 Collegamento caduto'); }
+    altri.clear(); pannelloRete();
+  });
+  ws.addEventListener('error',()=>{ ultimoErrore='rete non raggiungibile'; });
+  pannelloRete();
+}
+function esciStanza(zitto){
+  if(ws){ try{ statoRete='spento'; ws.close(); }catch(e){} }
+  ws=null; ioId=0; altri.clear(); statoRete='spento';
+  if(!zitto){ toast('🌐 Sei uscito dalla stanza'); pannelloRete(); }
+}
+function messaggioRete(m){
+  if(m.t==='io'){
+    ioId=m.id;
+    for(const g of (m.presenti||[])) nuovoAltro(g.id,g.nome,g.s);
+    pannelloRete(); return;
+  }
+  if(m.t==='entra'){ nuovoAltro(m.id,m.nome,null); toast('🌐 '+m.nome+' è entrato'); pannelloRete(); return; }
+  if(m.t==='via'){ altri.delete(m.id); toast('🌐 '+(m.nome||'Un giocatore')+' è uscito'); pannelloRete(); return; }
+  if(m.t==='s'){
+    let g=altri.get(m.id); if(!g){ g=nuovoAltro(m.id,'Giocatore',null); }
+    if(m.s) aggiornaAltro(g,m.s);
+    return;
+  }
+  if(m.t==='colpito'){
+    const d=Math.max(0,Math.min(60,+m.d||0));
+    ferisci(d,'🩸 Ti ha sparato '+(m.nome||'qualcuno'));
+    scossa=Math.min(1,scossa+0.5);
+    return;
+  }
+  if(m.t==='grido'){
+    const g=altri.get(m.id);
+    if(m.k==='clacson') beep(430,.18,'square',.04);
+    else if(m.k==='sparo'&&g) beep(320,.05,'square',.02);
+    return;
+  }
+}
+function nuovoAltro(id,nome,s0){
+  const g={id,nome:nome||'Giocatore',vita:100,pre:null,ora:null,col:'hsl('+((id*97)%360)+',55%,52%)',_v:null};
+  altri.set(id,g);
+  if(s0) aggiornaAltro(g,s0);
+  return g;
+}
+function aggiornaAltro(g,s){
+  const t=performance.now()/1000;
+  g.pre=g.ora||{...s,t};
+  g.ora={...s,t};
+  if(typeof s.vt==='number') g.vita=s.vt;
+}
+function posaAltro(g){                               // dove disegnarlo adesso
+  if(!g.ora) return null;
+  const t=performance.now()/1000-RITARDO;
+  const a=g.pre||g.ora, b=g.ora;
+  const dt=b.t-a.t;
+  let u=(dt>0.0001)?clamp((t-a.t)/dt,0,1.6):1;
+  const mx=(p,q)=>p+(q-p)*u;
+  const ang=a.a+angDelta(a.a,b.a)*u;
+  return {x:mx(a.x,b.x), y:mx(a.y,b.y), z:mx(a.z,b.z), a:ang, v:b.v, c:b.c, va:b.va,
+          sp:b.sp||0, b:b.b||0, w:b.w, giu:b.g};
+}
+function inviaStato(){
+  if(!ws||statoRete!=='dentro'||ws.readyState!==1) return;
+  const t=performance.now()/1000;
+  if(t-ultimoInvio<0.1) return;
+  ultimoInvio=t;
+  const v=P.veh;
+  const r2=(n)=>Math.round(n*100)/100;
+  const s={x:r2(P.x),y:r2(P.y),z:r2(P.z),a:r2(P.yaw),
+           v:v?v.type:0, c:v?v.col:0, va:v?(v.variante||'berlina'):0,
+           sp:v?r2(v.sp):0, b:r2(P.bob*2), w:armaInMano()||0, vt:Math.round(P.vita)};
+  try{ ws.send(JSON.stringify({t:'s',s})); }catch(e){}
+}
+function inviaColpo(id,dan){
+  if(!ws||statoRete!=='dentro'||ws.readyState!==1) return;
+  try{ ws.send(JSON.stringify({t:'colpo',a:id,d:dan})); }catch(e){}
+}
+/* --- pannello --- */
+const $net=document.getElementById('net');
+function pannelloRete(){
+  const L=document.getElementById('netList');
+  if(!L||!$net.classList.contains('show')) return;
+  L.innerHTML='';
+  const riga=(emo,tit,sot,tasto,attivo,fn)=>{
+    const r=document.createElement('div'); r.className='row';
+    r.innerHTML='<div class="em">'+emo+'</div><div class="tx"><b>'+tit+'</b><span>'+sot+'</span></div>';
+    if(tasto){
+      const b=document.createElement('button'); b.className='buy'; b.textContent=tasto; b.disabled=!attivo;
+      b.addEventListener('click',fn); r.appendChild(b);
+    }
+    L.appendChild(r); return r;
+  };
+  const stati={spento:'Non sei collegato',collego:'Mi sto collegando…',dentro:'Sei nella stanza '+stanza,
+               caduto:'Collegamento caduto',errore:'Errore: '+ultimoErrore};
+  document.getElementById('netSub').textContent=stati[statoRete]||'';
+  if(statoRete==='dentro'){
+    riga('🚪','Stanza '+stanza,'Passa il codice agli amici: entrano da 🌐 con lo stesso codice','ESCI',true,()=>esciStanza());
+    riga('🙋',P.nome||'Giocatore','Sei tu · numero '+ioId,'',false,null);
+    if(!altri.size) riga('⏳','Ancora nessuno','Appena entra un amico lo vedi qui e in città','',false,null);
+    for(const g of altri.values()){
+      const p=posaAltro(g);
+      const d=p?Math.round(Math.hypot(p.x-P.x,p.y-P.y)):null;
+      riga('🧍',g.nome,(d===null?'in arrivo…':'a '+d+' m'+(p.v?' · in '+(VEHDEF[p.v]?VEHDEF[p.v].n:'auto'):' · a piedi'))
+           +' · vita '+Math.round(g.vita)+'%','',false,null);
+    }
+    return;
+  }
+  /* non collegato */
+  const r=riga('🔑','Codice della stanza','Tre o più lettere e numeri, uguale per tutti','',false,null);
+  const inp=document.createElement('input');
+  inp.id='netCod'; inp.value=stanza||''; inp.maxLength=6; inp.placeholder='ABCD';
+  inp.style.cssText='width:110px;text-transform:uppercase;font:800 16px system-ui;letter-spacing:2px;'+
+    'text-align:center;border-radius:10px;border:1px solid rgba(255,255,255,.2);'+
+    'background:rgba(255,255,255,.08);color:#fff;padding:8px';
+  r.appendChild(inp);
+  riga('🚪','Entra nella stanza','Se non esiste la crea lui','ENTRA',true,()=>{
+    entraStanza(document.getElementById('netCod').value);
+  });
+  riga('🎲','Codice nuovo','Ne invento uno e ci entro subito','CREA',true,()=>{
+    const c=codiceACaso();
+    const i=document.getElementById('netCod'); if(i) i.value=c;
+    entraStanza(c);
+  });
+  riga('ℹ️','Come funziona','Vi vedete camminare e guidare, e potete spararvi. Traffico e passanti restano diversi per ognuno','',false,null);
+}
+function apriRete(){ paused=true; $net.classList.add('show'); pannelloRete(); }
+function chiudiRete(){
+  $net.classList.remove('show');
+  if(!document.getElementById('start').classList.contains('show')
+   &&!document.getElementById('shop').classList.contains('show')
+   &&!document.getElementById('tel').classList.contains('show')
+   &&!document.getElementById('map').classList.contains('show')) paused=false;
+}
+document.getElementById('btnNet').addEventListener('click',()=>{audioOn();apriRete();});
+try{                                                 // link con la stanza gia' dentro
+  const q=new URLSearchParams(location.search).get('stanza');
+  if(q) stanza=q.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,6);
+}catch(e){}
+document.getElementById('netClose').addEventListener('click',chiudiRete);
+setInterval(()=>{ if($net.classList.contains('show')&&statoRete==='dentro') pannelloRete(); },1200);
 
 /* ===================== SALVATAGGIO ===================== */
 const SAVE_KEY='cittaLibera3d';
