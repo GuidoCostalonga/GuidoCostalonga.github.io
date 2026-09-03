@@ -292,7 +292,7 @@ const SHOPDEF=[
   {k:'benz', n:'Distributore',  e:'⛽', c:'#5f6cc4', items:['bibita','panino','bende','chiavi'],        count:4},
   {k:'off',  n:'Officina',      e:'🔧', c:'#9aa3ad', items:['chiavi','faro','spray'],                    count:4},
   {k:'conc', n:'Concessionaria', e:'🏎️', c:'#ff8a3d', items:[],                                           count:3},
-  {k:'armi', n:'Armeria',       e:'🎯', c:'#6f6252', items:['pistola','fucile','mitra','munizioni'],      count:2},
+  {k:'armi', n:'Armeria',       e:'🎯', c:'#6f6252', items:['pistola','fucile','mitra','munizioni'],      count:3},
 ];
 /* --- catalogo della concessionaria: modello, carrozzeria e prezzo --- */
 const MODELLI=[
@@ -415,7 +415,7 @@ function genCity(){
               benz:['Area Servizio Nord','Pit Stop','Benzinaio Sud','Rifornimento Est'],
               off:['Officina Rossi','Garage 22','MotorHub','Carrozzeria Blu'],
               conc:['Auto Palace','Motori & Co','Regina Motors'],
-              armi:['Il Bersaglio','Poligono Nord']};
+              armi:['Il Bersaglio','Poligono Nord','Tiro & Caccia']};
   for(const def of SHOPDEF)
     for(let n=0;n<def.count&&ci<cand.length;n++,ci++)
       mkShop(cand[ci],def,def.n+' "'+(NOMI[def.k]?NOMI[def.k][n%NOMI[def.k].length]:'City')+'"');
@@ -1081,6 +1081,14 @@ function apriTelefono(){
   if(off) riga('🗺️','Officina più vicina', off.name+' · '+Math.round(od)+' m (ripara a metà prezzo)','SEGNA',true,()=>{
     job={from:off,to:off,stage:1,reward:0,officina:true};
     toast('🧭 Officina segnata sulla bussola'); chiudiTelefono();
+  });
+  /* armeria piu' vicina */
+  let arm=null,ad=1e9;
+  for(const sh of shops) if(sh.def.k==='armi'){const d=dist(P.x,P.y,sh.x,sh.y); if(d<ad){ad=d;arm=sh;}}
+  if(arm) riga('\u{1F3AF}','Armeria più vicina',
+               arm.name+' · '+Math.round(ad)+' m (pistola, fucile, mitra e munizioni)','SEGNA',true,()=>{
+    job={from:arm,to:arm,stage:1,reward:0,officina:true};
+    toast('🧭 Armeria segnata sulla bussola'); chiudiTelefono();
   });
   /* concessionaria piu' vicina */
   let cnc=null,cd=1e9;
