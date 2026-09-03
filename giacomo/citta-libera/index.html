@@ -147,6 +147,7 @@ html,body{margin:0;padding:0;height:100%;overflow:hidden;background:#0e1013;
       <div class="sbtn" id="btnView">👁️</div>
       <div class="sbtn" id="btnMap">🗺️</div>
       <div class="sbtn" id="btnNet">🌐</div>
+      <div class="sbtn" id="btnAdm" style="display:none;background:rgba(90,60,10,.62)">👑</div>
       <div class="sbtn" id="btnFull">⛶</div>
       <div class="sbtn" id="btnHelp">❓</div>
     </div>
@@ -179,6 +180,13 @@ html,body{margin:0;padding:0;height:100%;overflow:hidden;background:#0e1013;
   <h2>📱 Telefono</h2>
   <div class="sub" id="telSub"></div>
   <div id="telList"></div>
+</div>
+
+<div class="ov" id="adm">
+  <div class="close" id="admClose">✕</div>
+  <h2>👑 Pannello ADMIN</h2>
+  <div class="sub">Roba da padrone di casa: vola, prendi tutto, sistema tutto</div>
+  <div id="admList"></div>
 </div>
 
 <div class="ov" id="net">
@@ -314,7 +322,7 @@ const MODELLI=[
 ];
 const COLORI=['#c8453a','#2f6fc0','#f0c419','#2c9c5a','#eceff2','#22262c','#e07b2a','#8a44c8'];
 let colScelto=0;
-const MAXGARAGE=8;
+const MAXGARAGE=12;
 const HANGAR={k:'hangar',n:'Hangar 7',e:'✈️',c:'#7a86ff',items:['V:eli','V:aereo','para','jet']};
 
 const ITEMS={
@@ -918,7 +926,7 @@ function panico(x,y){
   }
 }
 function ferisci(quanto,msg){
-  if(quanto<=0) return;
+  if(quanto<=0||admImmune) return;
   P.vita=Math.max(0,P.vita-quanto);
   P.hurt=Math.max(P.hurt,Math.min(1.4,0.3+quanto*0.03));
   P.ultimoDanno=tempo;
@@ -1114,7 +1122,8 @@ function concessionaria(list,s){
     r.appendChild(b); list.appendChild(r);
   }
 }
-function shopSub(){document.getElementById('shopSub').textContent='Hai '+Math.floor(P.soldi)+' € — tocca il prezzo per comprare';}
+function shopSub(){document.getElementById('shopSub').textContent=
+  (admin?'👑 ADMIN: soldi infiniti':'Hai '+Math.floor(P.soldi)+' €')+' — tocca il prezzo per comprare';}
 function compra(id,d){
   if(P.soldi<d.p){toast('💸 Non hai abbastanza soldi');return;}
   if(id.startsWith('V:')){
@@ -1156,7 +1165,8 @@ function riparaSubito(v){ v.danno=0; v.botte=[]; v.gomma=null; v.vetriRotti=fals
 function apriTelefono(){
   paused=true;
   const L=document.getElementById('telList'); L.innerHTML='';
-  document.getElementById('telSub').textContent=(P.nome&&P.nome!=='Giocatore'?P.nome+' · ':'')+'hai '+Math.floor(P.soldi)+' € in tasca';
+  document.getElementById('telSub').textContent=(P.nome&&P.nome!=='Giocatore'?P.nome+' · ':'')
+    +(admin?'👑 soldi infiniti':'hai '+Math.floor(P.soldi)+' € in tasca');
   const riga=(emo,tit,sot,tasto,attivo,fn)=>{
     const r=document.createElement('div'); r.className='row';
     r.innerHTML=`<div class="em">${emo}</div><div class="tx"><b>${tit}</b><span>${sot}</span></div>`;
@@ -1889,6 +1899,13 @@ function updateFoot(ix,iy,im,dt){
     if(P.step>1.5){P.step=0; beep(R(90,130),.05,'triangle',.02);}
   }
   const ground=appoggioA(P.x,P.y,P.z);
+  if(admVolo){                                       // volo da ADMIN: niente gravità, niente consumo
+    P.vz=key.A?9.5:(key.C?-9.5:0);
+    P.z=clamp(P.z+P.vz*dt,0,400);
+    P.x=clamp(P.x,1,dentroCasa?1e9:WSIZE-1); P.y=clamp(P.y,1,dentroCasa?1e9:WSIZE-1);
+    if(P.z<ground) P.z=ground;
+    return;
+  }
   if(EQ.jet&&key.A&&P.energia>0){
     P.vz=Math.min(P.vz+13*dt,7); P.energia=Math.max(0,P.energia-14*dt);
     if(rnd()<0.6)parts.push({x:P.x,y:P.y,z:P.z+0.3,vx:R(-.6,.6),vy:R(-.6,.6),vz:-R(1,4),life:.3,c:'#ffce7a',r:.12});
@@ -2035,7 +2052,8 @@ function updCam(dt){
   CAM.fov=lerp(CAM.fov,1.0+vistaLarga,1-Math.pow(0.05,dt));
 }
 function updHUD(){
-  $money.textContent=Math.floor(P.soldi);
+  if(admin&&P.soldi<SOLDI_ADMIN*0.5) P.soldi=SOLDI_ADMIN;
+  $money.textContent=admin?'∞':Math.floor(P.soldi);
   $en.style.width=P.energia+'%';
   $vt.style.width=P.vita+'%';
   $cb.style.width=P.cibo+'%';
@@ -4985,6 +5003,100 @@ if(salvataggio){
   document.querySelector('#start .sub').textContent=
     'Partita salvata: '+Math.floor(salvataggio.soldi)+' € · ripresa '+(g<1?'adesso':(g<60?g+' min fa':Math.round(g/60)+' h fa'));
 }
+let admin=false;
+const SOLDI_ADMIN=999999999;
+function controllaAdmin(annuncia){
+  const era=admin;
+  admin=(''+(P.nome||'')).trim().toUpperCase()==='ADMIN';
+  const bt=document.getElementById('btnAdm');
+  if(bt) bt.style.display=admin?'flex':'none';
+  if(admin){
+    P.soldi=SOLDI_ADMIN;
+    if(annuncia&&!era) toast('👑 ADMIN: soldi infiniti · pannello 👑 in alto',3600);
+  } else { admVolo=false; admImmune=false; }
+  updHUD();
+}
+let admVolo=false, admImmune=false;
+const $adm=document.getElementById('adm');
+function apriAdmin(){
+  if(!admin){ toast('👑 Serve il nome ADMIN'); return; }
+  paused=true; $adm.classList.add('show'); pannelloAdmin();
+}
+function chiudiAdmin(){
+  $adm.classList.remove('show');
+  if(!document.getElementById('start').classList.contains('show')
+   &&!document.getElementById('shop').classList.contains('show')
+   &&!document.getElementById('tel').classList.contains('show')
+   &&!document.getElementById('net').classList.contains('show')
+   &&!document.getElementById('map').classList.contains('show')) paused=false;
+}
+function pannelloAdmin(){
+  const L=document.getElementById('admList'); if(!L) return;
+  L.innerHTML='';
+  const riga=(emo,tit,sot,tasto,fn,acceso)=>{
+    const r=document.createElement('div'); r.className='row';
+    r.innerHTML='<div class="em">'+emo+'</div><div class="tx"><b>'+tit+'</b><span>'+sot+'</span></div>';
+    const b=document.createElement('button'); b.className='buy'; b.textContent=tasto;
+    if(acceso) b.style.background='#2f7d4f'; else if(acceso===false) b.style.background='#494f58';
+    b.addEventListener('click',fn); r.appendChild(b); L.appendChild(r);
+  };
+  riga('🕊️','Volo libero',admVolo?'Sei in volo: SALTA per salire, FRENO per scendere'
+       :'Vola dove vuoi, senza consumare energia',admVolo?'SPENTO':'ACCENDI',()=>{
+    admVolo=!admVolo;
+    if(admVolo){ P.veh=null; setLabels(); P.vz=0; toast('🕊️ Volo libero acceso'); }
+    else toast('🕊️ Volo spento');
+    pannelloAdmin();
+  },admVolo);
+  riga('🎒','Tutti gli oggetti','Zaino pieno, tutto l\'equipaggiamento addosso e 999 colpi','PRENDI',()=>{
+    for(let i=0;i<10;i++) inv[i]=null;
+    const scelti=['pistola','mitra','fucile','munizioni','kit','pizza','caffe','molla','fuochi','spray'];
+    for(let i=0;i<scelti.length&&i<10;i++) inv[i]={id:scelti[i],n:ITEMS[scelti[i]].t==='use'?99:1};
+    for(const k in EQ) EQ[k]=true;
+    P.colpi=999; P.vita=100; P.cibo=100; P.energia=100;
+    drawHotbar(); updHUD();
+    toast('🎒 Preso tutto: armi, cibo, jetpack, GPS, skate…',3000);
+    pannelloAdmin();
+  });
+  riga('🚗','Tutti i mezzi','Ogni modello della concessionaria nel tuo garage','METTI',()=>{
+    for(const m of MODELLI)
+      if(!P.garage.some(g=>g.n===m.n)) aggiungiAlGarage(m.tipo,COLORI[Math.floor(rnd()*COLORI.length)],m.va||'berlina',m.n,m.e);
+    toast('🚗 Garage pieno: chiamali dal telefono 📱',3000);
+    pannelloAdmin();
+  });
+  riga('🏠','Tutte le case','Diventano tue tutte le case della città','PRENDI',()=>{
+    for(const c of abitazioni) c.mia=true;
+    toast('🏠 Sono tutte tue: '+abitazioni.length+' case',3000);
+    pannelloAdmin();
+  });
+  riga('🛡️','Invincibile',admImmune?'Non ti fa male niente':'Torni a farti male come tutti',
+       admImmune?'SPENTO':'ACCENDI',()=>{
+    admImmune=!admImmune;
+    if(admImmune){ P.vita=100; P.hurt=0; }
+    toast(admImmune?'🛡️ Invincibile':'🛡️ Di nuovo mortale');
+    pannelloAdmin();
+  },admImmune);
+  riga('🚓','Polizia','Toglie le stelline e manda via le pattuglie','CALMA',()=>{
+    allarme=0;
+    for(const m of servizi.slice()) if(m.tipo==='polizia') togliServizio(m);
+    toast('🚓 Nessuno ti cerca più');
+    pannelloAdmin();
+  });
+  riga('🔧','Rimetti a posto il mezzo','Danni, gomme e vetri come nuovi','RIPARA',()=>{
+    const v=P.veh||veicoloVicino();
+    if(!v){ toast('🔧 Nessun mezzo qui vicino'); return; }
+    riparaSubito(v); v.fuoco=false;
+    if(P.mia) P.mia.danno=0;
+    toast('🔧 Come appena comprato');
+    pannelloAdmin();
+  });
+  riga('🌞','Salute e scorte','Vita, cibo ed energia al massimo','PIENO',()=>{
+    P.vita=100; P.cibo=100; P.energia=100; P.hurt=0; updHUD();
+    toast('🌞 Tutto al massimo');
+    pannelloAdmin();
+  });
+}
+document.getElementById('btnAdm').addEventListener('click',()=>{audioOn();apriAdmin();});
+document.getElementById('admClose').addEventListener('click',chiudiAdmin);
 let partitaAvviata=false;
 function avvia(){
   const campo=document.getElementById('nome');
@@ -4993,6 +5105,7 @@ function avvia(){
   if(!partitaAvviata&&salvataggio) applicaSalvataggio(salvataggio);
   if(n) P.nome=n;                                   // il nome scelto ora vince sul salvataggio
   partitaAvviata=true;
+  controllaAdmin(true);
   document.getElementById('start').classList.remove('show'); paused=false; audioOn(); schermoAcceso();
   setTimeout(()=>{$hint.style.opacity=0;},6000);
 }
