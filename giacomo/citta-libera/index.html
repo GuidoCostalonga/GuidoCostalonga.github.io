@@ -19,6 +19,7 @@
 html,body{margin:0;padding:0;height:100%;overflow:hidden;background:#0e1013;
   font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:#eef1f5;touch-action:none;overscroll-behavior:none}
 #game{position:fixed;inset:0;display:block}
+#hud2d{position:fixed;inset:0;display:block;pointer-events:none;z-index:3}
 .ui{position:fixed;z-index:5}
 #top{top:0;left:0;right:0;display:flex;gap:8px;align-items:flex-start;justify-content:space-between;
   padding:calc(env(safe-area-inset-top,0px) + 8px) calc(env(safe-area-inset-right,0px) + 8px) 0 calc(env(safe-area-inset-left,0px) + 8px);
@@ -123,6 +124,7 @@ html,body{margin:0;padding:0;height:100%;overflow:hidden;background:#0e1013;
 </head>
 <body>
 <canvas id="game"></canvas>
+<canvas id="hud2d"></canvas>
 
 <div id="top" class="ui">
   <div id="stats">
@@ -194,13 +196,20 @@ html,body{margin:0;padding:0;height:100%;overflow:hidden;background:#0e1013;
 <script>
 "use strict";
 /* ===================== CANVAS ===================== */
-const cv=document.getElementById('game'), ctx=cv.getContext('2d',{alpha:false});
+const cv=document.getElementById('game');
+const hud=document.getElementById('hud2d'), ctx=hud.getContext('2d');   // sovrimpressioni 2D
+const gl=cv.getContext('webgl',{antialias:true,alpha:false,depth:true,powerPreference:'high-performance'})
+       ||cv.getContext('experimental-webgl');
 let DPR=1,VW=0,VH=0,RS=1,MAXRS=1;
 function applyRes(){
   const s=clamp(RS,0.55,MAXRS);
   cv.width=Math.max(2,Math.round(VW*s)); cv.height=Math.max(2,Math.round(VH*s));
   cv.style.width=VW+'px'; cv.style.height=VH+'px';
-  ctx.setTransform(s,0,0,s,0,0);
+  const h=Math.min(s,1.6);
+  hud.width=Math.max(2,Math.round(VW*h)); hud.height=Math.max(2,Math.round(VH*h));
+  hud.style.width=VW+'px'; hud.style.height=VH+'px';
+  ctx.setTransform(h,0,0,h,0,0);
+  if(gl) gl.viewport(0,0,cv.width,cv.height);
 }
 function resize(){
   DPR=Math.min(2,window.devicePixelRatio||1);
@@ -1092,837 +1101,632 @@ function updPrompt(){
   if(t!==promptTxt){promptTxt=t;$prompt.textContent=t;$prompt.style.display=t?'block':'none';}
 }
 
-/* ===================== MOTORE 3D ===================== */
-const NEAR=0.12, FOGC=[168,186,204];
-let FAR=210, F=1, cy_=1, sy_=0, cp_=1, sp_=0, tanH=1;
-function camPrep(){
-  // CAM.fov e' il campo visivo ORIZZONTALE: in verticale lo schermo lungo dei telefoni
-  // darebbe altrimenti una vista da teleobiettivo
-  tanH=Math.tan(CAM.fov*0.5);
-  F=(VW*0.5)/tanH;
-  cy_=Math.cos(CAM.yaw); sy_=Math.sin(CAM.yaw);
-  cp_=Math.cos(CAM.pitch); sp_=Math.sin(CAM.pitch);
-}
-function camX(x,y){return -(x-CAM.x)*sy_+(y-CAM.y)*cy_;}
-function camY(x,y,z){return -((x-CAM.x)*cy_+(y-CAM.y)*sy_)*sp_+(z-CAM.z)*cp_;}
-function camZ(x,y,z){return ((x-CAM.x)*cy_+(y-CAM.y)*sy_)*cp_+(z-CAM.z)*sp_;}
+/* ===================== MOTORE WEBGL ===================== */
+let FAR=260;
+const CIELO_ORIZ=[0.72,0.79,0.86];
+const ELEV=0.86;                                    // altezza del sole
+const SOLE=0.9, SOLX=-Math.cos(0.9), SOLY=-Math.sin(0.9);
+const SUNV=[Math.cos(SOLE)*Math.cos(ELEV), Math.sin(SOLE)*Math.cos(ELEV), Math.sin(ELEV)];
 
-/* ---- colori: fog e ombreggiatura, con cache ---- */
-function rgbOf(col){
-  if(col.charCodeAt(0)===35){const n=parseInt(col.slice(1),16);return [n>>16,(n>>8)&255,n&255];}
-  const m=/(\d+)[, ]+(\d+)[, ]+(\d+)/.exec(col);
-  return m?[+m[1],+m[2],+m[3]]:[128,128,128];
+/* ---------- matrici 4x4 ---------- */
+function mIdent(m){m[0]=1;m[1]=0;m[2]=0;m[3]=0;m[4]=0;m[5]=1;m[6]=0;m[7]=0;m[8]=0;m[9]=0;m[10]=1;m[11]=0;m[12]=0;m[13]=0;m[14]=0;m[15]=1;return m;}
+function mPersp(m,fovy,asp,near,far){
+  const f=1/Math.tan(fovy*0.5);
+  m[0]=f/asp;m[1]=0;m[2]=0;m[3]=0; m[4]=0;m[5]=f;m[6]=0;m[7]=0;
+  m[8]=0;m[9]=0;m[10]=(far+near)/(near-far);m[11]=-1;
+  m[12]=0;m[13]=0;m[14]=2*far*near/(near-far);m[15]=0; return m;
 }
-const _fc={};
-function fog(col,d){
-  const t=clamp((d-30)/(FAR-30),0,0.9);
-  if(t<0.02) return col;
-  const key=col+'|'+((t*16)|0);
-  const v=_fc[key]; if(v) return v;
-  const c=rgbOf(col), q=t*t*0.85+t*0.15;
-  const out='rgb('+Math.round(lerp(c[0],FOGC[0],q))+','+Math.round(lerp(c[1],FOGC[1],q))+','+Math.round(lerp(c[2],FOGC[2],q))+')';
-  _fc[key]=out; return out;
+function mMul(o,a,b){                                  // o = a*b
+  for(let c=0;c<4;c++){
+    const b0=b[c*4],b1=b[c*4+1],b2=b[c*4+2],b3=b[c*4+3];
+    o[c*4  ]=a[0]*b0+a[4]*b1+a[8]*b2+a[12]*b3;
+    o[c*4+1]=a[1]*b0+a[5]*b1+a[9]*b2+a[13]*b3;
+    o[c*4+2]=a[2]*b0+a[6]*b1+a[10]*b2+a[14]*b3;
+    o[c*4+3]=a[3]*b0+a[7]*b1+a[11]*b2+a[15]*b3;
+  }
+  return o;
 }
-const _sc={};
-function shade(col,f){
-  const key=col+'|'+f.toFixed(2);
-  const v=_sc[key]; if(v) return v;
-  const c=rgbOf(col);
-  const out='rgb('+clamp(Math.round(c[0]*f),0,255)+','+clamp(Math.round(c[1]*f),0,255)+','+clamp(Math.round(c[2]*f),0,255)+')';
-  _sc[key]=out; return out;
+/* vista: mondo con z verso l'alto -> occhio che guarda lungo -Z */
+function mView(m,px,py,pz,yaw,pitch){
+  const cy=Math.cos(yaw), sy=Math.sin(yaw), cp=Math.cos(pitch), sp=Math.sin(pitch);
+  const fx=cy*cp, fy=sy*cp, fz=sp;                     // avanti
+  const rx=sy,    ry=-cy,   rz=0;                      // destra
+  const ux=-cy*sp, uy=-sy*sp, uz=cp;                   // alto
+  m[0]=rx; m[4]=ry; m[8]=rz;  m[12]=-(rx*px+ry*py+rz*pz);
+  m[1]=ux; m[5]=uy; m[9]=uz;  m[13]=-(ux*px+uy*py+uz*pz);
+  m[2]=-fx;m[6]=-fy;m[10]=-fz;m[14]=  fx*px+fy*py+fz*pz;
+  m[3]=0;  m[7]=0;  m[11]=0;  m[15]=1;
+  return m;
 }
-const SH_N=0.80, SH_E=1.14, SH_S=1.05, SH_W=0.87;
-const SOLE=0.9, SOLX=-Math.cos(0.9), SOLY=-Math.sin(0.9);   // direzione in cui cadono le ombre
+function mModel(m,x,y,z,yaw,sx,sy2,sz){
+  const c=Math.cos(yaw), s=Math.sin(yaw);
+  m[0]=c*sx; m[1]=s*sx; m[2]=0; m[3]=0;
+  m[4]=-s*sy2;m[5]=c*sy2;m[6]=0; m[7]=0;
+  m[8]=0;    m[9]=0;    m[10]=sz;m[11]=0;
+  m[12]=x;   m[13]=y;   m[14]=z; m[15]=1;
+  return m;
+}
+const MVP=new Float32Array(16), MVIEW=new Float32Array(16), MPROJ=new Float32Array(16), MMOD=new Float32Array(16);
 
-/* ---- disegno immediato di un quad, con taglio sul near plane ---- */
-const vX=new Float64Array(4), vY=new Float64Array(4), vZ=new Float64Array(4);
-const oX=new Float64Array(8), oY=new Float64Array(8), oZ=new Float64Array(8);
-function quad(x0,y0,z0,x1,y1,z1,x2,y2,z2,x3,y3,z3,col){
-  vX[0]=camX(x0,y0);vY[0]=camY(x0,y0,z0);vZ[0]=camZ(x0,y0,z0);
-  vX[1]=camX(x1,y1);vY[1]=camY(x1,y1,z1);vZ[1]=camZ(x1,y1,z1);
-  vX[2]=camX(x2,y2);vY[2]=camY(x2,y2,z2);vZ[2]=camZ(x2,y2,z2);
-  vX[3]=camX(x3,y3);vY[3]=camY(x3,y3,z3);vZ[3]=camZ(x3,y3,z3);
-  let m=0;
-  for(let i=0;i<4;i++){
-    const j=(i+1)&3, az=vZ[i], bz=vZ[j];
-    if(az>=NEAR){oX[m]=vX[i];oY[m]=vY[i];oZ[m]=az;m++;}
-    if((az>=NEAR)!==(bz>=NEAR)){
-      const t=(NEAR-az)/(bz-az);
-      oX[m]=vX[i]+(vX[j]-vX[i])*t; oY[m]=vY[i]+(vY[j]-vY[i])*t; oZ[m]=NEAR; m++;
-    }
-  }
-  if(m<3) return;
-  ctx.beginPath();
-  for(let k=0;k<m;k++){
-    const sc=F/oZ[k], X=VW*0.5+oX[k]*sc, Y=VH*0.5-oY[k]*sc;
-    k?ctx.lineTo(X,Y):ctx.moveTo(X,Y);
-  }
-  ctx.closePath(); ctx.fillStyle=col; ctx.fill();
+/* ---------- shader ---------- */
+function compila(tipo,src){
+  const sh=gl.createShader(tipo); gl.shaderSource(sh,src); gl.compileShader(sh);
+  if(!gl.getShaderParameter(sh,gl.COMPILE_STATUS)) console.error(gl.getShaderInfoLog(sh),src);
+  return sh;
 }
-function flat(x,y,w,d,z,col){quad(x,y,z,x+w,y,z,x+w,y+d,z,x,y+d,z,col);}
-/* quad con sfumatura fra il lato 0-1 e il lato 2-3: dà volume alle superfici */
-function quadG(x0,y0,z0,x1,y1,z1,x2,y2,z2,x3,y3,z3,colA,colB){
-  vX[0]=camX(x0,y0);vY[0]=camY(x0,y0,z0);vZ[0]=camZ(x0,y0,z0);
-  vX[1]=camX(x1,y1);vY[1]=camY(x1,y1,z1);vZ[1]=camZ(x1,y1,z1);
-  vX[2]=camX(x2,y2);vY[2]=camY(x2,y2,z2);vZ[2]=camZ(x2,y2,z2);
-  vX[3]=camX(x3,y3);vY[3]=camY(x3,y3,z3);vZ[3]=camZ(x3,y3,z3);
-  let m=0;
-  for(let i=0;i<4;i++){
-    const j=(i+1)&3, az=vZ[i], bz=vZ[j];
-    if(az>=NEAR){oX[m]=vX[i];oY[m]=vY[i];oZ[m]=az;m++;}
-    if((az>=NEAR)!==(bz>=NEAR)){
-      const t=(NEAR-az)/(bz-az);
-      oX[m]=vX[i]+(vX[j]-vX[i])*t; oY[m]=vY[i]+(vY[j]-vY[i])*t; oZ[m]=NEAR; m++;
-    }
-  }
-  if(m<3) return;
-  let stile=colA;
-  const za=(vZ[0]+vZ[1])*0.5, zb=(vZ[2]+vZ[3])*0.5;
-  if(za>=NEAR&&zb>=NEAR){
-    const sa=F/za, sb=F/zb;
-    const ax=VW*0.5+(vX[0]+vX[1])*0.5*sa, ay=VH*0.5-(vY[0]+vY[1])*0.5*sa;
-    const bx=VW*0.5+(vX[2]+vX[3])*0.5*sb, by=VH*0.5-(vY[2]+vY[3])*0.5*sb;
-    if(Math.abs(ax-bx)+Math.abs(ay-by)>0.6&&Math.abs(ax)<40000&&Math.abs(by)<40000){
-      const g=ctx.createLinearGradient(ax,ay,bx,by);
-      g.addColorStop(0,colA); g.addColorStop(1,colB); stile=g;
-    }
-  }
-  ctx.beginPath();
-  for(let k=0;k<m;k++){
-    const sc=F/oZ[k], X=VW*0.5+oX[k]*sc, Y=VH*0.5-oY[k]*sc;
-    k?ctx.lineTo(X,Y):ctx.moveTo(X,Y);
-  }
-  ctx.closePath(); ctx.fillStyle=stile; ctx.fill();
+function programma(vs,fs){
+  const p=gl.createProgram();
+  gl.attachShader(p,compila(gl.VERTEX_SHADER,vs));
+  gl.attachShader(p,compila(gl.FRAGMENT_SHADER,fs));
+  gl.linkProgram(p);
+  if(!gl.getProgramParameter(p,gl.LINK_STATUS)) console.error(gl.getProgramInfoLog(p));
+  return p;
 }
-const _t3x=new Float64Array(3),_t3y=new Float64Array(3),_t3z=new Float64Array(3);
-function tri(x0,y0,z0,x1,y1,z1,x2,y2,z2,col){
-  _t3x[0]=x0;_t3y[0]=y0;_t3z[0]=z0; _t3x[1]=x1;_t3y[1]=y1;_t3z[1]=z1; _t3x[2]=x2;_t3y[2]=y2;_t3z[2]=z2;
-  polyN(3,_t3x,_t3y,_t3z,col);
-}
-/* segmento fra due punti a quote diverse: braccia, gambe, tronchi inclinati */
-function arto(x0,y0,z0,x1,y1,z1,larg,prof,col,ang){
-  const c=Math.cos(ang), s=Math.sin(ang), hw=larg*0.5, hd=prof*0.5;
-  const loc=[[hd,hw],[hd,-hw],[-hd,-hw],[-hd,hw]];
-  const ax=[],ay=[],bx=[],by=[];
-  for(let i=0;i<4;i++){
-    ax[i]=x0+c*loc[i][0]-s*loc[i][1]; ay[i]=y0+s*loc[i][0]+c*loc[i][1];
-    bx[i]=x1+c*loc[i][0]-s*loc[i][1]; by[i]=y1+s*loc[i][0]+c*loc[i][1];
+const VS_SCENA=`
+attribute vec3 aPos; attribute vec3 aNor; attribute vec2 aUV; attribute vec3 aCol;
+uniform mat4 uVP, uModel;
+varying vec3 vNor, vCol, vW; varying vec2 vUV;
+void main(){
+  vec4 w=uModel*vec4(aPos,1.0);
+  vW=w.xyz; vNor=mat3(uModel)*aNor; vUV=aUV; vCol=aCol;
+  gl_Position=uVP*w;
+}`;
+const FS_SCENA=`
+precision mediump float;
+uniform sampler2D uTex; uniform vec3 uSun,uFog,uCam,uTint;
+uniform vec2 uFogR; uniform float uSpec,uAlpha,uTaglia,uPiatto;
+varying vec3 vNor,vCol,vW; varying vec2 vUV;
+void main(){
+  vec4 t=texture2D(uTex,vUV);
+  if(t.a<uTaglia) discard;
+  vec3 n=normalize(vNor);
+  float lam=max(dot(n,uSun),0.0);
+  float cielo=0.5+0.5*n.z;
+  vec3 amb=mix(vec3(0.44,0.47,0.55),vec3(0.62,0.65,0.70),cielo);
+  amb+=vec3(0.09,0.08,0.06)*max(0.0,-n.z);
+  vec3 col=t.rgb*vCol*uTint*(amb+vec3(1.12,1.03,0.88)*lam*0.80);
+  col=col*1.06-0.022;
+  col=mix(vec3(dot(col,vec3(0.299,0.587,0.114))),col,1.14);
+  col=mix(col,t.rgb*vCol*uTint,uPiatto);
+  if(uSpec>0.0){
+    vec3 v=normalize(uCam-vW), h=normalize(v+uSun);
+    col+=vec3(1.0,0.97,0.90)*pow(max(dot(n,h),0.0),46.0)*uSpec*(0.25+lam);
   }
-  for(let i=0;i<4;i++){
-    const j=(i+1)&3;
-    const nx=ay[j]-ay[i], ny=-(ax[j]-ax[i]);
-    if((CAM.x-(ax[i]+ax[j])*0.5)*nx+(CAM.y-(ay[i]+ay[j])*0.5)*ny<=0) continue;
-    quad(ax[i],ay[i],z0, ax[j],ay[j],z0, bx[j],by[j],z1, bx[i],by[i],z1, shade(col,(i&1)?1.06:0.84));
+  float d=length(uCam-vW);
+  float f=clamp((d-uFogR.x)/(uFogR.y-uFogR.x),0.0,1.0);
+  col=mix(col,uFog,f*f*0.82);
+  gl_FragColor=vec4(col,t.a*uAlpha);
+}`;
+const VS_CIELO=`attribute vec2 aP; varying vec2 vP; void main(){vP=aP; gl_Position=vec4(aP,1.0,1.0);}`;
+const FS_CIELO=`
+precision mediump float;
+uniform vec3 uF,uR,uU,uSun,uFog; uniform vec2 uTan; uniform sampler2D uNuv; uniform float uT;
+varying vec2 vP;
+void main(){
+  vec3 dir=normalize(uF+uR*vP.x*uTan.x+uU*vP.y*uTan.y);
+  vec3 zen=vec3(0.13,0.33,0.66), hor=vec3(0.73,0.80,0.87);
+  vec3 c=mix(hor,zen,pow(clamp(dir.z,0.0,1.0),0.55));
+  float sd=max(dot(dir,uSun),0.0);
+  c+=vec3(1.0,0.94,0.78)*pow(sd,1200.0)*2.0;
+  c+=vec3(1.0,0.88,0.66)*pow(sd,14.0)*0.30;
+  if(dir.z>0.015){
+    vec2 uv=dir.xy/dir.z*0.0016+vec2(uT*0.0000045,uT*0.0000022);
+    float a=texture2D(uNuv,uv).a*smoothstep(0.02,0.30,dir.z);
+    float b=texture2D(uNuv,uv*2.3+vec2(0.37,0.11)).a*smoothstep(0.05,0.40,dir.z);
+    a=clamp(a*0.85+b*0.45,0.0,1.0);
+    c=mix(c,mix(vec3(0.78,0.82,0.88),vec3(1.0),0.6)+vec3(0.02),a*0.9);
   }
-  if(CAM.z>z1) quad(bx[0],by[0],z1,bx[1],by[1],z1,bx[2],by[2],z1,bx[3],by[3],z1,shade(col,1.16));
-}
-/* numero stabile 0..1 da due coordinate: dettagli sempre uguali senza toccare il generatore */
-function hash2(a,b){
-  let h=Math.imul(a*73856093^b*19349663,2654435761);
-  h^=h>>>13; return ((h>>>0)%1000)/1000;
-}
-function boxRot(cx,cy,z,l,w,h,col,ang){
-  const c=Math.cos(ang), s=Math.sin(ang), hl=l*0.5, hw=w*0.5, z1=z+h;
-  const px=[cx+c*hl-s*hw, cx+c*hl+s*hw, cx-c*hl+s*hw, cx-c*hl-s*hw];
-  const py=[cy+s*hl+c*hw, cy+s*hl-c*hw, cy-s*hl-c*hw, cy-s*hl+c*hw];
-  for(let i=0;i<4;i++){
-    const j=(i+1)&3;
-    const nx=py[j]-py[i], ny=-(px[j]-px[i]);
-    if((CAM.x-(px[i]+px[j])*0.5)*nx+(CAM.y-(py[i]+py[j])*0.5)*ny<=0) continue;
-    quad(px[i],py[i],z,px[j],py[j],z,px[j],py[j],z1,px[i],py[i],z1,shade(col,(i&1)?1.04:0.86));
-  }
-  if(CAM.z>z1) quad(px[0],py[0],z1,px[1],py[1],z1,px[2],py[2],z1,px[3],py[3],z1,shade(col,1.16));
+  c=mix(uFog,c,smoothstep(-0.02,0.13,dir.z));
+  gl_FragColor=vec4(c,1.0);
+}`;
+let PSC=null,PSK=null,LOC={},LOCK={};
+function initShader(){
+  PSC=programma(VS_SCENA,FS_SCENA);
+  LOC={aPos:gl.getAttribLocation(PSC,'aPos'),aNor:gl.getAttribLocation(PSC,'aNor'),
+       aUV:gl.getAttribLocation(PSC,'aUV'),aCol:gl.getAttribLocation(PSC,'aCol'),
+       uVP:gl.getUniformLocation(PSC,'uVP'),uModel:gl.getUniformLocation(PSC,'uModel'),
+       uTex:gl.getUniformLocation(PSC,'uTex'),uSun:gl.getUniformLocation(PSC,'uSun'),
+       uFog:gl.getUniformLocation(PSC,'uFog'),uCam:gl.getUniformLocation(PSC,'uCam'),
+       uTint:gl.getUniformLocation(PSC,'uTint'),uFogR:gl.getUniformLocation(PSC,'uFogR'),
+       uSpec:gl.getUniformLocation(PSC,'uSpec'),uAlpha:gl.getUniformLocation(PSC,'uAlpha'),
+       uTaglia:gl.getUniformLocation(PSC,'uTaglia'),uPiatto:gl.getUniformLocation(PSC,'uPiatto')};
+  PSK=programma(VS_CIELO,FS_CIELO);
+  LOCK={aP:gl.getAttribLocation(PSK,'aP'),uF:gl.getUniformLocation(PSK,'uF'),uR:gl.getUniformLocation(PSK,'uR'),
+        uU:gl.getUniformLocation(PSK,'uU'),uSun:gl.getUniformLocation(PSK,'uSun'),uFog:gl.getUniformLocation(PSK,'uFog'),
+        uTan:gl.getUniformLocation(PSK,'uTan'),uNuv:gl.getUniformLocation(PSK,'uNuv'),uT:gl.getUniformLocation(PSK,'uT')};
 }
 
-/* ---- lista di OGGETTI (non di facce): niente pareti che si accavallano ---- */
-const DL=[]; let DN=0;
-function push(k,o,d,x,y,z,w,h,c,s2){
-  let e=DL[DN];
-  if(!e){e={k:0,o:null,d:0,x:0,y:0,z:0,w:0,h:0,c:'',s:0};DL[DN]=e;}
-  e.k=k;e.o=o;e.d=d;e.x=x;e.y=y;e.z=z;e.w=w;e.h=h;e.c=c;e.s=s2;
-  DN++;
+/* ---------- texture disegnate al volo ---------- */
+function rumore(x,size,forza,base){
+  const img=x.getImageData(0,0,size,size), dd=img.data;
+  for(let i=0;i<dd.length;i+=4){
+    const n=(Math.random()-0.5)*forza;
+    dd[i]=clamp(dd[i]+n,0,255); dd[i+1]=clamp(dd[i+1]+n,0,255); dd[i+2]=clamp(dd[i+2]+n,0,255);
+  }
+  x.putImageData(img,0,0); void base;
 }
-/* chiave = distanza dal punto piu vicino dell'ingombro: cosi chi occlude viene dopo */
-function keyBox(x0,y0,x1,y1){
-  const dx=CAM.x<x0?x0-CAM.x:(CAM.x>x1?CAM.x-x1:0);
-  const dy=CAM.y<y0?y0-CAM.y:(CAM.y>y1?CAM.y-y1:0);
-  return Math.sqrt(dx*dx+dy*dy);
+function texDa(disegna,size,alfa){
+  const c=document.createElement('canvas'); c.width=c.height=size||256;
+  const x=c.getContext('2d'); disegna(x,c.width);
+  const t=gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D,t);
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);
+  gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL,false);
+  gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,c);
+  gl.generateMipmap(gl.TEXTURE_2D);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.REPEAT);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.REPEAT);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR_MIPMAP_LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+  const ax=gl.getExtension('EXT_texture_filter_anisotropic')||gl.getExtension('WEBKIT_EXT_texture_filter_anisotropic');
+  if(ax) gl.texParameterf(gl.TEXTURE_2D,ax.TEXTURE_MAX_ANISOTROPY_EXT,Math.min(8,gl.getParameter(ax.MAX_TEXTURE_MAX_ANISOTROPY_EXT)));
+  void alfa; return t;
 }
-function visible(x,y,r){
-  const dx=x-CAM.x, dy=y-CAM.y;
-  const fwd=dx*cy_+dy*sy_;
-  if(fwd<-r-2) return -1;
-  const rgt=-dx*sy_+dy*cy_;
-  if(Math.abs(rgt)>Math.abs(fwd)*tanH+r+6) return -1;
-  const d=Math.hypot(dx,dy)-r;
-  return d>FAR?-1:(d>0?d:0);
+const TEX={};
+function creaTexture(){
+  /* facciata: una campata di 3.4 x 3.2 m con finestra, telaio, davanzale */
+  TEX.facciata=texDa((x,S)=>{
+    x.fillStyle='#cfc9be'; x.fillRect(0,0,S,S);
+    for(let i=0;i<900;i++){                                  // grana dell'intonaco
+      const a=Math.random()*0.06;
+      x.fillStyle='rgba('+(Math.random()<0.5?'0,0,0,':'255,255,255,')+a+')';
+      x.fillRect(Math.random()*S,Math.random()*S,2+Math.random()*7,2+Math.random()*5);
+    }
+    x.fillStyle='rgba(0,0,0,.05)'; x.fillRect(0,S-10,S,10);   // ombra sotto il solaio
+    x.fillStyle='rgba(255,255,255,.07)'; x.fillRect(0,0,S,6);
+    const wx=S*0.22, wy=S*0.18, ww=S*0.56, wh=S*0.52;
+    x.fillStyle='rgba(0,0,0,.20)'; x.fillRect(wx-4,wy-4,ww+8,wh+10);       // ombra del vano
+    x.fillStyle='#4a4640'; x.fillRect(wx-3,wy-3,ww+6,wh+6);                // telaio esterno
+    const g=x.createLinearGradient(wx,wy,wx+ww,wy+wh);                     // vetro
+    g.addColorStop(0,'#8fb6d6'); g.addColorStop(0.45,'#41586d');
+    g.addColorStop(0.5,'#5b7793'); g.addColorStop(1,'#22303c');
+    x.fillStyle=g; x.fillRect(wx,wy,ww,wh);
+    x.fillStyle='rgba(255,255,255,.16)';                                    // riflesso
+    x.beginPath(); x.moveTo(wx,wy+wh*0.66); x.lineTo(wx+ww*0.62,wy); x.lineTo(wx+ww,wy);
+    x.lineTo(wx,wy+wh); x.closePath(); x.fill();
+    x.strokeStyle='#e9e5dd'; x.lineWidth=Math.max(2,S*0.018);               // montanti
+    x.beginPath(); x.moveTo(wx+ww*0.5,wy); x.lineTo(wx+ww*0.5,wy+wh);
+    x.moveTo(wx,wy+wh*0.42); x.lineTo(wx+ww,wy+wh*0.42); x.stroke();
+    x.strokeStyle='#3a3630'; x.lineWidth=Math.max(1,S*0.012); x.strokeRect(wx,wy,ww,wh);
+    x.fillStyle='#e6e1d6'; x.fillRect(wx-6,wy+wh,ww+12,S*0.035);            // davanzale
+    x.fillStyle='rgba(0,0,0,.18)'; x.fillRect(wx-6,wy+wh+S*0.035,ww+12,3);
+    rumore(x,S,10);
+  },256);
+  /* piano terra: zoccolo in pietra con portone */
+  TEX.piano=texDa((x,S)=>{
+    x.fillStyle='#b7b0a4'; x.fillRect(0,0,S,S);
+    for(let r=0;r<5;r++){                                    // bugnato
+      x.fillStyle='rgba(0,0,0,.10)'; x.fillRect(0,r*S/5+S/5-3,S,3);
+      for(let cc=0;cc<3;cc++){
+        const off=(r%2)*S/6;
+        x.fillStyle='rgba(0,0,0,.07)'; x.fillRect(off+cc*S/3,r*S/5,2,S/5);
+      }
+    }
+    x.fillStyle='rgba(0,0,0,.12)'; x.fillRect(0,S-14,S,14);
+    rumore(x,S,12);
+  },256);
+  /* vetrina di negozio */
+  TEX.vetrina=texDa((x,S)=>{
+    x.fillStyle='#d8d2c6'; x.fillRect(0,0,S,S);
+    const g=x.createLinearGradient(0,S*0.15,S,S*0.9);
+    g.addColorStop(0,'#9fc3dd'); g.addColorStop(0.5,'#3d5568'); g.addColorStop(1,'#1d2a35');
+    x.fillStyle=g; x.fillRect(S*0.06,S*0.12,S*0.88,S*0.7);
+    x.fillStyle='rgba(255,255,255,.18)';
+    x.beginPath(); x.moveTo(S*0.06,S*0.66); x.lineTo(S*0.6,S*0.12); x.lineTo(S*0.94,S*0.12);
+    x.lineTo(S*0.06,S*0.82); x.closePath(); x.fill();
+    x.fillStyle='#3b3833'; x.fillRect(S*0.04,S*0.08,S*0.92,S*0.05);
+    x.fillRect(S*0.04,S*0.82,S*0.92,S*0.06);
+    x.fillRect(S*0.46,S*0.12,S*0.05,S*0.7);
+    x.fillStyle='#7d746a'; x.fillRect(0,S*0.88,S,S*0.12);
+    rumore(x,S,8);
+  },256);
+  /* asfalto */
+  TEX.asfalto=texDa((x,S)=>{
+    x.fillStyle='#494c52'; x.fillRect(0,0,S,S);
+    for(let i=0;i<2600;i++){
+      const v=Math.random();
+      x.fillStyle='rgba('+(v<0.5?'20,22,26,':'150,152,158,')+(0.05+Math.random()*0.22)+')';
+      x.fillRect(Math.random()*S,Math.random()*S,1+Math.random()*3,1+Math.random()*3);
+    }
+    x.strokeStyle='rgba(25,27,31,.5)'; x.lineWidth=1.6;                     // crepe
+    for(let i=0;i<3;i++){
+      x.beginPath(); let px2=Math.random()*S, py2=Math.random()*S; x.moveTo(px2,py2);
+      for(let k=0;k<6;k++){px2+=(Math.random()-0.5)*70; py2+=(Math.random()-0.5)*70; x.lineTo(px2,py2);}
+      x.stroke();
+    }
+    rumore(x,S,14);
+  },256);
+  /* marciapiede a lastre */
+  TEX.marciapiede=texDa((x,S)=>{
+    x.fillStyle='#a9a69f'; x.fillRect(0,0,S,S);
+    const n=4, p=S/n;
+    for(let a=0;a<n;a++)for(let b=0;b<n;b++){
+      const v=0.9+Math.random()*0.2;
+      x.fillStyle='rgba('+Math.round(168*v)+','+Math.round(165*v)+','+Math.round(158*v)+',1)';
+      x.fillRect(a*p+1.5,b*p+1.5,p-3,p-3);
+    }
+    x.strokeStyle='rgba(90,88,84,.55)'; x.lineWidth=2;
+    for(let a=0;a<=n;a++){x.beginPath();x.moveTo(a*p,0);x.lineTo(a*p,S);x.moveTo(0,a*p);x.lineTo(S,a*p);x.stroke();}
+    rumore(x,S,10);
+  },256);
+  /* erba */
+  TEX.erba=texDa((x,S)=>{
+    x.fillStyle='#4e7f3e'; x.fillRect(0,0,S,S);
+    for(let i=0;i<5000;i++){
+      const v=Math.random();
+      x.strokeStyle='rgba('+(v<0.5?'96,140,70,':'58,96,48,')+(0.25+Math.random()*0.5)+')';
+      x.lineWidth=1;
+      const px2=Math.random()*S, py2=Math.random()*S;
+      x.beginPath(); x.moveTo(px2,py2); x.lineTo(px2+(Math.random()-0.5)*4,py2-2-Math.random()*4); x.stroke();
+    }
+    rumore(x,S,10);
+  },256);
+  /* tegole */
+  TEX.tegole=texDa((x,S)=>{
+    x.fillStyle='#8a4b38'; x.fillRect(0,0,S,S);
+    const righe=6, h=S/righe;
+    for(let r=0;r<righe;r++){
+      for(let c=0;c<8;c++){
+        const w=S/8, off=(r%2)*w*0.5, v=0.88+Math.random()*0.24;
+        x.fillStyle='rgb('+Math.round(150*v)+','+Math.round(84*v)+','+Math.round(62*v)+')';
+        x.beginPath(); x.ellipse(off+c*w+w*0.5,r*h+h*0.55,w*0.52,h*0.62,0,Math.PI,0); x.fill();
+      }
+      x.fillStyle='rgba(0,0,0,.22)'; x.fillRect(0,r*h,S,3);
+    }
+    rumore(x,S,12);
+  },256);
+  /* ghiaia dei tetti piani */
+  TEX.ghiaia=texDa((x,S)=>{
+    x.fillStyle='#6e6f70'; x.fillRect(0,0,S,S);
+    for(let i=0;i<4000;i++){
+      const v=Math.random();
+      x.fillStyle='rgba('+(v<0.5?'40,42,44,':'160,158,155,')+(0.1+Math.random()*0.35)+')';
+      x.beginPath(); x.arc(Math.random()*S,Math.random()*S,0.8+Math.random()*2,0,6.283); x.fill();
+    }
+    rumore(x,S,10);
+  },256);
+  /* intonaco liscio (cornicioni, parapetti) */
+  TEX.intonaco=texDa((x,S)=>{
+    x.fillStyle='#d5cfc4'; x.fillRect(0,0,S,S); rumore(x,S,14);
+  },128);
+  /* legno */
+  TEX.legno=texDa((x,S)=>{
+    x.fillStyle='#9a6f3f'; x.fillRect(0,0,S,S);
+    for(let i=0;i<50;i++){
+      x.strokeStyle='rgba('+(Math.random()<0.5?'120,84,44,':'176,132,80,')+(0.2+Math.random()*0.4)+')';
+      x.lineWidth=1+Math.random()*3;
+      const y=Math.random()*S; x.beginPath(); x.moveTo(0,y);
+      x.bezierCurveTo(S*0.3,y+(Math.random()-0.5)*10,S*0.7,y+(Math.random()-0.5)*10,S,y+(Math.random()-0.5)*6);
+      x.stroke();
+    }
+    x.fillStyle='rgba(0,0,0,.18)';
+    for(let i=1;i<4;i++) x.fillRect(0,i*S/4,S,2);
+    rumore(x,S,10);
+  },128);
+  /* chioma degli alberi: macchia con alfa */
+  TEX.chioma=texDa((x,S)=>{
+    x.clearRect(0,0,S,S);
+    for(let i=0;i<260;i++){
+      const a=Math.random()*6.283, r=Math.pow(Math.random(),0.55)*S*0.46;
+      const px2=S*0.5+Math.cos(a)*r, py2=S*0.5+Math.sin(a)*r*0.92;
+      const v=0.6+Math.random()*0.5;
+      x.fillStyle='rgba('+Math.round(74*v)+','+Math.round(126*v)+','+Math.round(58*v)+','+(0.55+Math.random()*0.45)+')';
+      x.beginPath(); x.arc(px2,py2,S*0.05+Math.random()*S*0.06,0,6.283); x.fill();
+    }
+  },256,true);
+  /* corteccia */
+  TEX.corteccia=texDa((x,S)=>{
+    x.fillStyle='#6b4b30'; x.fillRect(0,0,S,S);
+    for(let i=0;i<70;i++){
+      x.strokeStyle='rgba('+(Math.random()<0.5?'50,34,20,':'124,92,60,')+(0.3+Math.random()*0.4)+')';
+      x.lineWidth=1+Math.random()*3;
+      const px2=Math.random()*S; x.beginPath(); x.moveTo(px2,0);
+      x.lineTo(px2+(Math.random()-0.5)*14,S); x.stroke();
+    }
+  },128);
+  /* tinta unita (veicoli, oggetti) */
+  TEX.piatta=texDa((x,S)=>{x.fillStyle='#ffffff';x.fillRect(0,0,S,S);},4);
+  /* strisce e segnaletica */
+  TEX.linea=texDa((x,S)=>{
+    x.fillStyle='#efece0'; x.fillRect(0,0,S,S);
+    for(let i=0;i<400;i++){x.fillStyle='rgba(90,90,86,'+(Math.random()*0.25)+')';
+      x.fillRect(Math.random()*S,Math.random()*S,2+Math.random()*6,2+Math.random()*4);}
+  },64);
+  /* nuvole per il cielo */
+  TEX.nuvole=texDa((x,S)=>{
+    x.clearRect(0,0,S,S);
+    for(let i=0;i<70;i++){
+      const cx2=Math.random()*S, cy2=Math.random()*S, r=S*(0.05+Math.random()*0.16);
+      const g=x.createRadialGradient(cx2,cy2,0,cx2,cy2,r);
+      g.addColorStop(0,'rgba(255,255,255,'+(0.35+Math.random()*0.4)+')');
+      g.addColorStop(1,'rgba(255,255,255,0)');
+      x.fillStyle=g; x.beginPath(); x.arc(cx2,cy2,r,0,6.283); x.fill();
+    }
+  },256,true);
+  /* macchia d'ombra: bianca ai bordi, grigia al centro (si moltiplica al fondo) */
+  TEX.ombraBlob=texDa((x,S)=>{
+    x.fillStyle='#ffffff'; x.fillRect(0,0,S,S);
+    const g=x.createRadialGradient(S*0.5,S*0.5,0,S*0.5,S*0.5,S*0.48);
+    g.addColorStop(0,'rgba(78,84,96,1)'); g.addColorStop(0.55,'rgba(140,146,158,1)');
+    g.addColorStop(1,'rgba(255,255,255,1)');
+    x.fillStyle=g; x.beginPath(); x.arc(S*0.5,S*0.5,S*0.48,0,6.283); x.fill();
+  },128);
+  /* vetro dei veicoli */
+  TEX.vetroAuto=texDa((x,S)=>{
+    const g=x.createLinearGradient(0,0,S,S);
+    g.addColorStop(0,'#9dc3e0'); g.addColorStop(0.45,'#2f4353'); g.addColorStop(1,'#1a242e');
+    x.fillStyle=g; x.fillRect(0,0,S,S);
+    x.fillStyle='rgba(255,255,255,.14)';
+    x.beginPath(); x.moveTo(0,S*0.7); x.lineTo(S*0.7,0); x.lineTo(S,0); x.lineTo(0,S); x.closePath(); x.fill();
+  },64);
 }
 
-/* ===================== SCENA ===================== */
-const _cells=[];
-function drawGround(){
-  const cxg=Math.floor(CAM.x/CELL), cyg=Math.floor(CAM.y/CELL), RANGE=Math.ceil(FAR/CELL)+1;
-  _cells.length=0;
-  for(let gy=cyg-RANGE;gy<=cyg+RANGE;gy++)for(let gx=cxg-RANGE;gx<=cxg+RANGE;gx++){
-    if(gx<0||gy<0||gx>=GRID||gy>=GRID) continue;
-    const d=visible(gx*CELL+CELL*0.5,gy*CELL+CELL*0.5,CELL*0.75);
-    if(d<0) continue;
-    _cells.push({gx,gy,d});
-  }
-  _cells.sort((a,b)=>b.d-a.d);
-  for(const c of _cells){
-    const ox=c.gx*CELL, oy=c.gy*CELL, d=c.d, isAir=(c.gx>=13&&c.gy>=13);
-    const usura=hash2(c.gx,c.gy);
-    const asf='rgb('+(56+usura*8|0)+','+(61+usura*8|0)+','+(68+usura*8|0)+')';
-    flat(ox,oy,ROAD,CELL,0,fog(asf,d));
-    flat(ox,oy,CELL,ROAD,0,fog(asf,d));
-    if(isAir){ flat(ox+ROAD,oy+ROAD,BS,BS,0.02,fog('#565c66',d)); }
-    else{
-      const sx0=ox+ROAD-SW, sy0=oy+ROAD-SW, S=BS+SW*2;
-      flat(sx0,sy0,S,S,0.15,fog('#9a9ea6',d));                       // marciapiede
-      flat(ox+ROAD,oy+ROAD,BS,BS,0.17,fog('#70757f',d));             // cortile interno
-      if(d<50){                                                       // cordoli in rilievo
-        const cc=fog('#b9bcc2',d);
-        boxRot(sx0+S*0.5,sy0,0,S,0.24,0.15,cc,0);
-        boxRot(sx0+S*0.5,sy0+S,0,S,0.24,0.15,cc,0);
-        boxRot(sx0,sy0+S*0.5,0,0.24,S,0.15,cc,0);
-        boxRot(sx0+S,sy0+S*0.5,0,0.24,S,0.15,cc,0);
-      }
-      if(d<24){                                                       // lastre del marciapiede
-        const lin=fog('#8a8e96',d);
-        for(let t=2;t<S;t+=3.2){
-          flat(sx0+t,sy0,0.06,SW,0.16,lin); flat(sx0+t,sy0+S-SW,0.06,SW,0.16,lin);
-          flat(sx0,sy0+t,SW,0.06,0.16,lin); flat(sx0+S-SW,sy0+t,SW,0.06,0.16,lin);
-        }
-      }
+/* ---------- costruttore di geometria ---------- */
+function Geo(){ this.a=[]; }
+Geo.prototype.q=function(ax,ay,az,bx,by,bz,cx,cy,cz,dx,dy,dz,u0,v0,u1,v1,r,g,b){
+  const e1x=bx-ax,e1y=by-ay,e1z=bz-az, e2x=dx-ax,e2y=dy-ay,e2z=dz-az;
+  let nx=e1y*e2z-e1z*e2y, ny=e1z*e2x-e1x*e2z, nz=e1x*e2y-e1y*e2x;
+  const L=Math.hypot(nx,ny,nz)||1; nx/=L; ny/=L; nz/=L;
+  const A=this.a;
+  const v=(x,y,z,u,w)=>{A.push(x,y,z,nx,ny,nz,u,w,r,g,b);};
+  v(ax,ay,az,u0,v0); v(bx,by,bz,u1,v0); v(cx,cy,cz,u1,v1);
+  v(ax,ay,az,u0,v0); v(cx,cy,cz,u1,v1); v(dx,dy,dz,u0,v1);
+};
+/* piano orizzontale */
+/* esagono dell'ombra: unisce la pianta e la sua copia spostata dal sole */
+Geo.prototype.ombra=function(x0,y0,x1,y1,dx,dy,z){
+  const A=this.a;
+  const pts=[[x1,y0],[x1,y1],[x0,y1],[x0+dx,y1+dy],[x0+dx,y0+dy],[x1+dx,y0+dy]];
+  const v=(p)=>{A.push(p[0],p[1],z, 0,0,1, 0,0, 1,1,1);};
+  for(let i=1;i<5;i++){ v(pts[0]); v(pts[i]); v(pts[i+1]); }
+};
+Geo.prototype.piano=function(x,y,w,d,z,sc,r,g,b){
+  this.q(x,y,z, x+w,y,z, x+w,y+d,z, x,y+d,z, x/sc,y/sc,(x+w)/sc,(y+d)/sc, r,g,b);
+};
+/* scatola assiale (facce laterali + coperchio) */
+Geo.prototype.box=function(x,y,z,w,d,h,sc,r,g,b,senzaSopra){
+  const x1=x+w,y1=y+d,z1=z+h;
+  this.q(x,y,z, x1,y,z, x1,y,z1, x,y,z1, 0,0,w/sc,h/sc, r,g,b);
+  this.q(x1,y,z, x1,y1,z, x1,y1,z1, x1,y,z1, 0,0,d/sc,h/sc, r,g,b);
+  this.q(x1,y1,z, x,y1,z, x,y1,z1, x1,y1,z1, 0,0,w/sc,h/sc, r,g,b);
+  this.q(x,y1,z, x,y,z, x,y,z1, x,y1,z1, 0,0,d/sc,h/sc, r,g,b);
+  if(!senzaSopra) this.q(x,y,z1, x1,y,z1, x1,y1,z1, x,y1,z1, 0,0,w/sc,d/sc, r,g,b);
+};
+function caricaGeo(geo,tex,opts){
+  if(!geo.a.length) return null;
+  const buf=gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER,buf);
+  gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(geo.a),gl.STATIC_DRAW);
+  const o=opts||{};
+  return {buf, n:geo.a.length/11, tex, spec:o.spec||0, alpha:o.alpha===undefined?1:o.alpha,
+          taglia:o.taglia||0.01, ombra:!!o.ombra, piatto:o.piatto||0};
+}
+const STATICO=[];
+
+/* ---------- la citta' ---------- */
+const BAY=3.4, PIANO=3.2, GF=3.6;                    // campata, interpiano, piano terra
+function costruisciCitta(){
+  const asf=new Geo(), lin=new Geo(), mar=new Geo(), erb=new Geo(), fac=new Geo(),
+        pia=new Geo(), vet=new Geo(), teg=new Geo(), ghi=new Geo(), int=new Geo(), omb=new Geo();
+  /* --- strade, marciapiedi, cortili, parchi --- */
+  const celleParco={};
+  for(const p of parks) celleParco[Math.floor(p.x/CELL)+','+Math.floor(p.y/CELL)]=1;
+  for(let gy=0;gy<GRID;gy++)for(let gx=0;gx<GRID;gx++){
+    const ox=gx*CELL, oy=gy*CELL, aria=(gx>=13&&gy>=13);
+    asf.piano(ox,oy,ROAD,CELL,0,8,1,1,1);
+    asf.piano(ox+ROAD,oy,CELL-ROAD,ROAD,0,8,1,1,1);
+    if(aria){ mar.piano(ox+ROAD,oy+ROAD,BS,BS,0.02,6,0.95,0.95,0.97); continue; }
+    const sx0=ox+ROAD-SW, sy0=oy+ROAD-SW, S=BS+SW*2;
+    mar.piano(sx0,sy0,S,S,0.15,4,1,1,1);                              // marciapiede
+    if(!celleParco[gx+','+gy]) erb.piano(ox+ROAD,oy+ROAD,BS,BS,0.17,6,0.72,0.78,0.66);   // cortile
+    mar.box(sx0-0.22,sy0-0.22,0,S+0.44,0.22,0.15,4,1.06,1.06,1.06);   // cordoli
+    mar.box(sx0-0.22,sy0+S,0,S+0.44,0.22,0.15,4,1.06,1.06,1.06);
+    mar.box(sx0-0.22,sy0,0,0.22,S,0.15,4,1.06,1.06,1.06);
+    mar.box(sx0+S,sy0,0,0.22,S,0.15,4,1.06,1.06,1.06);
+    for(let t=0;t<CELL;t+=7){                                          // mezzeria
+      lin.piano(ox+ROAD*0.5-0.16,oy+t,0.32,3.2,0.02,1,1,1,1);
+      lin.piano(ox+t,oy+ROAD*0.5-0.16,3.2,0.32,0.02,1,1,1,1);
     }
-    if(d<58){                                                         // mezzeria
-      const col=fog('#d8d6c8',d);
-      for(let t=0;t<CELL;t+=7){
-        flat(ox+ROAD*0.5-0.15,oy+t,0.3,3.2,0.03,col);
-        flat(ox+t,oy+ROAD*0.5-0.15,3.2,0.3,0.03,col);
-      }
-    }
-    if(d<46){                                                         // attraversamenti pedonali
-      const zeb=fog('#e6e4da',d);
-      for(let i=0;i<6;i++){
-        flat(ox+1.2+i*2.1,oy+ROAD+0.7,1.2,2.4,0.035,zeb);
-        flat(ox+ROAD+0.7,oy+1.2+i*2.1,2.4,1.2,0.035,zeb);
-      }
-    }
-    if(d<30){                                                         // rappezzi e tombini
-      const t1=hash2(c.gx+31,c.gy+7), t2=hash2(c.gx+9,c.gy+53);
-      flat(ox+ROAD*0.2+t1*6,oy+8+t1*40,2.6+t1*2,1.8+t2,0.02,fog('#33383e',d));
-      flat(ox+8+t2*40,oy+ROAD*0.25+t2*5,1.6+t1,2.2+t1*2,0.02,fog('#33383e',d));
-      flat(ox+ROAD*0.5-0.4,oy+18+t1*20,0.8,0.8,0.04,fog('#2b2f34',d));
+    for(let k=0;k<6;k++){                                              // attraversamenti
+      lin.piano(ox+1.2+k*2.1,oy+ROAD+0.7,1.2,2.4,0.025,1,1,1,1);
+      lin.piano(ox+ROAD+0.7,oy+1.2+k*2.1,2.4,1.2,0.025,1,1,1,1);
     }
   }
   for(const p of parks){
-    const d=visible(p.x+p.w*0.5,p.y+p.h*0.5,p.w*0.75); if(d<0) continue;
     if(p.plaza){
-      flat(p.x,p.y,p.w,p.h,0.19,fog('#8f9299',d));
-      flat(p.x+2,p.y+2,p.w-4,p.h-4,0.20,fog('#9aa0a6',d));
-      flat(p.x+p.w*0.5-7,p.y+p.h*0.5-7,14,14,0.22,fog('#7d848d',d));
-      if(d<60){                                                        // vasca della fontana
-        boxRot(p.x+p.w*0.5,p.y+p.h*0.5,0.2,9,9,0.55,fog('#b6bac0',d),0);
-        flat(p.x+p.w*0.5-3.9,p.y+p.h*0.5-3.9,7.8,7.8,0.6,fog('#5f93b8',d));
-        boxRot(p.x+p.w*0.5,p.y+p.h*0.5,0.6,1.2,1.2,1.6,fog('#c2c6cc',d),0);
-      }
+      mar.piano(p.x,p.y,p.w,p.h,0.19,4,1.02,1.02,1.02);
+      mar.box(p.x+p.w*0.5-4.5,p.y+p.h*0.5-4.5,0.19,9,9,0.5,4,0.96,0.96,0.98);
+      int.piano(p.x+p.w*0.5-3.9,p.y+p.h*0.5-3.9,7.8,7.8,0.70,4,0.34,0.62,0.86);
+      int.box(p.x+p.w*0.5-0.7,p.y+p.h*0.5-0.7,0.69,1.4,1.4,1.7,2,1,1,1);
     } else {
-      const g1=fog('#4f8a52',d), g2=fog('#5d9a5e',d);
-      flat(p.x,p.y,p.w,p.h,0.18,g1);
-      if(d<70){
-        for(let i=0;i<4;i++){
-          const t=hash2(p.x+i,p.y);
-          flat(p.x+3+t*(p.w-12),p.y+3+hash2(p.y,i)*(p.h-12),6+t*5,4+t*4,0.185,g2);
-        }
-        flat(p.x+p.w*0.5-1.4,p.y,2.8,p.h,0.19,fog('#b0a48c',d));       // vialetto
-        flat(p.x,p.y+p.h*0.5-1.4,p.w,2.8,0.19,fog('#b0a48c',d));
+      erb.piano(p.x,p.y,p.w,p.h,0.18,6,1,1,1);
+      mar.piano(p.x+p.w*0.5-1.5,p.y,3,p.h,0.19,4,1.04,1.0,0.9);
+      mar.piano(p.x,p.y+p.h*0.5-1.5,p.w,3,0.19,4,1.04,1.0,0.9);
+    }
+  }
+  /* --- edifici --- */
+  const tinte=[[0.86,0.82,0.74],[0.78,0.79,0.82],[0.88,0.76,0.66],[0.74,0.79,0.80],
+               [0.90,0.87,0.80],[0.70,0.72,0.75],[0.85,0.72,0.60]];
+  for(const b of buildings){
+    const x0=b.x,y0=b.y,x1=b.x+b.w,y1=b.y+b.d;
+    const t=tinte[Math.floor(hash2(Math.round(b.x),Math.round(b.y))*tinte.length)%tinte.length];
+    const casa=b.h<13.5&&hash2(Math.round(b.x),Math.round(b.y))>0.28;
+    const zt=casa?b.h-1.0:b.h;
+    const gf=Math.min(GF,zt*0.5);
+    const piani=Math.max(1,Math.round((zt-gf)/PIANO));
+    const lati=[[x0,y0,x1,y0],[x1,y0,x1,y1],[x1,y1,x0,y1],[x0,y1,x0,y0]];
+    for(const L of lati){
+      const len=Math.hypot(L[2]-L[0],L[3]-L[1]);
+      const campate=Math.max(1,Math.round(len/BAY));
+      const G=(b.shop?vet:pia);
+      G.q(L[0],L[1],0, L[2],L[3],0, L[2],L[3],gf, L[0],L[1],gf,
+          0,0, Math.max(1,Math.round(len/4)),1, t[0],t[1],t[2]);
+      fac.q(L[0],L[1],gf, L[2],L[3],gf, L[2],L[3],zt, L[0],L[1],zt,
+            0,0, campate,piani, t[0],t[1],t[2]);
+    }
+    if(casa){                                                          // tetto a falde
+      const o=0.5, rx0=x0-o, ry0=y0-o, rx1=x1+o, ry1=y1+o, colmo=b.h+1.0;
+      const tint=hash2(Math.round(b.x)+3,Math.round(b.y)+11)>0.45?[1,1,1]:[0.72,0.74,0.78];
+      if(b.w>=b.d){
+        const ym=(y0+y1)*0.5, sl=Math.hypot((ry1-ry0)*0.5,colmo-zt);
+        teg.q(rx0,ry0,zt, rx1,ry0,zt, rx1,ym,colmo, rx0,ym,colmo, 0,0,(rx1-rx0)/2,sl/2, tint[0],tint[1],tint[2]);
+        teg.q(rx1,ry1,zt, rx0,ry1,zt, rx0,ym,colmo, rx1,ym,colmo, 0,0,(rx1-rx0)/2,sl/2, tint[0],tint[1],tint[2]);
+        int.q(rx0,ry0,zt, rx0,ry1,zt, rx0,ym,colmo, rx0,ym,colmo, 0,0,1,1, t[0],t[1],t[2]);
+        int.q(rx1,ry1,zt, rx1,ry0,zt, rx1,ym,colmo, rx1,ym,colmo, 0,0,1,1, t[0],t[1],t[2]);
+      } else {
+        const xm=(x0+x1)*0.5, sl=Math.hypot((rx1-rx0)*0.5,colmo-zt);
+        teg.q(rx0,ry1,zt, rx0,ry0,zt, xm,ry0,colmo, xm,ry1,colmo, 0,0,(ry1-ry0)/2,sl/2, tint[0],tint[1],tint[2]);
+        teg.q(rx1,ry0,zt, rx1,ry1,zt, xm,ry1,colmo, xm,ry0,colmo, 0,0,(ry1-ry0)/2,sl/2, tint[0],tint[1],tint[2]);
+        int.q(rx0,ry0,zt, rx1,ry0,zt, xm,ry0,colmo, xm,ry0,colmo, 0,0,1,1, t[0],t[1],t[2]);
+        int.q(rx1,ry1,zt, rx0,ry1,zt, xm,ry1,colmo, xm,ry1,colmo, 0,0,1,1, t[0],t[1],t[2]);
       }
+      int.box(lerp(x0,x1,0.28),lerp(y0,y1,0.28),zt,0.9,0.9,2.2,2,0.86,0.7,0.62);
+    } else {                                                           // tetto piano
+      ghi.piano(x0,y0,b.w,b.d,b.h,4,1,1,1);
+      int.box(x0-0.18,y0-0.18,b.h-0.45,b.w+0.36,0.36,0.45,2,1.05,1.05,1.05);
+      int.box(x0-0.18,y1-0.18,b.h-0.45,b.w+0.36,0.36,0.45,2,1.05,1.05,1.05);
+      int.box(x0-0.18,y0-0.18,b.h-0.45,0.36,b.d+0.36,0.45,2,1.05,1.05,1.05);
+      int.box(x1-0.18,y0-0.18,b.h-0.45,0.36,b.d+0.36,0.45,2,1.05,1.05,1.05);
+      int.box(x0+0.1,y0+0.1,b.h,b.w-0.2,0.3,0.8,2,t[0],t[1],t[2]);
+      int.box(x0+0.1,y1-0.4,b.h,b.w-0.2,0.3,0.8,2,t[0],t[1],t[2]);
+      int.box(x0+0.1,y0+0.4,b.h,0.3,b.d-0.8,0.8,2,t[0],t[1],t[2]);
+      int.box(x1-0.4,y0+0.4,b.h,0.3,b.d-0.8,0.8,2,t[0],t[1],t[2]);
+      ghi.box(x0+2.4,y0+2.4,b.h,2.6,2.2,1.2,3,0.8,0.82,0.84);
     }
+    const lung=(casa?b.h+1.0:b.h)/Math.tan(ELEV);                      // ombra al suolo
+    omb.ombra(x0,y0,x1,y1,SOLX*lung,SOLY*lung,0.22);
   }
-  ctx.save();                                                          // ombre portate dal sole
-  for(const c of _cells){
-    if(c.d>95) continue;
-    const al=0.22*(1-c.d/95);
-    if(al<0.015) continue;
-    ctx.globalAlpha=al;
-    const arr=cellB[c.gx+c.gy*GRID];
-    for(let i=0;i<arr.length;i++){
-      const b=arr[i], ox2=SOLX*b.h*0.55, oy2=SOLY*b.h*0.55;
-      quad(b.x+ox2,b.y+oy2,0.21, b.x+b.w+ox2,b.y+oy2,0.21,
-           b.x+b.w+ox2,b.y+b.d+oy2,0.21, b.x+ox2,b.y+b.d+oy2,0.21,'#0d1a24');
-    }
-  }
-  ctx.restore();
-  for(const dc of decals){
-    const d=visible(dc.x,dc.y,dc.r); if(d<0||d>70) continue;
-    flat(dc.x-dc.r,dc.y-dc.r,dc.r*2,dc.r*2,0.2,fog(dc.c,d));
-  }
-}
-function collect(){
-  DN=0;
-  for(const c of _cells){
-    const arr=cellB[c.gx+c.gy*GRID];
-    for(let i=0;i<arr.length;i++){
-      const b=arr[i];
-      if(visible(b.x+b.w*0.5,b.y+b.d*0.5,Math.max(b.w,b.d)*0.71)<0) continue;
-      push(0,b,keyBox(b.x,b.y,b.x+b.w,b.y+b.d),0,0,0,0,0,'',0);
-    }
-  }
-  for(const l of lamps){
-    const d=visible(l.x,l.y,1.2); if(d<0||d>80) continue;
-    push(9,l,d,l.x,l.y,0,0,0,'',0);
-  }
-  for(const sm of semafori){
-    const d=visible(sm.x,sm.y,1.2); if(d<0||d>70) continue;
-    push(11,sm,d,sm.x,sm.y,0,0,0,'',0);
-  }
-  for(const pa of panchine){
-    const d=visible(pa.x,pa.y,1.2); if(d<0||d>70) continue;
-    push(12,pa,d,pa.x,pa.y,0,0,0,'',0);
-  }
-  for(const cs of cassonetti){
-    const d=visible(cs.x,cs.y,1.2); if(d<0||d>70) continue;
-    push(13,cs,d,cs.x,cs.y,0,0,0,'',0);
-  }
-  for(const t of trees){
-    const d=visible(t.x,t.y,t.r); if(d<0) continue;
-    push(3,t,d,t.x,t.y,0,t.r*2,t.h,'#3f8a4e',0);
-  }
-  for(const c of coins){
-    const d=visible(c.x,c.y,0.5); if(d<0||d>80) continue;
-    push(4,c,d,c.x,c.y,0.35+Math.sin(tempo*2+c.t)*0.1,0.42,0.42,'#ffcf3f',c.t);
-  }
-  for(const c of crates){
-    const d=visible(c.x,c.y,0.6); if(d<0||d>100) continue;
-    push(5,c,d,c.x,c.y,0,0,0,'',0);
-  }
-  for(const v of vehicles){
-    if(P.veh===v&&!tps) continue;
-    const d=visible(v.x,v.y,Math.max(v.d.l,v.d.w)*0.6); if(d<0) continue;
-    push(1,v,d,0,0,0,0,0,'',0);
-  }
-  for(const c of traffic){
-    const x=c.vert?c.line:c.pos, y=c.vert?c.pos:c.line;
-    const d=visible(x,y,4); if(d<0||d>130) continue;
-    if(!c._v) c._v={x:0,y:0,z:0,ang:0,rot:0,col:c.col,type:c.type,d:VEHDEF[c.type],sp:0};
-    c._v.x=x; c._v.y=y; c._v.sp=c.sp; c._v.wroll=c.pos*c.dir/0.32;
-    c._v.ang=c.vert?(c.dir>0?Math.PI*0.5:-Math.PI*0.5):(c.dir>0?0:Math.PI);
-    push(1,c._v,d,0,0,0,0,0,'',0);
-  }
-  for(const p of peds){
-    const q=pedPos(p);
-    const d=visible(q[0],q[1],0.6); if(d<0||d>110) continue;
-    push(2,p,d,q[0],q[1],0,0.62,1.72,p.col,tempo*7+p.t*20);
-  }
-  if(tps&&!P.veh){
-    const d=visible(P.x,P.y,0.6);
-    if(d>=0) push(2,P,d,P.x,P.y,P.z,0.66,1.78,P.hurt>0?'#d0453c':'#3d7fd6',P.bob*2);
-  }
-  for(const s of shops){
-    const d=visible(s.x,s.y,1.5); if(d<0||d>120) continue;
-    push(6,s,d>0.8?d-0.8:0,s.x,s.y,4.3,2.8,1.5,s.c,s.e);
-  }
-  if(job){
-    const t=job.stage===0?job.from:job.to;
-    const d=visible(t.x,t.y,1);
-    if(d>=0) push(7,t,d>1?d-1:0,t.x,t.y,6.8+Math.sin(tempo*2)*0.4,1.6,1.6,job.stage===0?'\u{1F4E6}':'\u{1F3C1}',0);
-  }
-  for(const p of parts){
-    const d=visible(p.x,p.y,0.3); if(d<0||d>120) continue;
-    push(8,p,d>0.5?d-0.5:0,p.x,p.y,p.z,p.r*3,p.r*3,p.c,p.life);
-  }
-}
-const KIND={2:'person',3:'tree',4:'coin',6:'sign',7:'emoji',8:'part'};
-const PELLI=['#f0c9a0','#e8b98c','#d9a273','#b9855c','#8d5f3d','#6d4630'];
-function drawEntry(e){
-  switch(e.k){
-    case 0: drawBuilding(e.o,e.d); break;
-    case 1: drawVehicle(e.o,e.d); break;
-    case 2: {
-      if(e.d<30&&personeSolide>0){
-        personeSolide--;
-        const o=e.o, pelle=PELLI[Math.floor(hash2(Math.round(e.x*3),Math.round(e.y*3))*PELLI.length)%PELLI.length];
-        const ang=(o===P)?P.yaw:pedAng(o);
-        personaSolida(e.x,e.y,e.z,ang,e.s,e.c,pelle,e.d);
-      } else spriteAt(e.x,e.y,e.z,e.w,e.h,'person',e.c,e.s,e.d);
-      break;}
-    case 3: {
-      if(e.d<70) alberoSolido(e.o,e.d);
-      else spriteAt(e.x,e.y,e.z,e.w,e.h,'tree',e.c,e.s,e.d);
-      break;}
-    case 5: {
-      const cs=e.o;
-      boxRot(cs.x,cs.y,0.16,0.72,0.72,0.72,fog('#a8783f',e.d),0.3);
-      if(e.d<28){
-        boxRot(cs.x,cs.y,0.34,0.76,0.76,0.1,fog('#8a5f31',e.d),0.3);
-        boxRot(cs.x,cs.y,0.7,0.78,0.78,0.08,fog('#c08f4e',e.d),0.3);
-      }
-      break;}
-    case 11:{                                   // semaforo
-      const sm=e.o;
-      boxRot(sm.x,sm.y,0,0.22,0.22,3.1,fog('#3a4048',e.d),0);
-      boxRot(sm.x,sm.y,3.1,0.42,0.34,1.05,fog('#2b3138',e.d),0);
-      if(e.d<40){
-        const acceso=(Math.floor(tempo*0.35+sm.a*3)%3);
-        const luci=['#e04a3a','#e8c23a','#48c86a'];
-        for(let i=0;i<3;i++){
-          const on=(i===acceso);
-          const cz=3.9-i*0.3;
-          const cc=on?luci[i]:shade(luci[i],0.28);
-          boxRot(sm.x-0.2,sm.y,cz,0.06,0.2,0.2,fog(cc,e.d),0);
-          boxRot(sm.x+0.2,sm.y,cz,0.06,0.2,0.2,fog(cc,e.d),0);
-          boxRot(sm.x,sm.y-0.19,cz,0.2,0.06,0.2,fog(cc,e.d),0);
-          boxRot(sm.x,sm.y+0.19,cz,0.2,0.06,0.2,fog(cc,e.d),0);
-        }
-      }
-      break;}
-    case 12:{                                   // panchina
-      const pa=e.o, c=fog('#8a6640',e.d), m=fog('#4b5058',e.d);
-      boxRot(pa.x,pa.y,0.42,1.7,0.5,0.09,c,pa.a);
-      boxRot(pa.x-Math.sin(pa.a)*0.24,pa.y+Math.cos(pa.a)*0.24,0.5,1.7,0.09,0.5,c,pa.a);
-      boxRot(pa.x+Math.cos(pa.a)*0.7,pa.y+Math.sin(pa.a)*0.7,0,0.1,0.44,0.42,m,pa.a);
-      boxRot(pa.x-Math.cos(pa.a)*0.7,pa.y-Math.sin(pa.a)*0.7,0,0.1,0.44,0.42,m,pa.a);
-      break;}
-    case 13:{                                   // cassonetto
-      const cs=e.o;
-      boxRot(cs.x,cs.y,0.12,1.25,0.85,1.05,fog(cs.c,e.d),0);
-      boxRot(cs.x,cs.y,1.17,1.3,0.9,0.1,fog(shade(cs.c,1.3),e.d),0);
-      boxRot(cs.x-0.5,cs.y-0.36,0,0.16,0.16,0.14,fog('#23262b',e.d),0);
-      boxRot(cs.x+0.5,cs.y-0.36,0,0.16,0.16,0.14,fog('#23262b',e.d),0);
-      break;}
-    case 9:{
-      const l=e.o;
-      boxRot(l.x,l.y,0,0.2,0.2,4.6,fog('#4a4f57',e.d),0);
-      boxRot(l.x+0.45,l.y,4.5,1.0,0.24,0.2,fog('#6e747d',e.d),0);
-      spriteAt(l.x+0.9,l.y,4.45,0.55,0.55,'glow','#fff3c4',0,e.d);
-      break;}
-    default: spriteAt(e.x,e.y,e.z,e.w,e.h,KIND[e.k],e.c,e.s,e.d);
-  }
-}
-function spriteAt(x,y,z,w,h,kind,col,extra,d){
-  const dz=camZ(x,y,z); if(dz<NEAR) return;
-  const sc=F/dz, px=VW*0.5+camX(x,y)*sc, pyb=VH*0.5-camY(x,y,z)*sc;
-  const H=h*sc, W=w*sc;
-  if(px<-W-40||px>VW+W+40||pyb<-H-60||pyb-H>VH+60) return;
-  const c=fog(col,d);
-  switch(kind){
-    case 'coin':
-      ctx.fillStyle=c; ctx.beginPath();
-      ctx.ellipse(px,pyb-H*0.5,Math.max(0.8,W*0.5*Math.abs(Math.cos(tempo*2+extra))+0.5),Math.max(0.8,H*0.5),0,0,TAU);
-      ctx.fill(); break;
-    case 'glow':{
-      const r=Math.max(4,W*1.6);
-      const g=ctx.createRadialGradient(px,pyb,0,px,pyb,r);
-      g.addColorStop(0,'rgba(255,244,205,.55)'); g.addColorStop(1,'rgba(255,244,205,0)');
-      ctx.fillStyle=g; ctx.beginPath(); ctx.arc(px,pyb,r,0,TAU); ctx.fill(); break;}
-    case 'person':{
-      ctx.fillStyle=fog('#2b2f36',d);
-      const sw=Math.sin(extra)*W*0.32;
-      ctx.fillRect(px-W*0.30+sw*0.5,pyb-H*0.46,Math.max(1,W*0.22),H*0.46);
-      ctx.fillRect(px+W*0.08-sw*0.5,pyb-H*0.46,Math.max(1,W*0.22),H*0.46);
-      ctx.fillStyle=c;
-      ctx.beginPath(); ctx.ellipse(px,pyb-H*0.63,Math.max(1,W*0.48),Math.max(1,H*0.22),0,0,TAU); ctx.fill();
-      ctx.fillStyle=fog('#eec8a2',d);
-      ctx.beginPath(); ctx.arc(px,pyb-H*0.89,Math.max(1,W*0.26),0,TAU); ctx.fill();
-      break;}
-    case 'tree':
-      ctx.fillStyle=fog('#6b4b2f',d);
-      ctx.fillRect(px-Math.max(1,W*0.08),pyb-H*0.45,Math.max(1.5,W*0.16),H*0.45);
-      ctx.fillStyle=c;
-      ctx.beginPath(); ctx.arc(px,pyb-H*0.70,Math.max(2,W*0.48),0,TAU); ctx.fill();
-      ctx.beginPath(); ctx.arc(px-W*0.28,pyb-H*0.52,Math.max(2,W*0.32),0,TAU); ctx.fill();
-      ctx.beginPath(); ctx.arc(px+W*0.28,pyb-H*0.54,Math.max(2,W*0.30),0,TAU); ctx.fill();
-      break;
-    case 'sign':
-      ctx.fillStyle=c; ctx.fillRect(px-W*0.5,pyb-H,W,H);
-      ctx.strokeStyle='rgba(0,0,0,.35)'; ctx.lineWidth=Math.max(1,W*0.03); ctx.strokeRect(px-W*0.5,pyb-H,W,H);
-      if(H>14){ctx.font=Math.round(H*0.68)+'px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';
-        ctx.fillText(extra,px,pyb-H*0.5);}
-      break;
-    case 'emoji':
-      if(H>9){ctx.font=Math.round(H)+'px system-ui';ctx.textAlign='center';ctx.textBaseline='alphabetic';
-        ctx.fillText(col,px,pyb);}
-      break;
-    case 'part':
-      ctx.globalAlpha=clamp(extra,0,1); ctx.fillStyle=col;
-      ctx.beginPath(); ctx.arc(px,pyb,Math.max(0.8,W*0.5),0,TAU); ctx.fill(); ctx.globalAlpha=1;
-      break;
-  }
-}
-function drawBuilding(b,d){
-  const x0=b.x,y0=b.y,x1=b.x+b.w,y1=b.y+b.d;
-  const casa = b.h<13.5 && hash2(Math.round(b.x),Math.round(b.y))>0.28;   // casetta col tetto a falde
-  const zt = casa ? b.h-1.0 : b.h;                                        // quota di gronda
-  const vicino = d<40, moltoVicino = d<22, sfuma = d<26;
-  const sides=[
-    [x0,y0,x1,y0,SH_N,1,y0,CAM.y<y0],
-    [x1,y0,x1,y1,SH_E,0,x1,CAM.x>x1],
-    [x1,y1,x0,y1,SH_S,1,y1,CAM.y>y1],
-    [x0,y1,x0,y0,SH_W,0,x0,CAM.x<x0]];
-  for(let k=0;k<4;k++){
-    const sd=sides[k];
-    if(!sd[7]) continue;
-    const ax0=sd[0],ay0=sd[1],ax1=sd[2],ay1=sd[3];
-    const base=shade(b.wall,sd[4]);
-    /* muro con occlusione in basso e luce in alto: è ciò che dà volume */
-    if(sfuma) quadG(ax0,ay0,0,ax1,ay1,0,ax1,ay1,zt,ax0,ay0,zt, fog(shade(base,0.72),d), fog(shade(base,1.06),d));
-    else quad(ax0,ay0,0,ax1,ay1,0,ax1,ay1,zt,ax0,ay0,zt, fog(shade(base,0.93),d));
-    const nx=(sd[5]===0?(CAM.x>sd[6]?0.05:-0.05):0), ny=(sd[5]===1?(CAM.y>sd[6]?0.05:-0.05):0);
-    const len=Math.hypot(ax1-ax0,ay1-ay0);
-    /* zoccolo in pietra */
-    if(vicino) quad(ax0+nx,ay0+ny,0,ax1+nx,ay1+ny,0,ax1+nx,ay1+ny,0.85,ax0+nx,ay0+ny,0.85, fog(shade(base,0.62),d));
-    /* vetrina del negozio */
-    if(b.shop&&vicino){
-      const ax=lerp(ax0,ax1,0.16)+nx, ay=lerp(ay0,ay1,0.16)+ny;
-      const bx=lerp(ax0,ax1,0.84)+nx, by=lerp(ay0,ay1,0.84)+ny;
-      if(sfuma) quadG(ax,ay,0.05,bx,by,0.05,bx,by,3.1,ax,ay,3.1, fog(shade(b.shop.c,0.8),d), fog(shade(b.shop.c,1.05),d));
-      else quad(ax,ay,0.05,bx,by,0.05,bx,by,3.1,ax,ay,3.1, fog(b.shop.c,d));
-      const dx0=lerp(ax,bx,0.34), dy0=lerp(ay,by,0.34), dx1=lerp(ax,bx,0.66), dy1=lerp(ay,by,0.66);
-      quad(dx0+nx,dy0+ny,0.06,dx1+nx,dy1+ny,0.06,dx1+nx,dy1+ny,2.35,dx0+nx,dy0+ny,2.35, fog('#252a32',d));
-      // tendina
-      quad(ax+nx*3,ay+ny*3,3.15, bx+nx*3,by+ny*3,3.15, bx+nx*14,by+ny*14,2.75, ax+nx*14,ay+ny*14,2.75, fog(shade(b.shop.c,1.12),d));
-    }
-    /* marcapiano e finestre */
-    if(winBudget>0&&vicino&&b.h>4.5){
-      const flo=b.floors, hp=zt/flo;
-      const nw=Math.max(1,Math.round(len/3.4));
-      const telaio=fog('#2e3238',d), dav=fog(shade(base,1.22),d);
-      for(let fl=(b.shop?1:0);fl<flo;fl++){
-        const zb=fl*hp+0.95, zh=Math.min(hp*0.52,2.0);
-        if(zb+zh>zt-0.35) break;
-        if(moltoVicino&&fl>0)   // fascia marcapiano
-          quad(ax0+nx*2,ay0+ny*2,fl*hp-0.08, ax1+nx*2,ay1+ny*2,fl*hp-0.08,
-               ax1+nx*2,ay1+ny*2,fl*hp+0.12, ax0+nx*2,ay0+ny*2,fl*hp+0.12, fog(shade(base,1.16),d));
-        for(let i=0;i<nw;i++){
-          if(--winBudget<=0) return;
-          const t0=(i+0.22)/nw, t1=(i+0.78)/nw;
-          const fx0=lerp(ax0,ax1,t0)+nx, fy0=lerp(ay0,ay1,t0)+ny;
-          const fx1=lerp(ax0,ax1,t1)+nx, fy1=lerp(ay0,ay1,t1)+ny;
-          quad(fx0,fy0,zb,fx1,fy1,zb,fx1,fy1,zb+zh,fx0,fy0,zb+zh,telaio);          // telaio
-          const g0=lerp(t0,t1,0.12), g1=lerp(t0,t1,0.88);
-          const gx0=lerp(ax0,ax1,g0)+nx*2, gy0=lerp(ay0,ay1,g0)+ny*2;
-          const gx1=lerp(ax0,ax1,g1)+nx*2, gy1=lerp(ay0,ay1,g1)+ny*2;
-          if(sfuma) quadG(gx0,gy0,zb+0.09,gx1,gy1,zb+0.09,gx1,gy1,zb+zh-0.09,gx0,gy0,zb+zh-0.09,
-                fog('#2b3a49',d), fog(b.wcol,d));                                   // vetro: cielo riflesso
-          else quad(gx0,gy0,zb+0.09,gx1,gy1,zb+0.09,gx1,gy1,zb+zh-0.09,gx0,gy0,zb+zh-0.09, fog(b.wcol,d));
-          if(moltoVicino)
-            quad(fx0+nx*3,fy0+ny*3,zb-0.16, fx1+nx*3,fy1+ny*3,zb-0.16,
-                 fx1+nx*3,fy1+ny*3,zb-0.02, fx0+nx*3,fy0+ny*3,zb-0.02, dav);        // davanzale
-        }
-      }
-    }
-  }
-  /* ---- coperture ---- */
-  if(casa){
-    const o=0.45, rx0=x0-o, ry0=y0-o, rx1=x1+o, ry1=y1+o;
-    const colmo=b.h+0.9, tetto=b.roofTile||(b.roofTile=hash2(Math.round(b.x)+3,Math.round(b.y)+11)>0.5?'#8d4b3a':'#6b6f78');
-    const lungoX=(b.w>=b.d);
-    const near=[], far=[];
-    if(lungoX){
-      const ym=(y0+y1)*0.5;
-      const A=[rx0,ry0,zt, rx1,ry0,zt, rx1,ym,colmo, rx0,ym,colmo, shade(tetto,CAM.y<ym?1.12:0.8)];
-      const B=[rx0,ry1,zt, rx1,ry1,zt, rx1,ym,colmo, rx0,ym,colmo, shade(tetto,CAM.y>ym?1.12:0.8)];
-      (CAM.y<ym?far:near).push(B); (CAM.y<ym?near:far).push(A);
-      if(CAM.x<x0) tri(rx0,ry0,zt,rx0,ry1,zt,rx0,ym,colmo,fog(shade(b.wall,SH_W*0.95),d));
-      if(CAM.x>x1) tri(rx1,ry0,zt,rx1,ry1,zt,rx1,ym,colmo,fog(shade(b.wall,SH_E*0.95),d));
-    } else {
-      const xm=(x0+x1)*0.5;
-      const A=[rx0,ry0,zt, rx0,ry1,zt, xm,ry1,colmo, xm,ry0,colmo, shade(tetto,CAM.x<xm?1.12:0.8)];
-      const B=[rx1,ry0,zt, rx1,ry1,zt, xm,ry1,colmo, xm,ry0,colmo, shade(tetto,CAM.x>xm?1.12:0.8)];
-      (CAM.x<xm?far:near).push(B); (CAM.x<xm?near:far).push(A);
-      if(CAM.y<y0) tri(rx0,ry0,zt,rx1,ry0,zt,xm,ry0,colmo,fog(shade(b.wall,SH_N*0.95),d));
-      if(CAM.y>y1) tri(rx0,ry1,zt,rx1,ry1,zt,xm,ry1,colmo,fog(shade(b.wall,SH_S*0.95),d));
-    }
-    for(const f of far.concat(near)){
-      if(sfuma) quadG(f[0],f[1],f[2],f[3],f[4],f[5],f[6],f[7],f[8],f[9],f[10],f[11], fog(shade(f[12],0.92),d), fog(f[12],d));
-      else quad(f[0],f[1],f[2],f[3],f[4],f[5],f[6],f[7],f[8],f[9],f[10],f[11], fog(f[12],d));
-    }
-    if(d<55){                                    // comignolo
-      const cxx=lerp(x0,x1,0.3), cyy=lerp(y0,y1,0.3);
-      boxRot(cxx,cyy,zt,0.8,0.8,2.0,fog('#8a5a4a',d),0);
-      boxRot(cxx,cyy,zt+2.0,1.0,1.0,0.22,fog('#5c5f66',d),0);
-    }
-  } else {
-    if(CAM.z>b.h){
-      quad(x0,y0,b.h,x1,y0,b.h,x1,y1,b.h,x0,y1,b.h,fog(shade(b.roof,1.0),d));
-      if(d<70){
-        boxRot(x0+2.6,y0+2.6,b.h,2.6,2.2,1.2,fog('#7d838c',d),0);
-        boxRot(x1-3.0,y1-2.4,b.h,1.6,1.6,1.0,fog('#8b9199',d),0);
-      }
-    }
-    if(d<80){                                    // cornicione e parapetto
-      const cor=fog(shade(b.wall,1.2),d);
-      boxRot((x0+x1)*0.5,y0-0.09,b.h-0.4,b.w+0.34,0.34,0.4,cor,0);
-      boxRot((x0+x1)*0.5,y1+0.09,b.h-0.4,b.w+0.34,0.34,0.4,cor,0);
-      boxRot(x0-0.09,(y0+y1)*0.5,b.h-0.4,0.34,b.d+0.34,0.4,cor,0);
-      boxRot(x1+0.09,(y0+y1)*0.5,b.h-0.4,0.34,b.d+0.34,0.4,cor,0);
-      const par=fog(shade(b.wall,0.95),d);
-      boxRot((x0+x1)*0.5,y0+0.2,b.h,b.w,0.32,0.75,par,0);
-      boxRot((x0+x1)*0.5,y1-0.2,b.h,b.w,0.32,0.75,par,0);
-      boxRot(x0+0.2,(y0+y1)*0.5,b.h,0.32,b.d,0.75,par,0);
-      boxRot(x1-0.2,(y0+y1)*0.5,b.h,0.32,b.d,0.75,par,0);
-    }
-  }
+  STATICO.length=0;
+  const add=(g,tex,o)=>{const m=caricaGeo(g,tex,o); if(m) STATICO.push(m);};
+  add(asf,TEX.asfalto); add(lin,TEX.linea); add(mar,TEX.marciapiede); add(erb,TEX.erba);
+  add(pia,TEX.piano); add(vet,TEX.vetrina,{spec:0.35}); add(fac,TEX.facciata,{spec:0.12});
+  add(teg,TEX.tegole); add(ghi,TEX.ghiaia); add(int,TEX.intonaco);
+  add(omb,TEX.piatta,{ombra:true,piatto:1});
 }
 
-/* ---- persone in tre dimensioni, per quando sono vicine ---- */
-function personaSolida(x,y,z,ang,fase,col,pelle,d){
-  const sw=Math.sin(fase)*0.30, sw2=-sw;
-  const c=Math.cos(ang), s=Math.sin(ang);
-  const anca=0.92, spalla=1.42, testa=1.60;
-  const px=(a,b)=>x+c*a-s*b, py=(a,b)=>y+s*a+c*b;
-  const pant=shade(col,0.55);
-  arto(px(sw,0.11),py(sw,0.11),z, px(0,0.10),py(0,0.10),z+anca, 0.17,0.20, fog(pant,d), ang);
-  arto(px(sw2,-0.11),py(sw2,-0.11),z, px(0,-0.10),py(0,-0.10),z+anca, 0.17,0.20, fog(pant,d), ang);
-  arto(px(0,0),py(0,0),z+anca-0.02, px(0,0),py(0,0),z+spalla, 0.42,0.26, fog(col,d), ang);
-  arto(px(sw2*0.9,0.30),py(sw2*0.9,0.30),z+spalla-0.03, px(sw2*0.2,0.27),py(sw2*0.2,0.27),z+0.96, 0.14,0.16, fog(shade(col,0.86),d), ang);
-  arto(px(sw*0.9,-0.30),py(sw*0.9,-0.30),z+spalla-0.03, px(sw*0.2,-0.27),py(sw*0.2,-0.27),z+0.96, 0.14,0.16, fog(shade(col,0.86),d), ang);
-  arto(px(0,0),py(0,0),z+spalla, px(0,0),py(0,0),z+testa, 0.14,0.14, fog(pelle,d), ang);
-  arto(px(0,0),py(0,0),z+testa, px(0,0),py(0,0),z+testa+0.21, 0.23,0.21, fog(pelle,d), ang);
-  if(d<14){
-    const cap=shade(pelle,0.42);
-    arto(px(-0.02,0),py(-0.02,0),z+testa+0.14, px(-0.02,0),py(-0.02,0),z+testa+0.235, 0.245,0.225, fog(cap,d), ang);
+/* ---------- forme riusabili per gli oggetti che si muovono ---------- */
+const M={};
+function primitive(){
+  const b=new Geo();                                   // cubo unitario: 0..1 in z, -0.5..0.5 in x,y
+  b.box(-0.5,-0.5,0,1,1,1,1,1,1,1);
+  M.box=caricaGeo(b,TEX.piatta);
+  const c=new Geo(), N=14;                             // cilindro con asse Y (ruote)
+  for(let i=0;i<N;i++){
+    const a0=i/N*TAU, a1=(i+1)/N*TAU;
+    const x0=Math.cos(a0),z0=Math.sin(a0),x1=Math.cos(a1),z1=Math.sin(a1);
+    c.q(x0,-1,z0, x1,-1,z1, x1,1,z1, x0,1,z0, i/N,0,(i+1)/N,1, 1,1,1);
+    c.q(x0,1,z0, x1,1,z1, 0,1,0, 0,1,0, 0,0,1,1, 1,1,1);
+    c.q(x1,-1,z1, x0,-1,z0, 0,-1,0, 0,-1,0, 0,0,1,1, 1,1,1);
   }
-  ctx.save(); ctx.globalAlpha=0.22;                 // ombra ai piedi
-  quad(px(0.3+SOLX*0.5,0.3+SOLY*0.5),py(0.3+SOLX*0.5,0.3+SOLY*0.5),0.05,
-       px(0.3+SOLX*0.5,-0.3+SOLY*0.5),py(0.3+SOLX*0.5,-0.3+SOLY*0.5),0.05,
-       px(-0.3+SOLX*0.5,-0.3+SOLY*0.5),py(-0.3+SOLX*0.5,-0.3+SOLY*0.5),0.05,
-       px(-0.3+SOLX*0.5,0.3+SOLY*0.5),py(-0.3+SOLX*0.5,0.3+SOLY*0.5),0.05,'#0d1a24');
-  ctx.restore();
+  M.cil=caricaGeo(c,TEX.piatta);
+  const f=new Geo();                                   // tre quadrati incrociati: chioma
+  for(let i=0;i<3;i++){
+    const a=i/3*Math.PI, ca=Math.cos(a), sa=Math.sin(a);
+    f.q(-ca,-sa,-1, ca,sa,-1, ca,sa,1, -ca,-sa,1, 0,0,1,1, 1,1,1);
+    f.q(ca,sa,-1, -ca,-sa,-1, -ca,-sa,1, ca,sa,1, 0,0,1,1, 1,1,1);
+  }
+  f.q(-1,-1,0.55, 1,-1,0.55, 1,1,0.55, -1,1,0.55, 0,0,1,1, 1,1,1);
+  M.chioma=caricaGeo(f,TEX.chioma,{taglia:0.45});
+  const p=new Geo(); p.piano(-0.5,-0.5,1,1,0,1,1,1,1);
+  M.quad=caricaGeo(p,TEX.piatta);
+  /* auto: profilo a sezioni, coordinate normalizzate (lunghezza x, larghezza y, altezza z) */
+  const anelli=[{z:0.15,a:0.44,b:0.38},{z:0.29,a:0.50,b:0.50},{z:0.50,a:0.495,b:0.50},
+                {z:0.63,a:0.45,b:0.455},{z:0.73,a:0.31,b:0.40,dx:-0.03},{z:1.0,a:0.24,b:0.34,dx:-0.05}];
+  M.auto=caricaGeo(profilo(anelli,true),TEX.piatta,{spec:0.55});
+  const vetri=[{z:0.755,a:0.30,b:0.405,dx:-0.03},{z:0.95,a:0.25,b:0.35,dx:-0.045}];
+  M.autoVetri=caricaGeo(profilo(vetri,false),TEX.vetroAuto,{spec:1.0});
 }
-/* ---- albero con chioma a volume ---- */
-function alberoSolido(t,d){
-  const dz=camZ(t.x,t.y,t.h*0.6); if(dz<NEAR) return;
-  ctx.save(); ctx.globalAlpha=0.25;
-  const ox=SOLX*t.h*0.4, oy=SOLY*t.h*0.4;
-  quad(t.x+ox-t.r,t.y+oy-t.r*0.8,0.07, t.x+ox+t.r,t.y+oy-t.r*0.8,0.07,
-       t.x+ox+t.r,t.y+oy+t.r*0.8,0.07, t.x+ox-t.r,t.y+oy+t.r*0.8,0.07,'#0d1a24');
-  ctx.restore();
-  arto(t.x,t.y,0, t.x+t.r*0.08,t.y,t.h*0.55, 0.34,0.34, fog('#6b4b2f',d), 0.4);
-  const sc=F/dz;
-  const blob=(bx,by,bz,r,c1,c2)=>{
-    const zz=camZ(bx,by,bz); if(zz<NEAR) return;
-    const q=F/zz, X=VW*0.5+camX(bx,by)*q, Y=VH*0.5-camY(bx,by,bz)*q, R=r*q;
-    if(R<1.2||X<-R-30||X>VW+R+30) return;
-    const g=ctx.createRadialGradient(X-R*0.35,Y-R*0.4,R*0.08,X,Y,R);
-    g.addColorStop(0,c1); g.addColorStop(1,c2);
-    ctx.fillStyle=g; ctx.beginPath(); ctx.arc(X,Y,R,0,TAU); ctx.fill();
+/* costruisce una superficie raccordata fra sezioni ottagonali */
+function profilo(anelli,chiudi){
+  const g=new Geo();
+  const punti=(r)=>{
+    const A=r.a,B=r.b,C=Math.min(A,B)*0.34,dx=r.dx||0;
+    return [[A+dx,B-C],[A+dx,-B+C],[A-C+dx,-B],[-A+C+dx,-B],
+            [-A+dx,-B+C],[-A+dx,B-C],[-A+C+dx,B],[A-C+dx,B]];
   };
-  const v=hash2(Math.round(t.x*4),Math.round(t.y*4));
-  const H=88+v*30, Sa=38+v*14;
-  const chiaro=fog('hsl('+H+','+Sa+'%,52%)',d), medio=fog('hsl('+H+','+Sa+'%,38%)',d), scuro=fog('hsl('+H+','+(Sa+6)+'%,26%)',d);
-  blob(t.x-t.r*0.52,t.y+t.r*0.28,t.h*0.58,t.r*0.62,medio,scuro);
-  blob(t.x+t.r*0.50,t.y-t.r*0.30,t.h*0.62,t.r*0.58,medio,scuro);
-  blob(t.x+t.r*0.20,t.y+t.r*0.42,t.h*0.72,t.r*0.52,chiaro,medio);
-  blob(t.x-t.r*0.18,t.y-t.r*0.38,t.h*0.76,t.r*0.50,medio,scuro);
-  blob(t.x,t.y,t.h*0.80,t.r*0.72,chiaro,medio);
-  void sc;
+  for(let k=1;k<anelli.length;k++){
+    const p0=punti(anelli[k-1]), p1=punti(anelli[k]);
+    const z0=anelli[k-1].z, z1=anelli[k].z;
+    for(let i=0;i<8;i++){
+      const j=(i+1)%8;
+      g.q(p0[j][0],p0[j][1],z0, p0[i][0],p0[i][1],z0, p1[i][0],p1[i][1],z1, p1[j][0],p1[j][1],z1,
+          i/8,z0,(i+1)/8,z1, 1,1,1);
+    }
+  }
+  if(chiudi){
+    const t=punti(anelli[anelli.length-1]), z=anelli[anelli.length-1].z;
+    for(let i=1;i<7;i++) g.q(t[0][0],t[0][1],z, t[i][0],t[i][1],z, t[i+1][0],t[i+1][1],z, t[0][0],t[0][1],z, 0,0,1,1, 1,1,1);
+    const b=punti(anelli[0]), z2=anelli[0].z;
+    for(let i=1;i<7;i++) g.q(b[0][0],b[0][1],z2, b[i+1][0],b[i+1][1],z2, b[i][0],b[i][1],z2, b[0][0],b[0][1],z2, 0,0,1,1, 1,1,1);
+  }
+  return g;
 }
 
-/* ---- poligono generico (per cerchi e sezioni curve) ---- */
-const gX=new Float64Array(18), gY=new Float64Array(18), gZ=new Float64Array(18);
-const hX=new Float64Array(36), hY=new Float64Array(36), hZ=new Float64Array(36);
-function polyN(n,xs,ys,zs,col){
-  for(let i=0;i<n;i++){gX[i]=camX(xs[i],ys[i]);gY[i]=camY(xs[i],ys[i],zs[i]);gZ[i]=camZ(xs[i],ys[i],zs[i]);}
-  let m=0;
-  for(let i=0;i<n;i++){
-    const j=(i+1)%n, az=gZ[i], bz=gZ[j];
-    if(az>=NEAR){hX[m]=gX[i];hY[m]=gY[i];hZ[m]=az;m++;}
-    if((az>=NEAR)!==(bz>=NEAR)){
-      const t=(NEAR-az)/(bz-az);
-      hX[m]=gX[i]+(gX[j]-gX[i])*t; hY[m]=gY[i]+(gY[j]-gY[i])*t; hZ[m]=NEAR; m++;
-    }
-  }
-  if(m<3) return;
-  ctx.beginPath();
-  for(let k=0;k<m;k++){
-    const sc=F/hZ[k], X=VW*0.5+hX[k]*sc, Y=VH*0.5-hY[k]*sc;
-    k?ctx.lineTo(X,Y):ctx.moveTo(X,Y);
-  }
-  ctx.closePath(); ctx.fillStyle=col; ctx.fill();
+/* ---------- disegno ---------- */
+let lastObjs=0, lastCalls=0;
+function usaMesh(m){
+  gl.bindBuffer(gl.ARRAY_BUFFER,m.buf);
+  gl.vertexAttribPointer(LOC.aPos,3,gl.FLOAT,false,44,0);
+  gl.vertexAttribPointer(LOC.aNor,3,gl.FLOAT,false,44,12);
+  gl.vertexAttribPointer(LOC.aUV ,2,gl.FLOAT,false,44,24);
+  gl.vertexAttribPointer(LOC.aCol,3,gl.FLOAT,false,44,32);
+  gl.bindTexture(gl.TEXTURE_2D,m.tex);
+  gl.uniform1f(LOC.uSpec,m.spec||0);
+  gl.uniform1f(LOC.uAlpha,m.alpha===undefined?1:m.alpha);
+  gl.uniform1f(LOC.uTaglia,m.taglia||0.01);
+  gl.uniform1f(LOC.uPiatto,m.piatto||0);
 }
-/* luce: stessa direzione del sole del cielo */
-const SUN=0.9;
-function lit(nx,ny,extra){
-  const l=Math.atan2(ny,nx);
-  return 0.80+0.32*Math.max(0,Math.cos(l-SUN))+(extra||0);
+function disegna(m,x,y,z,yaw,sx,sy,sz,r,g,b){
+  mModel(MMOD,x,y,z,yaw,sx,sy,sz);
+  gl.uniformMatrix4fv(LOC.uModel,false,MMOD);
+  gl.uniform3f(LOC.uTint,r,g,b);
+  gl.drawArrays(gl.TRIANGLES,0,m.n);
+  lastCalls++;
 }
+/* ruota: rotazione attorno all'asse trasversale del veicolo */
+function disegnaRuota(x,y,z,yaw,roll,rag,larg,r,g,b){
+  disegnaCil(x,y,z,yaw,roll,rag*0.46,larg*0.92,0.50,0.52,0.56);   // cerchione
 
-/* ---- RUOTA TONDA: prisma a molte facce, con cerchione e mozzo ---- */
-const _wx=new Float64Array(16), _wy=new Float64Array(16), _wz=new Float64Array(16);
-const _wx2=new Float64Array(16), _wy2=new Float64Array(16), _wz2=new Float64Array(16);
-function wheel(cx,cy,cz,r,w,ang,roll,d,fine){
-  const N=fine?12:8;
-  const fxv=Math.cos(ang), fyv=Math.sin(ang);      // avanti
-  const ux=-Math.sin(ang), uy=Math.cos(ang);       // asse della ruota
-  const hw=w*0.5;
-  for(let k=0;k<N;k++){
-    const a=roll+k*TAU/N, ca=Math.cos(a), sa=Math.sin(a);
-    _wx[k]=cx+fxv*r*ca; _wy[k]=cy+fyv*r*ca; _wz[k]=cz+r*sa;
-  }
-  const gomma=fog('#191c21',d);
-  for(let k=0;k<N;k++){
-    const j=(k+1)%N;
-    const a=roll+(k+0.5)*TAU/N, ca=Math.cos(a), sa=Math.sin(a);
-    const nx=fxv*ca, ny=fyv*ca, nz=sa;            // normale radiale
-    const mx=(_wx[k]+_wx[j])*0.5, my=(_wy[k]+_wy[j])*0.5, mz=(_wz[k]+_wz[j])*0.5;
-    if((CAM.x-mx)*nx+(CAM.y-my)*ny+(CAM.z-mz)*nz<=0) continue;
-    const f=0.72+0.30*Math.max(0,sa)+0.10*Math.max(0,Math.cos(Math.atan2(ny,nx)-SUN));
-    quad(_wx[k]+ux*hw,_wy[k]+uy*hw,_wz[k], _wx[j]+ux*hw,_wy[j]+uy*hw,_wz[j],
-         _wx[j]-ux*hw,_wy[j]-uy*hw,_wz[j], _wx[k]-ux*hw,_wy[k]-uy*hw,_wz[k], shade(gomma,f));
-  }
-  const side=((CAM.x-cx)*ux+(CAM.y-cy)*uy)>=0?hw:-hw;   // fianco rivolto a noi
-  for(let k=0;k<N;k++){_wx2[k]=_wx[k]+ux*side;_wy2[k]=_wy[k]+uy*side;_wz2[k]=_wz[k];}
-  polyN(N,_wx2,_wy2,_wz2,shade(gomma,1.15));
-  if(d<26){                                            // cerchione + mozzo
-    for(let k=0;k<N;k++){
-      const a=roll+k*TAU/N, ca=Math.cos(a), sa=Math.sin(a);
-      _wx2[k]=cx+fxv*r*0.58*ca+ux*(side*1.02); _wy2[k]=cy+fyv*r*0.58*ca+uy*(side*1.02); _wz2[k]=cz+r*0.58*sa;
-    }
-    polyN(N,_wx2,_wy2,_wz2,fog('#aab0b8',d));
-    for(let k=0;k<N;k++){
-      const a=roll+k*TAU/N, ca=Math.cos(a), sa=Math.sin(a);
-      _wx2[k]=cx+fxv*r*0.2*ca+ux*(side*1.04); _wy2[k]=cy+fyv*r*0.2*ca+uy*(side*1.04); _wz2[k]=cz+r*0.2*sa;
-    }
-    polyN(N,_wx2,_wy2,_wz2,fog('#6f757d',d));
-  }
+  const c=Math.cos(yaw),s=Math.sin(yaw),cr=Math.cos(roll),sr=Math.sin(roll);
+  MMOD[0]=c*cr*rag; MMOD[1]=s*cr*rag; MMOD[2]=-sr*rag; MMOD[3]=0;
+  MMOD[4]=-s*larg;  MMOD[5]=c*larg;   MMOD[6]=0;       MMOD[7]=0;
+  MMOD[8]=c*sr*rag; MMOD[9]=s*sr*rag; MMOD[10]=cr*rag; MMOD[11]=0;
+  MMOD[12]=x; MMOD[13]=y; MMOD[14]=z; MMOD[15]=1;
+  gl.uniformMatrix4fv(LOC.uModel,false,MMOD);
+  gl.uniform3f(LOC.uTint,r,g,b);
+  gl.drawArrays(gl.TRIANGLES,0,M.cil.n);
+  lastCalls++;
 }
-
-/* ---- carrozzeria curva: sezioni sovrapposte raccordate (loft) ---- */
-const _r0x=new Float64Array(10),_r0y=new Float64Array(10),_r0z=new Float64Array(10);
-const _r1x=new Float64Array(10),_r1y=new Float64Array(10),_r1z=new Float64Array(10);
-function ringPts(v,c,s,r,n,X,Y,Z){
-  const A=r.a, B=r.b, C=Math.min(A,B)*0.34, dx=r.dx||0;
-  const loc = n===8
-    ? [[A,B-C],[A,-B+C],[A-C,-B],[-A+C,-B],[-A,-B+C],[-A,B-C],[-A+C,B],[A-C,B]]
-    : [[A,B],[A,-B],[-A,-B],[-A,B]];
-  for(let i=0;i<n;i++){
-    const lx=loc[i][0]+dx, ly=loc[i][1];
-    X[i]=v.x+c*lx-s*ly; Y[i]=v.y+s*lx+c*ly; Z[i]=v.z+r.z;
-  }
+function disegnaCil(x,y,z,yaw,roll,rag,larg,r,g,b){
+  const c=Math.cos(yaw),s=Math.sin(yaw),cr=Math.cos(roll),sr=Math.sin(roll);
+  MMOD[0]=c*cr*rag; MMOD[1]=s*cr*rag; MMOD[2]=-sr*rag; MMOD[3]=0;
+  MMOD[4]=-s*larg;  MMOD[5]=c*larg;   MMOD[6]=0;       MMOD[7]=0;
+  MMOD[8]=c*sr*rag; MMOD[9]=s*sr*rag; MMOD[10]=cr*rag; MMOD[11]=0;
+  MMOD[12]=x; MMOD[13]=y; MMOD[14]=z; MMOD[15]=1;
+  gl.uniformMatrix4fv(LOC.uModel,false,MMOD);
+  gl.uniform3f(LOC.uTint,r,g,b);
+  gl.drawArrays(gl.TRIANGLES,0,M.cil.n);
+  lastCalls++;
 }
-function loft(v,c,s,rings,n,col,d,extraLight){
-  ringPts(v,c,s,rings[0],n,_r0x,_r0y,_r0z);
-  for(let k=1;k<rings.length;k++){
-    ringPts(v,c,s,rings[k],n,_r1x,_r1y,_r1z);
-    for(let i=0;i<n;i++){
-      const j=(i+1)%n;
-      const nx=_r0y[j]-_r0y[i], ny=-(_r0x[j]-_r0x[i]);
-      const mx=(_r0x[i]+_r0x[j])*0.5, my=(_r0y[i]+_r0y[j])*0.5;
-      if((CAM.x-mx)*nx+(CAM.y-my)*ny<=0) continue;
-      const inclina=(rings[k].a<rings[k-1].a||rings[k].b<rings[k-1].b)?0.09:0;
-      quad(_r0x[i],_r0y[i],_r0z[i], _r0x[j],_r0y[j],_r0z[j],
-           _r1x[j],_r1y[j],_r1z[j], _r1x[i],_r1y[i],_r1z[i],
-           shade(col,lit(nx,ny,inclina+(extraLight||0))));
-    }
-    for(let i=0;i<n;i++){_r0x[i]=_r1x[i];_r0y[i]=_r1y[i];_r0z[i]=_r1z[i];}
+function rgbN(col){const c=rgbOf(col);return [c[0]/255,c[1]/255,c[2]/255];}
+const _cn={};
+function tint(col){let v=_cn[col]; if(!v){v=rgbN(col);_cn[col]=v;} return v;}
+function rgbOf(col){
+  if(col.charCodeAt(0)===35){const n=parseInt(col.slice(1),16);return [n>>16,(n>>8)&255,n&255];}
+  const m=/(\d+)[, ]+(\d+)[, ]+(\d+)/.exec(col);
+  if(m) return [+m[1],+m[2],+m[3]];
+  const h=/hsl\((\d+),\s*(\d+)%,\s*(\d+)%\)/.exec(col);
+  if(h){
+    const H=+h[1]/360,Sx=+h[2]/100,Lx=+h[3]/100;
+    const q=Lx<0.5?Lx*(1+Sx):Lx+Sx-Lx*Sx, p2=2*Lx-q;
+    const f=(t)=>{t=(t+1)%1; return t<1/6?p2+(q-p2)*6*t:t<0.5?q:t<2/3?p2+(q-p2)*(2/3-t)*6:p2;};
+    return [Math.round(f(H+1/3)*255),Math.round(f(H)*255),Math.round(f(H-1/3)*255)];
   }
-  if(CAM.z>_r0z[0]) polyN(n,_r0x,_r0y,_r0z,shade(col,1.2));   // tetto
+  return [128,128,128];
 }
-
-function drawVehicle(v,d){
-  const def=v.d, c=Math.cos(v.ang), s=Math.sin(v.ang), col=fog(v.col,d);
-  const L=def.l, W=def.w, H=def.h, ang=v.ang, z=v.z;
-  const fx=(a,b)=>v.x+c*a-s*b, fy=(a,b)=>v.y+s*a+c*b;
-  const roll=v.wroll||0;
-  if(d<95&&CAM.z>0.3){                                   // ombra proiettata a terra
-    const al=0.3*(1-clamp(z/60,0,0.85))*(1-clamp(d/95,0,1));
-    if(al>0.02){
-      const e=1+clamp(z/25,0,0.6), hl=L*0.5*e, hw=W*0.5*e;
-      ctx.save(); ctx.globalAlpha=al;
-      quad(v.x+c*hl-s*hw,v.y+s*hl+c*hw,0.06, v.x+c*hl+s*hw,v.y+s*hl-c*hw,0.06,
-           v.x-c*hl+s*hw,v.y-s*hl-c*hw,0.06, v.x-c*hl-s*hw,v.y-s*hl+c*hw,0.06,'#000');
-      ctx.restore();
-    }
-  }
-  /* ruote: prima quelle dal lato lontano, poi la carrozzeria, poi quelle vicine */
-  const camLat=-(CAM.x-v.x)*s+(CAM.y-v.y)*c;             // dove sta la camera, lateralmente
-  const fine=d<11;
-  function ruote(lista,r,larg,vicine){
-    if(d>40) return;
-    for(let i=0;i<lista.length;i++){
-      const ly=lista[i][1];
-      const near=(ly*camLat)>=0;
-      if(near!==vicine) continue;
-      wheel(fx(lista[i][0],ly),fy(lista[i][0],ly),z+r,r,larg,ang,roll,d,fine);
-    }
-  }
-  if(v.type==='aereo'){
-    const carrello=[[L*0.30,0],[-L*0.10,W*0.22],[-L*0.10,-W*0.22]];
-    ruote(carrello,0.32,0.2,false);
-    boxRot(v.x,v.y,z+0.55,L,1.15,1.25,col,ang);
-    boxRot(fx(-L*0.10,0),fy(-L*0.10,0),z+0.92,L*0.24,W,0.26,shade(col,0.94),ang);
-    boxRot(fx(-L*0.42,0),fy(-L*0.42,0),z+1.5,1.2,0.26,H-1.5,shade(col,0.9),ang);
-    boxRot(fx(-L*0.42,0),fy(-L*0.42,0),z+1.5,0.85,W*0.34,0.22,shade(col,0.94),ang);
-    boxRot(fx(L*0.20,0),fy(L*0.20,0),z+1.55,L*0.26,0.95,0.28,fog('#26323d',d),ang);
-    boxRot(fx(L*0.42,0),fy(L*0.42,0),z+0.9,0.35,0.9,0.55,fog('#33383f',d),ang);
-    ruote(carrello,0.32,0.2,true);
-  } else if(v.type==='eli'){
-    boxRot(fx(L*0.10,0),fy(L*0.10,0),z+0.45,L*0.52,W,H-0.45,col,ang);
-    boxRot(fx(L*0.26,0),fy(L*0.26,0),z+1.15,L*0.2,W*0.86,0.9,fog('#26323d',d),ang);
-    boxRot(fx(-L*0.34,0),fy(-L*0.34,0),z+H*0.52,L*0.5,0.42,0.42,shade(col,0.9),ang);
-    boxRot(fx(-L*0.56,0),fy(-L*0.56,0),z+H*0.52,0.5,0.22,1.0,shade(col,0.88),ang);
-    boxRot(fx(0,W*0.44),fy(0,W*0.44),z,L*0.55,0.22,0.42,fog('#3a4049',d),ang);
-    boxRot(fx(0,-W*0.44),fy(0,-W*0.44),z,L*0.55,0.22,0.42,fog('#3a4049',d),ang);
-    boxRot(fx(L*0.05,0),fy(L*0.05,0),z+H,0.34,0.34,0.42,fog('#3a4049',d),ang);
-    const bc=fog('#2a2f37',d);
-    for(let i=0;i<2;i++){
-      const a=v.rot+i*Math.PI*0.5, ca=Math.cos(a), sa=Math.sin(a);
-      const bx=fx(L*0.05,0), by=fy(L*0.05,0), zz=z+H+0.42;
-      quad(bx-ca*5.2-sa*0.18,by-sa*5.2+ca*0.18,zz, bx+ca*5.2-sa*0.18,by+sa*5.2+ca*0.18,zz,
-           bx+ca*5.2+sa*0.18,by+sa*5.2-ca*0.18,zz, bx-ca*5.2+sa*0.18,by-sa*5.2-ca*0.18,zz, bc);
-    }
-  } else if(v.type==='moto'){
-    const rr=[[L*0.38,0],[-L*0.38,0]];
-    ruote(rr,0.30,0.18,false);
-    loft(v,c,s,[{z:0.34,a:L*0.34,b:W*0.26},{z:0.52,a:L*0.42,b:W*0.46},
-                {z:0.78,a:L*0.36,b:W*0.44},{z:0.94,a:L*0.26,b:W*0.30}],8,col,d);
-    boxRot(fx(L*0.24,0),fy(L*0.24,0),z+0.94,0.16,W*0.7,0.34,fog('#26323d',d),ang);   // parabrezza
-    boxRot(fx(L*0.30,0),fy(L*0.30,0),z+0.66,0.16,0.34,0.26,fog('#ffe9a8',d),ang);    // faro
-    boxRot(fx(L*0.20,0),fy(L*0.20,0),z+0.86,0.1,W*1.05,0.09,fog('#2b3037',d),ang);   // manubrio
-    ruote(rr,0.30,0.18,true);
-  } else if(v.type==='camion'){
-    const rr=[[L*0.30,W*0.45],[L*0.30,-W*0.45],[-L*0.16,W*0.45],[-L*0.16,-W*0.45],[-L*0.34,W*0.45],[-L*0.34,-W*0.45]];
-    ruote(rr,0.46,0.3,false);
-    if(d<45){
-      loft(v,c,s,[{z:0.62,a:L*0.15,b:W*0.44,dx:L*0.30},{z:0.85,a:L*0.17,b:W*0.5,dx:L*0.30},
-                  {z:2.4,a:L*0.17,b:W*0.5,dx:L*0.30},{z:H,a:L*0.15,b:W*0.46,dx:L*0.30}],8,col,d);
-    } else boxRot(fx(L*0.30,0),fy(L*0.30,0),z+0.62,L*0.34,W,H-0.62,col,ang);
-    boxRot(fx(L*0.45,0),fy(L*0.45,0),z+1.5,0.24,W*0.86,1.0,fog('#26323d',d),ang);
-    boxRot(fx(-L*0.18,0),fy(-L*0.18,0),z+0.9,L*0.6,W,H*0.78,shade(col,0.93),ang);
-    if(d<70){
-      boxRot(fx(L*0.48,W*0.32),fy(L*0.48,W*0.32),z+1.0,0.24,0.5,0.34,fog('#ffe9a8',d),ang);
-      boxRot(fx(L*0.48,-W*0.32),fy(L*0.48,-W*0.32),z+1.0,0.24,0.5,0.34,fog('#ffe9a8',d),ang);
-    }
-    ruote(rr,0.46,0.3,true);
-  } else {                                                  /* ---- automobile ---- */
-    const rr=[[L*0.30,W*0.46],[L*0.30,-W*0.46],[-L*0.30,W*0.46],[-L*0.30,-W*0.46]];
-    ruote(rr,0.32,0.26,false);
-    if(d<60){
-      const n=d<26?8:4;
-      loft(v,c,s,[
-        {z:0.22,a:L*0.44,b:W*0.38},
-        {z:0.42,a:L*0.50,b:W*0.50},
-        {z:0.72,a:L*0.495,b:W*0.50},
-        {z:0.92,a:L*0.45,b:W*0.455},
-        {z:1.06,a:L*0.31,b:W*0.40,dx:-L*0.03},
-        {z:H,   a:L*0.24,b:W*0.34,dx:-L*0.05}],n,col,d);
-      loft(v,c,s,[{z:1.10,a:L*0.295,b:W*0.405,dx:-L*0.03},
-                  {z:1.32,a:L*0.25,b:W*0.36,dx:-L*0.05}],n,fog('#26323d',d),d,0.06);
-      if(d<45){
-        boxRot(fx(L*0.47,W*0.3),fy(L*0.47,W*0.3),z+0.62,0.18,0.4,0.24,fog('#ffe9a8',d),ang);
-        boxRot(fx(L*0.47,-W*0.3),fy(L*0.47,-W*0.3),z+0.62,0.18,0.4,0.24,fog('#ffe9a8',d),ang);
-        boxRot(fx(-L*0.47,W*0.3),fy(-L*0.47,W*0.3),z+0.66,0.18,0.4,0.22,fog('#c04030',d),ang);
-        boxRot(fx(-L*0.47,-W*0.3),fy(-L*0.47,-W*0.3),z+0.66,0.18,0.4,0.22,fog('#c04030',d),ang);
-      }
-    } else {
-      boxRot(v.x,v.y,z+0.34,L,W,H*0.39,col,ang);
-      boxRot(fx(-L*0.05,0),fy(-L*0.05,0),z+0.34+H*0.39,L*0.54,W*0.9,H-0.34-H*0.39,shade(col,0.97),ang);
-    }
-    ruote(rr,0.32,0.26,true);
-  }
+function hash2(a,b){
+  let h=Math.imul(a*73856093^b*19349663,2654435761);
+  h^=h>>>13; return ((h>>>0)%1000)/1000;
 }
 function pedAng(p){
   const t=((p.t%1)+1)%1, seg=Math.floor(t*4);
@@ -1938,111 +1742,277 @@ function pedPos(p){
   t-=s; if(t<s) return [bx+s-t,by+s];
   t-=s; return [bx,by+s-t];
 }
+function dist2cam(x,y){return Math.hypot(x-CAM.x,y-CAM.y);}
 
-/* ---------- cielo ---------- */
-function drawSky(){
-  const hor=VH*0.5+Math.tan(CAM.pitch)*F;
-  const g=ctx.createLinearGradient(0,Math.min(0,hor-VH*1.5),0,Math.max(hor,1));
-  g.addColorStop(0,'#1e5aa8'); g.addColorStop(0.45,'#5f9ad6');
-  g.addColorStop(0.82,'#a8c8e4'); g.addColorStop(1,'#cdd9e2');
-  ctx.fillStyle=g; ctx.fillRect(0,0,VW,Math.max(0,hor));
-  const gt=ctx.createLinearGradient(0,Math.max(0,hor),0,VH);
-  gt.addColorStop(0,'rgb(178,190,201)'); gt.addColorStop(1,'rgb(126,138,150)');
-  ctx.fillStyle=gt; ctx.fillRect(0,Math.max(0,hor),VW,VH-Math.max(0,hor));
-  const dsun=angDelta(CAM.yaw,SOLE);
-  if(Math.abs(dsun)<1.3){
-    const sx=VW*0.5+Math.tan(dsun)*F, sy=hor-F*0.58;
-    const gr=ctx.createRadialGradient(sx,sy,2,sx,sy,VH*0.42);
-    gr.addColorStop(0,'rgba(255,252,236,.95)'); gr.addColorStop(0.06,'rgba(255,246,205,.75)');
-    gr.addColorStop(0.35,'rgba(255,240,190,.18)'); gr.addColorStop(1,'rgba(255,240,190,0)');
-    ctx.fillStyle=gr; ctx.beginPath(); ctx.arc(sx,sy,VH*0.42,0,TAU); ctx.fill();
-    ctx.fillStyle='rgba(255,253,242,.95)'; ctx.beginPath(); ctx.arc(sx,sy,VH*0.022,0,TAU); ctx.fill();
+function disegnaVeicolo(v,d){
+  const def=v.d, L=def.l, W=def.w, H=def.h, a=v.ang, c=Math.cos(a), s=Math.sin(a);
+  const t=tint(v.col), scuro=[t[0]*0.5,t[1]*0.5,t[2]*0.5];
+  const fx=(p,q)=>v.x+c*p-s*q, fy=(p,q)=>v.y+s*p+c*q;
+  const roll=v.wroll||0;
+  usaMesh(M.box);
+  if(v.type==='aereo'){
+    disegna(M.box,v.x,v.y,v.z+0.55,a,L,1.2,1.3,t[0],t[1],t[2]);
+    disegna(M.box,fx(-L*0.1,0),fy(-L*0.1,0),v.z+0.95,a,L*0.24,W,0.26,t[0],t[1],t[2]);
+    disegna(M.box,fx(-L*0.42,0),fy(-L*0.42,0),v.z+1.5,a,1.2,0.26,H-1.5,t[0],t[1],t[2]);
+    disegna(M.box,fx(-L*0.42,0),fy(-L*0.42,0),v.z+1.5,a,0.9,W*0.34,0.22,t[0],t[1],t[2]);
+    usaMesh({buf:M.box.buf,n:M.box.n,tex:TEX.vetroAuto,spec:0.9});
+    disegna(M.box,fx(L*0.2,0),fy(L*0.2,0),v.z+1.55,a,L*0.26,0.95,0.3,1,1,1);
+  } else if(v.type==='eli'){
+    disegna(M.box,fx(L*0.1,0),fy(L*0.1,0),v.z+0.45,a,L*0.52,W,H-0.45,t[0],t[1],t[2]);
+    disegna(M.box,fx(-L*0.34,0),fy(-L*0.34,0),v.z+H*0.52,a,L*0.5,0.42,0.42,t[0],t[1],t[2]);
+    disegna(M.box,fx(-L*0.56,0),fy(-L*0.56,0),v.z+H*0.52,a,0.5,0.22,1.0,scuro[0],scuro[1],scuro[2]);
+    disegna(M.box,fx(0,W*0.44),fy(0,W*0.44),v.z,a,L*0.55,0.22,0.42,0.25,0.27,0.3);
+    disegna(M.box,fx(0,-W*0.44),fy(0,-W*0.44),v.z,a,L*0.55,0.22,0.42,0.25,0.27,0.3);
+    disegna(M.box,fx(L*0.05,0),fy(L*0.05,0),v.z+H,a,0.34,0.34,0.45,0.22,0.24,0.28);
+    for(let i=0;i<2;i++)
+      disegna(M.box,fx(L*0.05,0),fy(L*0.05,0),v.z+H+0.45,a+v.rot+i*Math.PI*0.5,10.4,0.3,0.06,0.16,0.17,0.2);
+    usaMesh({buf:M.box.buf,n:M.box.n,tex:TEX.vetroAuto,spec:0.9});
+    disegna(M.box,fx(L*0.26,0),fy(L*0.26,0),v.z+1.05,a,L*0.2,W*0.86,0.95,1,1,1);
+  } else if(v.type==='moto'){
+    disegna(M.box,v.x,v.y,v.z+0.38,a,L*0.78,W,0.42,t[0],t[1],t[2]);
+    disegna(M.box,fx(-L*0.08,0),fy(-L*0.08,0),v.z+0.8,a,L*0.4,W*0.92,0.35,scuro[0],scuro[1],scuro[2]);
+    disegna(M.box,fx(L*0.2,0),fy(L*0.2,0),v.z+0.86,a,0.1,W*1.05,0.09,0.2,0.21,0.24);
+    usaMesh(M.cil);
+    disegnaRuota(fx(L*0.38,0),fy(L*0.38,0),v.z+0.30,a,roll,0.30,0.09,0.11,0.12,0.14);
+    disegnaRuota(fx(-L*0.38,0),fy(-L*0.38,0),v.z+0.30,a,roll,0.30,0.09,0.11,0.12,0.14);
+  } else if(v.type==='camion'){
+    disegna(M.box,fx(L*0.3,0),fy(L*0.3,0),v.z+0.62,a,L*0.34,W,H-0.62,t[0],t[1],t[2]);
+    disegna(M.box,fx(-L*0.18,0),fy(-L*0.18,0),v.z+0.9,a,L*0.6,W,H*0.78,t[0]*0.95,t[1]*0.95,t[2]*0.95);
+    usaMesh({buf:M.box.buf,n:M.box.n,tex:TEX.vetroAuto,spec:0.9});
+    disegna(M.box,fx(L*0.45,0),fy(L*0.45,0),v.z+1.5,a,0.24,W*0.86,1.0,1,1,1);
+    usaMesh(M.cil);
+    const wq=[[L*0.3,W*0.45],[L*0.3,-W*0.45],[-L*0.16,W*0.45],[-L*0.16,-W*0.45],[-L*0.34,W*0.45],[-L*0.34,-W*0.45]];
+    for(const w of wq) disegnaRuota(fx(w[0],w[1]),fy(w[0],w[1]),v.z+0.46,a,roll,0.46,0.16,0.11,0.12,0.14);
+  } else {
+    usaMesh(M.auto);
+    disegna(M.auto,v.x,v.y,v.z,a,L,W,H,t[0],t[1],t[2]);
+    usaMesh(M.autoVetri);
+    disegna(M.autoVetri,v.x,v.y,v.z,a,L,W,H,1,1,1);
+    usaMesh(M.box);
+    if(d<70){
+      disegna(M.box,fx(L*0.46,W*0.32),fy(L*0.46,W*0.32),v.z+H*0.42,a,0.16,0.34,0.2,1.9,1.8,1.4);
+      disegna(M.box,fx(L*0.46,-W*0.32),fy(L*0.46,-W*0.32),v.z+H*0.42,a,0.16,0.34,0.2,1.9,1.8,1.4);
+      disegna(M.box,fx(-L*0.47,W*0.32),fy(-L*0.47,W*0.32),v.z+H*0.45,a,0.14,0.34,0.18,1.2,0.16,0.12);
+      disegna(M.box,fx(-L*0.47,-W*0.32),fy(-L*0.47,-W*0.32),v.z+H*0.45,a,0.14,0.34,0.18,1.2,0.16,0.12);
+    }
+    usaMesh(M.cil);
+    const wq=[[L*0.31,W*0.53],[L*0.31,-W*0.53],[-L*0.31,W*0.53],[-L*0.31,-W*0.53]];
+    for(const w of wq) disegnaRuota(fx(w[0],w[1]),fy(w[0],w[1]),v.z+0.34,a,roll,0.34,0.14,0.13,0.14,0.16);
   }
-  for(let i=0;i<9;i++){
-    const dd=angDelta(CAM.yaw,i*0.72+0.25);
-    if(Math.abs(dd)>1.25) continue;
-    const sx=VW*0.5+Math.tan(dd)*F, sy=hor-F*(0.30+((i*29)%17)/30), w=70+((i*47)%80);
-    for(let j=0;j<3;j++){
-      const bx=sx+(j-1)*w*0.45, by=sy+((j===1)?-w*0.12:0), r=w*(j===1?0.42:0.3);
-      const cg=ctx.createRadialGradient(bx,by-r*0.3,r*0.1,bx,by,r);
-      cg.addColorStop(0,'rgba(255,255,255,.92)'); cg.addColorStop(0.6,'rgba(246,250,253,.6)');
-      cg.addColorStop(1,'rgba(235,243,250,0)');
-      ctx.fillStyle=cg; ctx.beginPath(); ctx.ellipse(bx,by,r,r*0.55,0,0,TAU); ctx.fill();
+}
+const PELLI=[[0.94,0.79,0.63],[0.91,0.73,0.55],[0.85,0.64,0.45],[0.73,0.52,0.36],[0.55,0.37,0.24],[0.43,0.28,0.19]];
+function disegnaPersona(x,y,z,ang,fase,col,pelle,vicino){
+  const t=tint(col), c=Math.cos(ang), s=Math.sin(ang);
+  const fx=(p,q)=>x+c*p-s*q, fy=(p,q)=>y+s*p+c*q;
+  const sw=Math.sin(fase)*0.26;
+  disegna(M.box,fx(sw,0.11),fy(sw,0.11),z,ang,0.2,0.17,0.92,t[0]*0.55,t[1]*0.55,t[2]*0.6);
+  disegna(M.box,fx(-sw,-0.11),fy(-sw,-0.11),z,ang,0.2,0.17,0.92,t[0]*0.55,t[1]*0.55,t[2]*0.6);
+  disegna(M.box,x,y,z+0.9,ang,0.28,0.44,0.54,t[0],t[1],t[2]);
+  if(vicino){
+    disegna(M.box,fx(-sw*0.8,0.28),fy(-sw*0.8,0.28),z+0.9,ang,0.15,0.14,0.46,t[0]*0.9,t[1]*0.9,t[2]*0.9);
+    disegna(M.box,fx(sw*0.8,-0.28),fy(sw*0.8,-0.28),z+0.9,ang,0.15,0.14,0.46,t[0]*0.9,t[1]*0.9,t[2]*0.9);
+  }
+  disegna(M.box,x,y,z+1.44,ang,0.15,0.15,0.16,pelle[0],pelle[1],pelle[2]);
+  disegna(M.box,x,y,z+1.58,ang,0.22,0.24,0.23,pelle[0],pelle[1],pelle[2]);
+  if(vicino) disegna(M.box,x,y,z+1.72,ang,0.235,0.255,0.08,pelle[0]*0.35,pelle[1]*0.32,pelle[2]*0.3);
+}
+function disegnaScena(){
+  lastObjs=0;
+  /* --- veicoli --- */
+  for(const v of vehicles){
+    if(P.veh===v&&!tps) continue;
+    const d=dist2cam(v.x,v.y); if(d>FAR) continue;
+    disegnaVeicolo(v,d); lastObjs++;
+  }
+  for(const cc of traffic){
+    const x=cc.vert?cc.line:cc.pos, y=cc.vert?cc.pos:cc.line;
+    const d=dist2cam(x,y); if(d>FAR*0.8) continue;
+    if(!cc._v) cc._v={x:0,y:0,z:0,ang:0,rot:0,col:cc.col,type:cc.type,d:VEHDEF[cc.type],sp:0,wroll:0};
+    cc._v.x=x; cc._v.y=y; cc._v.wroll=cc.pos*cc.dir/0.32;
+    cc._v.ang=cc.vert?(cc.dir>0?Math.PI*0.5:-Math.PI*0.5):(cc.dir>0?0:Math.PI);
+    disegnaVeicolo(cc._v,d); lastObjs++;
+  }
+  /* --- persone --- */
+  usaMesh(M.box);
+  for(const p of peds){
+    const q=pedPos(p), d=dist2cam(q[0],q[1]);
+    if(d>110) continue;
+    const pelle=PELLI[Math.floor(hash2(p.gx*7+Math.round(p.t*97),p.gy*13)*PELLI.length)%PELLI.length];
+    disegnaPersona(q[0],q[1],0,pedAng(p),tempo*7+p.t*20,p.col,pelle,d<35); lastObjs++;
+  }
+  if(tps&&!P.veh) disegnaPersona(P.x,P.y,P.z,P.yaw,P.bob*2,P.hurt>0?'#d0453c':'#3d7fd6',PELLI[0],true);
+  /* --- oggetti --- */
+  for(const c of crates){
+    const d=dist2cam(c.x,c.y); if(d>110) continue;
+    usaMesh({buf:M.box.buf,n:M.box.n,tex:TEX.legno});
+    disegna(M.box,c.x,c.y,0.16,0.4,0.75,0.75,0.75,1,1,1); lastObjs++;
+    usaMesh(M.box);
+  }
+  for(const l of lamps){
+    const d=dist2cam(l.x,l.y); if(d>95) continue;
+    disegna(M.box,l.x,l.y,0,0,0.2,0.2,4.6,0.32,0.34,0.38);
+    disegna(M.box,l.x+0.45,l.y,4.5,0,1.0,0.24,0.2,0.36,0.38,0.42);
+    disegna(M.box,l.x+0.9,l.y,4.3,0,0.44,0.34,0.22,1.6,1.55,1.2); lastObjs++;
+  }
+  for(const sm of semafori){
+    const d=dist2cam(sm.x,sm.y); if(d>80) continue;
+    disegna(M.box,sm.x,sm.y,0,0,0.22,0.22,3.1,0.28,0.3,0.34);
+    disegna(M.box,sm.x,sm.y,3.1,0,0.42,0.34,1.05,0.18,0.2,0.23);
+    const acceso=Math.floor(tempo*0.35+sm.a*3)%3;
+    const luci=[[1.0,0.16,0.12],[1.0,0.78,0.15],[0.2,1.0,0.32]];
+    for(let i=0;i<3;i++){
+      const on=(i===acceso), L=luci[i];
+      usaMesh({buf:M.box.buf,n:M.box.n,tex:TEX.piatta,piatto:on?1:0});
+      const f=on?1:0.2;
+      disegna(M.box,sm.x,sm.y,3.85-i*0.3,0,0.44,0.36,0.2,L[0]*f,L[1]*f,L[2]*f);
+    }
+    usaMesh(M.box);
+    lastObjs++;
+  }
+  for(const pa of panchine){
+    const d=dist2cam(pa.x,pa.y); if(d>70) continue;
+    usaMesh({buf:M.box.buf,n:M.box.n,tex:TEX.legno});
+    disegna(M.box,pa.x,pa.y,0.42,pa.a,1.7,0.5,0.09,1,1,1);
+    disegna(M.box,pa.x-Math.sin(pa.a)*0.24,pa.y+Math.cos(pa.a)*0.24,0.5,pa.a,1.7,0.09,0.5,1,1,1);
+    usaMesh(M.box);
+    disegna(M.box,pa.x+Math.cos(pa.a)*0.7,pa.y+Math.sin(pa.a)*0.7,0,pa.a,0.1,0.44,0.42,0.3,0.32,0.36);
+    disegna(M.box,pa.x-Math.cos(pa.a)*0.7,pa.y-Math.sin(pa.a)*0.7,0,pa.a,0.1,0.44,0.42,0.3,0.32,0.36);
+    lastObjs++;
+  }
+  for(const cs of cassonetti){
+    const d=dist2cam(cs.x,cs.y); if(d>70) continue;
+    const t=tint(cs.c);
+    disegna(M.box,cs.x,cs.y,0.12,0,1.25,0.85,1.05,t[0],t[1],t[2]);
+    disegna(M.box,cs.x,cs.y,1.17,0,1.3,0.9,0.1,t[0]*1.3,t[1]*1.3,t[2]*1.3); lastObjs++;
+  }
+  for(const c of coins){
+    const d=dist2cam(c.x,c.y); if(d>70) continue;
+    disegna(M.box,c.x,c.y,0.3+Math.sin(tempo*2+c.t)*0.1,tempo*2+c.t,0.34,0.1,0.34,1.9,1.5,0.3); lastObjs++;
+  }
+  /* insegne dei negozi */
+  for(const sh of shops){
+    const d=dist2cam(sh.x,sh.y); if(d>90) continue;
+    const t=tint(sh.c), a=[0,Math.PI*0.5,Math.PI,-Math.PI*0.5][sh.side]||0;
+    disegna(M.box,sh.x,sh.y,3.7,a,0.25,2.6,0.9,t[0],t[1],t[2]); lastObjs++;
+  }
+  /* pacco della consegna */
+  if(job){
+    const t=job.stage===0?job.from:job.to, d=dist2cam(t.x,t.y);
+    if(d<FAR){
+      const zz=6.6+Math.sin(tempo*2)*0.35;
+      disegna(M.box,t.x,t.y,zz,tempo,1.1,1.1,1.1, job.stage===0?1.6:1.9, job.stage===0?1.1:1.9, 0.4);
+      lastObjs++;
     }
   }
-  // foschia sulla linea dell'orizzonte: unisce cielo e terra
-  const hz=ctx.createLinearGradient(0,hor-VH*0.16,0,hor+VH*0.10);
-  hz.addColorStop(0,'rgba(190,203,214,0)'); hz.addColorStop(0.55,'rgba(190,203,214,.85)');
-  hz.addColorStop(1,'rgba(190,203,214,0)');
-  ctx.fillStyle=hz; ctx.fillRect(0,hor-VH*0.16,VW,VH*0.26);
-}
-/* ---------- abitacolo ---------- */
-function drawCockpit(){
-  if(!P.veh||tps) return;
-  const v=P.veh, def=v.d, y0=VH*0.74;
-  if(def.air){
-    ctx.fillStyle='rgba(28,34,42,.94)';
-    ctx.beginPath(); ctx.moveTo(0,VH); ctx.lineTo(0,y0+46); ctx.quadraticCurveTo(VW*0.5,y0-16,VW,y0+46); ctx.lineTo(VW,VH); ctx.fill();
-    ctx.strokeStyle='rgba(22,26,32,.8)'; ctx.lineWidth=8;
-    ctx.beginPath();
-    ctx.moveTo(VW*0.10,-10); ctx.lineTo(VW*0.20,y0+18);
-    ctx.moveTo(VW*0.90,-10); ctx.lineTo(VW*0.80,y0+18);
-    ctx.stroke();
-    ctx.fillStyle='#1b212a'; ctx.fillRect(VW*0.4,VH*0.9,VW*0.2,VH*0.12);
-    ctx.fillStyle='#5fe0b0'; ctx.font='700 12px system-ui'; ctx.textAlign='center';
-    ctx.fillText(Math.round(v.z)+' m',VW*0.5,VH*0.955);
-  } else {
-    ctx.fillStyle=shade(v.col,0.72);
-    ctx.beginPath(); ctx.moveTo(0,VH); ctx.lineTo(0,y0+54); ctx.quadraticCurveTo(VW*0.5,y0-4,VW,y0+54); ctx.lineTo(VW,VH); ctx.fill();
-    ctx.fillStyle='rgba(24,28,34,.96)';
-    ctx.beginPath(); ctx.moveTo(0,VH); ctx.lineTo(0,VH*0.9); ctx.quadraticCurveTo(VW*0.5,VH*0.81,VW,VH*0.9); ctx.lineTo(VW,VH); ctx.fill();
-    ctx.strokeStyle='rgba(14,17,21,.95)'; ctx.lineWidth=13;
-    ctx.beginPath(); ctx.arc(VW*0.5,VH*1.03,VW*0.19,Math.PI*1.14,Math.PI*1.86); ctx.stroke();
+  /* --- alberi: tronco e chioma --- */
+  usaMesh({buf:M.cil.buf,n:M.cil.n,tex:TEX.corteccia});
+  for(const t of trees){
+    const d=dist2cam(t.x,t.y); if(d>FAR) continue;
+    /* cilindro con asse Y: lo raddrizzo scambiando gli assi */
+    MMOD[0]=0.17; MMOD[1]=0; MMOD[2]=0; MMOD[3]=0;
+    MMOD[4]=0; MMOD[5]=0; MMOD[6]=t.h*0.34; MMOD[7]=0;
+    MMOD[8]=0; MMOD[9]=-0.17; MMOD[10]=0; MMOD[11]=0;
+    MMOD[12]=t.x; MMOD[13]=t.y; MMOD[14]=t.h*0.34;
+    gl.uniformMatrix4fv(LOC.uModel,false,MMOD);
+    gl.uniform3f(LOC.uTint,1,1,1);
+    gl.drawArrays(gl.TRIANGLES,0,M.cil.n); lastCalls++;
   }
+  usaMesh(M.chioma);
+  for(const t of trees){
+    const d=dist2cam(t.x,t.y); if(d>FAR) continue;
+    const v=hash2(Math.round(t.x*4),Math.round(t.y*4));
+    disegna(M.chioma,t.x,t.y,t.h*0.72,v*3,t.r*1.15,t.r*1.15,t.h*0.34,0.8+v*0.4,1.05-v*0.15,0.75+v*0.2);
+    lastObjs++;
+  }
+  /* --- ombre morbide sotto gli oggetti --- */
+  gl.enable(gl.BLEND); gl.blendFunc(gl.DST_COLOR,gl.ZERO); gl.depthMask(false);
+  usaMesh({buf:M.quad.buf,n:M.quad.n,tex:TEX.ombraBlob,piatto:1});
+  for(const v of vehicles){
+    const d=dist2cam(v.x,v.y); if(d>90) continue;
+    const e=1+clamp(v.z/25,0,0.6);
+    disegna(M.quad,v.x+SOLX*v.z*0.6,v.y+SOLY*v.z*0.6,0.23,v.ang,v.d.l*1.6*e,v.d.w*2.1*e,1,1,1,1);
+  }
+  for(const cc of traffic){
+    const x=cc.vert?cc.line:cc.pos, y=cc.vert?cc.pos:cc.line;
+    if(dist2cam(x,y)>90) continue;
+    const a=cc.vert?Math.PI*0.5:0, dd=VEHDEF[cc.type];
+    disegna(M.quad,x,y,0.23,a,dd.l*1.6,dd.w*2.1,1,1,1,1);
+  }
+  for(const p of peds){
+    const q=pedPos(p); if(dist2cam(q[0],q[1])>60) continue;
+    disegna(M.quad,q[0]+SOLX*0.5,q[1]+SOLY*0.5,0.23,0,1.5,1.5,1,1,1,1);
+  }
+  for(const t of trees){
+    if(dist2cam(t.x,t.y)>90) continue;
+    disegna(M.quad,t.x+SOLX*t.h*0.5,t.y+SOLY*t.h*0.5,0.235,0,t.r*3.4,t.r*3.2,1,1,1,1);
+  }
+  gl.depthMask(true); gl.disable(gl.BLEND);
+  gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
 }
 
-/* vignettatura disegnata una volta e riusata: costa molto meno */
-let _vig=null, _vigK='';
+/* ---------- cielo ---------- */
+let bufCielo=null;
+function disegnaCielo(){
+  if(!bufCielo){
+    bufCielo=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,bufCielo);
+    gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1, 3,-1, -1,3]),gl.STATIC_DRAW);
+  }
+  gl.useProgram(PSK);
+  gl.disable(gl.DEPTH_TEST); gl.depthMask(false);
+  gl.bindBuffer(gl.ARRAY_BUFFER,bufCielo);
+  gl.enableVertexAttribArray(LOCK.aP);
+  gl.vertexAttribPointer(LOCK.aP,2,gl.FLOAT,false,0,0);
+  const cy=Math.cos(CAM.yaw), sy=Math.sin(CAM.yaw), cp=Math.cos(CAM.pitch), sp=Math.sin(CAM.pitch);
+  const tanX=Math.tan(CAM.fov*0.5), asp=cv.width/cv.height;
+  gl.uniform3f(LOCK.uF,cy*cp,sy*cp,sp);
+  gl.uniform3f(LOCK.uR,sy,-cy,0);
+  gl.uniform3f(LOCK.uU,-cy*sp,-sy*sp,cp);
+  gl.uniform3f(LOCK.uSun,SUNV[0],SUNV[1],SUNV[2]);
+  gl.uniform3f(LOCK.uFog,CIELO_ORIZ[0],CIELO_ORIZ[1],CIELO_ORIZ[2]);
+  gl.uniform2f(LOCK.uTan,tanX,tanX/asp);
+  gl.uniform1f(LOCK.uT,tempo*1000);
+  gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D,TEX.nuvole);
+  gl.uniform1i(LOCK.uNuv,0);
+  gl.drawArrays(gl.TRIANGLES,0,3);
+  gl.disableVertexAttribArray(LOCK.aP);
+  gl.enable(gl.DEPTH_TEST); gl.depthMask(true);
+}
+
+/* ---------- sovrimpressioni 2D ---------- */
+let _vig=null,_vigK='';
 function vignetta(){
   const k=Math.round(VW)+'x'+Math.round(VH);
   if(_vig&&_vigK===k) return _vig;
   const c=document.createElement('canvas');
   c.width=Math.max(2,Math.round(VW*0.5)); c.height=Math.max(2,Math.round(VH*0.5));
   const x=c.getContext('2d');
-  const g=x.createRadialGradient(c.width*0.5,c.height*0.48,c.height*0.34,c.width*0.5,c.height*0.5,c.height*0.82);
-  g.addColorStop(0,'rgba(10,14,20,0)'); g.addColorStop(1,'rgba(10,14,20,.30)');
+  const g=x.createRadialGradient(c.width*0.5,c.height*0.48,c.height*0.36,c.width*0.5,c.height*0.5,c.height*0.84);
+  g.addColorStop(0,'rgba(10,14,20,0)'); g.addColorStop(1,'rgba(10,14,20,.26)');
   x.fillStyle=g; x.fillRect(0,0,c.width,c.height);
   _vig=c; _vigK=k; return c;
 }
-
-/* ===================== RENDER ===================== */
-let winBudget=0, lastObjs=0, personeSolide=0;
-function render(){
-  camPrep();
-  drawSky();
-  drawGround();
-  winBudget=260; personeSolide=12;
-  collect();
-  const ord=DL.slice(0,DN);
-  ord.sort((a,b)=>b.d-a.d);
-  lastObjs=DN;
-  ctx.textAlign='center'; ctx.textBaseline='alphabetic';
-  for(let i=0;i<ord.length;i++) drawEntry(ord[i]);
-  drawCockpit();
-  if(EQ.faro&&!P.veh){
-    const g=ctx.createRadialGradient(VW*0.5,VH*0.62,10,VW*0.5,VH*0.62,VH*0.75);
-    g.addColorStop(0,'rgba(255,244,200,.14)'); g.addColorStop(1,'rgba(255,244,200,0)');
-    ctx.fillStyle=g; ctx.fillRect(0,0,VW,VH);
+function drawCockpit(){
+  if(!P.veh||tps) return;
+  const v=P.veh, def=v.d, y0=VH*0.74;
+  const t=tint(v.col);
+  const col='rgb('+Math.round(t[0]*180)+','+Math.round(t[1]*180)+','+Math.round(t[2]*180)+')';
+  if(def.air){
+    ctx.fillStyle='rgba(28,34,42,.94)';
+    ctx.beginPath(); ctx.moveTo(0,VH); ctx.lineTo(0,y0+46); ctx.quadraticCurveTo(VW*0.5,y0-16,VW,y0+46); ctx.lineTo(VW,VH); ctx.fill();
+    ctx.strokeStyle='rgba(22,26,32,.8)'; ctx.lineWidth=8;
+    ctx.beginPath(); ctx.moveTo(VW*0.10,-10); ctx.lineTo(VW*0.20,y0+18);
+    ctx.moveTo(VW*0.90,-10); ctx.lineTo(VW*0.80,y0+18); ctx.stroke();
+    ctx.fillStyle='#1b212a'; ctx.fillRect(VW*0.4,VH*0.9,VW*0.2,VH*0.12);
+    ctx.fillStyle='#5fe0b0'; ctx.font='700 12px system-ui'; ctx.textAlign='center';
+    ctx.fillText(Math.round(v.z)+' m',VW*0.5,VH*0.955);
+  } else {
+    ctx.fillStyle=col;
+    ctx.beginPath(); ctx.moveTo(0,VH); ctx.lineTo(0,y0+54); ctx.quadraticCurveTo(VW*0.5,y0-4,VW,y0+54); ctx.lineTo(VW,VH); ctx.fill();
+    ctx.fillStyle='rgba(24,28,34,.96)';
+    ctx.beginPath(); ctx.moveTo(0,VH); ctx.lineTo(0,VH*0.9); ctx.quadraticCurveTo(VW*0.5,VH*0.81,VW,VH*0.9); ctx.lineTo(VW,VH); ctx.fill();
+    ctx.strokeStyle='rgba(14,17,21,.95)'; ctx.lineWidth=13;
+    ctx.beginPath(); ctx.arc(VW*0.5,VH*1.03,VW*0.19,Math.PI*1.14,Math.PI*1.86); ctx.stroke();
   }
-  if(RS>0.8) ctx.drawImage(vignetta(),0,0,VW,VH);
-  drawCompass();
-  if(P.vita<35){                                  // bordi rossi quando la vita e' bassa
-    const f=(1-P.vita/35)*0.5*(0.75+0.25*Math.sin(tempo*3));
-    const g=ctx.createRadialGradient(VW*0.5,VH*0.5,VH*0.28,VW*0.5,VH*0.5,VH*0.72);
-    g.addColorStop(0,'rgba(150,20,15,0)'); g.addColorStop(1,'rgba(150,20,15,'+f.toFixed(3)+')');
-    ctx.fillStyle=g; ctx.fillRect(0,0,VW,VH);
-  }
-  if(P.hurt>0){ctx.fillStyle='rgba(190,40,30,'+(P.hurt*0.16)+')';ctx.fillRect(0,0,VW,VH);}
 }
 function drawCompass(){
   if(!job) return;
@@ -2059,6 +2029,68 @@ function drawCompass(){
   ctx.beginPath(); ctx.moveTo(px,cy+7); ctx.lineTo(px-7,cy-6); ctx.lineTo(px+7,cy-6); ctx.closePath(); ctx.fill();
   ctx.fillStyle='rgba(255,255,255,.92)'; ctx.font='700 11px system-ui'; ctx.textAlign='center'; ctx.textBaseline='middle';
   ctx.fillText((job.stage===0?'\u{1F4E6} ritiro ':'\u{1F3C1} consegna ')+Math.round(d)+' m',cx,cy+24);
+}
+
+/* ---------- il fotogramma ---------- */
+let glPronto=false;
+function initGL(){
+  if(!gl) return false;
+  initShader(); creaTexture(); primitive(); costruisciCitta();
+  gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LEQUAL);
+  gl.enable(gl.CULL_FACE); gl.cullFace(gl.BACK); gl.frontFace(gl.CCW);
+  gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
+  gl.clearColor(CIELO_ORIZ[0],CIELO_ORIZ[1],CIELO_ORIZ[2],1);
+  gl.viewport(0,0,cv.width,cv.height);
+  glPronto=true; return true;
+}
+function render(){
+  if(!glPronto) return;
+  lastCalls=0;
+  const asp=cv.width/cv.height;
+  mPersp(MPROJ, 2*Math.atan(Math.tan(CAM.fov*0.5)/asp), asp, 0.12, Math.max(400,FAR*2));
+  mView(MVIEW, CAM.x,CAM.y,CAM.z, CAM.yaw, CAM.pitch);
+  mMul(MVP,MPROJ,MVIEW);
+  gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
+  disegnaCielo();
+  gl.useProgram(PSC);
+  gl.enableVertexAttribArray(LOC.aPos); gl.enableVertexAttribArray(LOC.aNor);
+  gl.enableVertexAttribArray(LOC.aUV);  gl.enableVertexAttribArray(LOC.aCol);
+  gl.uniformMatrix4fv(LOC.uVP,false,MVP);
+  gl.uniform3f(LOC.uSun,SUNV[0],SUNV[1],SUNV[2]);
+  gl.uniform3f(LOC.uFog,CIELO_ORIZ[0],CIELO_ORIZ[1],CIELO_ORIZ[2]);
+  gl.uniform3f(LOC.uCam,CAM.x,CAM.y,CAM.z);
+  gl.uniform2f(LOC.uFogR,FAR*0.5,FAR*1.05);
+  gl.uniform1i(LOC.uTex,0);
+  gl.activeTexture(gl.TEXTURE0);
+  mIdent(MMOD); gl.uniformMatrix4fv(LOC.uModel,false,MMOD);
+  gl.uniform3f(LOC.uTint,1,1,1);
+  for(const m of STATICO){                                  // citta' ferma: pochi disegni
+    if(m.ombra){ gl.enable(gl.BLEND); gl.blendFunc(gl.DST_COLOR,gl.ZERO); gl.depthMask(false); }
+    usaMesh(m);
+    mIdent(MMOD); gl.uniformMatrix4fv(LOC.uModel,false,MMOD);
+    gl.uniform3f(LOC.uTint,m.ombra?0.50:1,m.ombra?0.52:1,m.ombra?0.60:1);
+    gl.drawArrays(gl.TRIANGLES,0,m.n); lastCalls++;
+    if(m.ombra){ gl.depthMask(true); gl.disable(gl.BLEND);
+                 gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA); }
+  }
+  disegnaScena();
+  /* sovrimpressioni */
+  ctx.clearRect(0,0,VW,VH);
+  drawCockpit();
+  if(EQ.faro&&!P.veh){
+    const g=ctx.createRadialGradient(VW*0.5,VH*0.62,10,VW*0.5,VH*0.62,VH*0.75);
+    g.addColorStop(0,'rgba(255,244,200,.14)'); g.addColorStop(1,'rgba(255,244,200,0)');
+    ctx.fillStyle=g; ctx.fillRect(0,0,VW,VH);
+  }
+  if(RS>0.8) ctx.drawImage(vignetta(),0,0,VW,VH);
+  drawCompass();
+  if(P.vita<35){
+    const f=(1-P.vita/35)*0.5*(0.75+0.25*Math.sin(tempo*3));
+    const g=ctx.createRadialGradient(VW*0.5,VH*0.5,VH*0.28,VW*0.5,VH*0.5,VH*0.72);
+    g.addColorStop(0,'rgba(150,20,15,0)'); g.addColorStop(1,'rgba(150,20,15,'+f.toFixed(3)+')');
+    ctx.fillStyle=g; ctx.fillRect(0,0,VW,VH);
+  }
+  if(P.hurt>0){ctx.fillStyle='rgba(190,40,30,'+(P.hurt*0.16)+')';ctx.fillRect(0,0,VW,VH);}
 }
 
 /* ===================== SALVATAGGIO ===================== */
@@ -2152,7 +2184,7 @@ function frame(now){
       fps=fCnt/fAcc; fAcc=0; fCnt=0;
       if(fps<45){ if(++slow>=2&&RS>0.56){RS=Math.max(0.55,RS*0.86);applyRes();slow=0;} }
       else{ slow=0; if(fps>57&&RS<MAXRS){RS=Math.min(MAXRS,RS*1.08);applyRes();} }
-      FAR=fps<38?130:(fps<50?170:210);
+      FAR=fps<38?170:(fps<50?220:280);
     }
   }
   acc+=dt; if(acc>0.14){acc=0; drawMini(); if($map.classList.contains('show')) drawBigMap();}
@@ -2194,6 +2226,9 @@ document.getElementById('newgame').addEventListener('click',()=>{
   location.reload();
 });
 
+if(!initGL()){
+  document.querySelector('#start .sub').textContent='Questo browser non supporta WebGL: prova con Chrome o Safari aggiornati.';
+}
 drawHotbar();
 addItem('panino',2); addItem('bibita',2); addItem('caffe',1);
 setLabels(); updHUD(); newJob();
