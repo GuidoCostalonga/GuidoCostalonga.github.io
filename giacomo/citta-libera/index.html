@@ -284,6 +284,7 @@ const SHOPDEF=[
   {k:'benz', n:'Distributore',  e:'⛽', c:'#5f6cc4', items:['bibita','panino','bende','chiavi'],        count:4},
   {k:'off',  n:'Officina',      e:'🔧', c:'#9aa3ad', items:['chiavi','faro','spray'],                    count:4},
   {k:'conc', n:'Concessionaria', e:'🏎️', c:'#ff8a3d', items:[],                                           count:3},
+  {k:'armi', n:'Armeria',       e:'🎯', c:'#6f6252', items:['pistola','fucile','mitra','munizioni'],      count:2},
 ];
 /* --- catalogo della concessionaria: modello, carrozzeria e prezzo --- */
 const MODELLI=[
@@ -319,9 +320,18 @@ const ITEMS={
   jet   :{n:'Jetpack',      e:'🎒', p:900, d:'Voli a piedi (consuma ⚡)',  t:'tog'},
   para  :{n:'Paracadute',   e:'🪂', p:160, d:'Discesa lenta dall\'alto',   t:'tog'},
   gps   :{n:'GPS Città',    e:'📡', p:180, d:'Tutti i negozi sulla mappa', t:'tog'},
+  pistola:{n:'Pistola',    e:'🔫', p:450,  d:'Un colpo per volta, precisa',   t:'arma'},
+  fucile :{n:'Fucile',     e:'💥', p:900,  d:'Sette pallini, forte da vicino',t:'arma'},
+  mitra  :{n:'Mitra',      e:'⚡', p:1400, d:'Raffica: tieni premuto USA',    t:'arma'},
+  munizioni:{n:'Munizioni',e:'🔶', p:60,   d:'+30 colpi per tutte le armi',   t:'use'},
   faro  :{n:'Faro',         e:'🔦', p:90,  d:'Alone di luce intorno a te', t:'tog'},
 };
 // misure reali: l lunghezza, w larghezza, h altezza (m); max/acc in m/s
+const ARMI={
+  pistola:{n:'Pistola',dan:26,cad:0.30,disp:0.010,ric:0.045,gitt:110,canna:0.34,f:[420,0.06]},
+  fucile :{n:'Fucile', dan:15,cad:0.85,disp:0.055,ric:0.130,gitt:42, canna:0.52,pallini:7,f:[190,0.14]},
+  mitra  :{n:'Mitra',  dan:17,cad:0.10,disp:0.026,ric:0.022,gitt:95, canna:0.44,auto:true,f:[520,0.05]},
+};
 const VEHDEF={
   auto  :{n:'Auto',       e:'🚗', p:1500, l:4.4, w:1.85, h:1.45, max:33,acc:7,   turn:1.7, air:false, col:'#c8453a', eye:1.15},
   moto  :{n:'Moto',       e:'🏍️', p:900,  l:2.1, w:0.8,  h:1.15, max:40,acc:11,  turn:2.4, air:false, col:'#2f7fc0', eye:1.3},
@@ -396,7 +406,8 @@ function genCity(){
               ferr:['Il Chiodo','Ferramenta Bassi','Utensili & Co'],
               benz:['Area Servizio Nord','Pit Stop','Benzinaio Sud','Rifornimento Est'],
               off:['Officina Rossi','Garage 22','MotorHub','Carrozzeria Blu'],
-              conc:['Auto Palace','Motori & Co','Regina Motors']};
+              conc:['Auto Palace','Motori & Co','Regina Motors'],
+              armi:['Il Bersaglio','Poligono Nord']};
   for(const def of SHOPDEF)
     for(let n=0;n<def.count&&ci<cand.length;n++,ci++)
       mkShop(cand[ci],def,def.n+' "'+(NOMI[def.k]?NOMI[def.k][n%NOMI[def.k].length]:'City')+'"');
@@ -472,7 +483,7 @@ const P={x:8*CELL+CELL/2+8,y:8*CELL+CELL/2+14,z:0,vz:0,vx:0,vy:0,
   yaw:-Math.PI/2,pitch:-0.04,energia:100,vita:100,cibo:100,soldi:320,veh:null,
   boost:0,spring:0,bob:0,hurt:0,step:0,ultimoDanno:-99,
   garage:[{type:'auto',col:'#c8453a',variante:'berlina',danno:0,n:'Berlina',e:'🚗'}],
-  telAttesa:0, nome:'Giocatore'};
+  telAttesa:0, nome:'Giocatore', colpi:0, ultimoSparo:-9};
 P.mia=P.garage[0];
 const EQ={scarpe:false,skate:false,jet:false,para:false,gps:false,faro:false};
 const inv=new Array(10).fill(null);
@@ -520,7 +531,9 @@ cv.addEventListener('contextmenu',e=>e.preventDefault());
 cv.addEventListener('mousedown',e=>{
   if(paused) return;
   audioOn(); mLook=true; mX=e.clientX; mY=e.clientY; $hint.style.opacity=0; e.preventDefault();
+  if(e.button===0&&armaInMano()){ key.SPARA=true; usaSlot(sel); }
 });
+addEventListener('mouseup',e=>{ if(e.button===0) key.SPARA=false; });
 addEventListener('mousemove',e=>{
   if(!mLook) return;
   turn((e.clientX-mX)*0.0042,(e.clientY-mY)*0.0038);
@@ -541,7 +554,12 @@ function hold(id,name){
 }
 hold('bA','A'); hold('bC','C');
 document.getElementById('bB').addEventListener('pointerdown',e=>{e.preventDefault();audioOn();azione();});
-document.getElementById('bU').addEventListener('pointerdown',e=>{e.preventDefault();audioOn();usaSlot(sel);});
+{
+  const bu=document.getElementById('bU');
+  bu.addEventListener('pointerdown',e=>{e.preventDefault();audioOn();key.SPARA=true;usaSlot(sel);});
+  const su=e=>{key.SPARA=false;};
+  bu.addEventListener('pointerup',su); bu.addEventListener('pointercancel',su); bu.addEventListener('pointerleave',su);
+}
 addEventListener('keydown',e=>{
   const k=e.key.toLowerCase();
   if(k==='w'||k==='arrowup')key.up=1; if(k==='s'||k==='arrowdown')key.dn=1;
@@ -648,6 +666,7 @@ function usaSlot(i){
     toast((EQ[it.id]?'✅ ':'⬜ ')+def.n+(EQ[it.id]?' attivo':' disattivato'));
     beep(EQ[it.id]?680:380,.08,'triangle'); drawHotbar(); return;
   }
+  if(def.t==='arma'){ sparaArma(it.id); return; }
   let ok=true;
   switch(it.id){
     case 'panino': mangia(35,10); toast('🥪 Gnam! +35 cibo'); break;
@@ -660,6 +679,7 @@ function usaSlot(i){
     case 'molla' : P.spring=60; toast('🦘 Salti da record per 60s!'); break;
     case 'fuochi': fuochi(P.x,P.y); toast('🎆 Spettacolo!'); break;
     case 'spray' : decals.push({x:P.x,y:P.y,r:R(0.7,1.3),c:`hsl(${RI(0,360)},80%,55%)`}); toast('🎨 Graffito lasciato'); break;
+    case 'munizioni': P.colpi+=30; toast('🔶 +30 colpi (ne hai '+(P.colpi)+')'); break;
     case 'chiavi':{const p=nearRoadFree(P.x,P.y); spawnVehicle(pick(['auto','moto']),p.x,p.y,rnd()*TAU);
       toast('🔑 Veicolo consegnato qui vicino!'); break;}
     default: ok=false;
@@ -669,6 +689,132 @@ function usaSlot(i){
 function mangia(cibo,energia){
   P.cibo=Math.min(100,P.cibo+cibo);
   P.energia=Math.min(100,P.energia+energia);
+}
+/* ===================== ARMI DA FUOCO ===================== */
+function armaInMano(){
+  const it=inv[sel];
+  return (it&&ITEMS[it.id]&&ITEMS[it.id].t==='arma')?it.id:null;
+}
+function boccaDiFuoco(){                          // da dove esce il colpo
+  const c=Math.cos(P.yaw), s=Math.sin(P.yaw);
+  const alt=P.veh?(P.veh.d.eye+P.veh.z-0.1):(P.z+EYE-0.14);
+  return [P.x+c*0.45+s*0.20, P.y+s*0.45-c*0.20, alt];
+}
+function sparaArma(id){
+  const A=ARMI[id]; if(!A) return;
+  if(paused) return;
+  if(tempo-P.ultimoSparo<A.cad) return;
+  if(P.colpi<=0){
+    if(tempo-P.ultimoSparo>0.5){ toast('🔶 Senza munizioni: comprale in armeria 🎯'); beep(110,.08,'square',.05); }
+    P.ultimoSparo=tempo; return;
+  }
+  P.ultimoSparo=tempo; P.colpi--;
+  const b=boccaDiFuoco();
+  for(let k=0;k<(A.pallini||1);k++){
+    const dy2=R(-A.disp,A.disp), dp=R(-A.disp,A.disp);
+    proiettile(b[0],b[1],b[2],P.yaw+dy2,P.pitch+dp,A,k<2);
+  }
+  const cc=Math.cos(P.yaw), ss=Math.sin(P.yaw);
+  for(let k=0;k<3;k++)                              // vampa
+    parts.push({x:b[0]+cc*0.2,y:b[1]+ss*0.2,z:b[2],vx:cc*R(1,4),vy:ss*R(1,4),vz:R(-.5,1.2),
+                life:.055,c:'#ffe08a',r:R(.10,.18)});
+  parts.push({x:b[0]+cc*0.3,y:b[1]+ss*0.3,z:b[2],vx:cc*1.6,vy:ss*1.6,vz:0.5,
+              life:.5,c:'#c9c9c9',r:.07,fumo:1});    // sbuffo di fumo
+  parts.push({x:b[0]-ss*0.12,y:b[1]+cc*0.12,z:b[2],  // bossolo che salta via
+              vx:-ss*R(1.4,2.6)+R(-.4,.4),vy:cc*R(1.4,2.6)+R(-.4,.4),vz:R(1.6,2.8),
+              life:.9,c:'#d8a441',r:.035});
+  P.vampa=tempo;
+  scossa=Math.min(1,scossa+A.ric*2.2);
+  P.pitch=clamp(P.pitch+A.ric,-1.25,1.25);
+  P.recupero=(P.recupero||0)+A.ric*0.85;             // la mira torna giu' da sola
+  P.rinculo=Math.min(1,(P.rinculo||0)+0.85);
+  rumoreSparo(A);
+  updHUD();
+}
+function rumoreSparo(A){
+  if(!AC){ return; }
+  const n=Math.floor(AC.sampleRate*0.28), buf=AC.createBuffer(1,n,AC.sampleRate), d=buf.getChannelData(0);
+  for(let i=0;i<n;i++){                              // botto: rumore che si spegne in fretta
+    const t=i/n;
+    d[i]=(Math.random()*2-1)*Math.pow(1-t,A.pallini?7:11);
+  }
+  const src=AC.createBufferSource(); src.buffer=buf;
+  const f=AC.createBiquadFilter(); f.type='lowpass'; f.frequency.value=A.pallini?1500:2600; f.Q.value=0.7;
+  const g=AC.createGain(); g.gain.value=A.pallini?0.30:0.20;
+  src.connect(f); f.connect(g); g.connect(AC.destination); src.start();
+  beep(A.f[0],A.f[1]*0.6,'square',.025);             // schiocco metallico sopra
+}
+function proiettile(x,y,z,yaw,pit,A,scia){
+  const cp=Math.cos(pit);
+  const dx=Math.cos(yaw)*cp, dy=Math.sin(yaw)*cp, dz=Math.sin(pit);
+  let tm=A.gitt, muro=false;
+  for(let t=1.2;t<A.gitt;t+=1.6){                   // muri e terreno
+    const px=x+dx*t, py=y+dy*t, pz=z+dz*t;
+    if(pz<0.04){ tm=t; muro=true; break; }
+    if(dentroEdificio(px,py,pz)){ tm=Math.max(0.5,t-0.9); muro=true; break; }
+  }
+  let bersaglio=null, tipo=null, tb=tm;
+  const prova=(bx,by,bz0,bz1,rag,ogg,kind)=>{       // distanza del bersaglio dal raggio
+    const vx=bx-x, vy=by-y;
+    const t=vx*dx+vy*dy;
+    if(t<0.6||t>tb) return;
+    const qz=z+dz*t;
+    if(qz<bz0-rag||qz>bz1+rag) return;
+    const ex=x+dx*t-bx, ey=y+dy*t-by;
+    if(ex*ex+ey*ey>rag*rag) return;
+    tb=t; bersaglio=ogg; tipo=kind;
+  };
+  for(const p of peds){
+    if(p.giu) continue;
+    const q=pedPos(p);
+    if(Math.abs(q[0]-x)>A.gitt||Math.abs(q[1]-y)>A.gitt) continue;
+    prova(q[0],q[1],0,1.8,0.42,p,'ped');
+  }
+  for(const v of vehicles){
+    if(v===P.veh) continue;
+    prova(v.x,v.y,v.z,v.z+v.d.h,Math.max(1.0,v.d.w*0.6),v,'veh');
+  }
+  for(const c of traffic){
+    const cx=c.vert?c.line:c.pos, cy=c.vert?c.pos:c.line;
+    prova(cx,cy,0,VEHDEF[c.type].h,Math.max(1.0,VEHDEF[c.type].w*0.6),c,'traf');
+  }
+  const fine=bersaglio?tb:tm;
+  const ix=x+dx*fine, iy=y+dy*fine, iz=z+dz*fine;
+  if(scia&&parts.length<420)                        // scia luminosa del colpo
+    for(let t=2;t<fine;t+=3.2)
+      parts.push({x:x+dx*t,y:y+dy*t,z:z+dz*t,vx:0,vy:0,vz:0,life:.05,c:'#ffe9a8',r:.045});
+  if(tipo==='ped') feriscoPedone(bersaglio,A.dan,ix,iy,iz);
+  else if(tipo==='veh'){ ammacca(bersaglio,A.dan*0.55,1); scintille(ix,iy,iz,'#ffd28a'); }
+  else if(tipo==='traf'){ scintille(ix,iy,iz,'#ffd28a'); bersaglio.v=Math.max(0,(bersaglio.v||0)*0.6); }
+  else if(muro) scintille(ix,iy,iz,'#cfd3d8');
+}
+function scintille(x,y,z,col){
+  if(parts.length>420) return;
+  for(let k=0;k<5;k++)
+    parts.push({x,y,z,vx:R(-2.5,2.5),vy:R(-2.5,2.5),vz:R(0.6,3.4),life:R(.14,.3),c:col,r:R(.04,.08)});
+}
+function feriscoPedone(p,dan,x,y,z){
+  if(p.vita===undefined) p.vita=100;
+  p.vita-=dan;
+  if(parts.length<420)
+    for(let k=0;k<7;k++)
+      parts.push({x,y,z,vx:R(-1.6,1.6),vy:R(-1.6,1.6),vz:R(0.4,2.4),life:R(.25,.5),c:'#b4262a',r:R(.05,.09)});
+  p.fuga=Math.max(p.fuga||0,8);
+  panico(x,y);
+  if(p.vita<=0&&!p.giu){
+    const q=pedPos(p);
+    p.giu=tempo; p.fx=q[0]; p.fy=q[1]; p.fang=pedAng(p);
+    p.aspetta=0; p.att=null;
+    toast('🤕 Una persona è a terra ferita');
+  } else beep(300,.05,'triangle',.03);
+}
+function panico(x,y){
+  for(const p of peds){
+    if(p.giu) continue;
+    const q=pedPos(p);
+    const d2=(q[0]-x)*(q[0]-x)+(q[1]-y)*(q[1]-y);
+    if(d2<420) p.fuga=Math.max(p.fuga||0,6);
+  }
 }
 function ferisci(quanto,msg){
   if(quanto<=0) return;
@@ -1417,6 +1563,15 @@ function update(dt){
         vx:R(-2,2),vy:R(-2,2),vz:R(1,4),life:R(.4,.9),c:'#8fe9ff',r:.07});
     }
   }
+  if(key.SPARA){                                   // raffica: si tiene premuto
+    const a=armaInMano();
+    if(a&&ARMI[a]&&ARMI[a].auto) sparaArma(a);
+  }
+  P.rinculo=(P.rinculo||0)*Math.pow(0.00002,dt);      // il rinculo rientra
+  if(P.recupero>0){                                   // e la mira rientra piano
+    const q=Math.min(P.recupero,dt*0.55);
+    P.pitch=clamp(P.pitch-q,-1.25,1.25); P.recupero-=q;
+  }
   aggiornaLuce(dt);
   updJob(); updCam(dt); updHUD(); updPrompt(); engineSound();
 }
@@ -1587,9 +1742,16 @@ function updHUD(){
   const ms=P.veh?Math.abs(P.veh.sp):Math.hypot(P.vx,P.vy);
   const ico=P.veh?P.veh.d.e:(EQ.jet&&P.z>0.5?'🎒':(EQ.skate?'🛹':'🚶'));
   const dnn=P.veh?Math.round(P.veh.danno||0):0;
+  const arma=armaInMano();
+  const cross=document.getElementById('cross');
+  if(cross){
+    const vuole=arma?'rgba(255,86,64,.92)':'rgba(255,255,255,.5)';
+    if(cross.style.background!==vuole) cross.style.background=vuole;
+  }
   const hh=Math.floor(ora), mi=Math.floor((ora-hh)*60);
   $spd.textContent=ico+' '+Math.round(ms*3.6)+' km/h'+(P.z>1?' · '+Math.round(P.z)+' m':'')
                    +(dnn>4?' · 🔧'+dnn+'%':'')
+                   +(arma?' · 🔶'+P.colpi:'')
                    +' · '+(hh<10?'0':'')+hh+':'+(mi<10?'0':'')+mi;
 }
 let promptTxt='';
@@ -2808,6 +2970,17 @@ function hash2(a,b){
 }
 /* il pedone: cammina attorno all'isolato, aspetta il verde e attraversa sulle strisce */
 function aggiornaPedone(p,dt){
+  if(p.giu){                                        // a terra: si riprende da solo
+    if(tempo-p.giu>22){ p.giu=null; p.vita=45; p.fuga=7; }
+    return;
+  }
+  if(p.fuga>0){                                     // scappa: corre e non attraversa
+    p.fuga-=dt;
+    p.t+=p.sp*dt*11;
+    if(p.t>1)p.t-=1; if(p.t<0)p.t+=1;
+    if(p.vita!==undefined&&p.vita<100) p.vita=Math.min(100,p.vita+dt*1.5);
+    return;
+  }
   if(p.att){                                        // sta attraversando
     p.att.u+=dt*1.35/p.att.len;
     if(p.att.u>=1){
@@ -3156,6 +3329,60 @@ function discoX(x,y,z,yaw,rag,r,g,b){
   gl.drawArrays(gl.TRIANGLES,0,M.fenestron.n); lastCalls++;
 }
 const PELLI=[[0.94,0.79,0.63],[0.91,0.73,0.55],[0.85,0.64,0.45],[0.73,0.52,0.36],[0.55,0.37,0.24],[0.43,0.28,0.19]];
+function disegnaArma(id){
+  const A=ARMI[id]; if(!A) return;
+  const primaPersona=!(tps||P.veh);
+  const ric=P.rinculo||0;                            // rinculo che rientra
+  const ond=primaPersona?Math.sin(P.bob)*0.012*clamp(Math.hypot(P.vx,P.vy)/4,0,1):0;
+  const ond2=primaPersona?Math.cos(P.bob*2)*0.009*clamp(Math.hypot(P.vx,P.vy)/4,0,1):0;
+  const gy=P.yaw-(primaPersona?0.45:0);              // di taglio: si vede il fianco dell'arma
+  const gp=-P.pitch+ric*0.30;
+  const c=Math.cos(gy), s=Math.sin(gy);
+  const cy=Math.cos(P.yaw), sy=Math.sin(P.yaw);
+  const cp=Math.cos(P.pitch), sp=Math.sin(P.pitch);
+  let bx,by,bz;
+  if(!primaPersona){                                 // impugnata all'altezza della spalla
+    const alt=P.veh?(P.veh.d.eye+P.veh.z-0.15):(P.z+1.30);
+    bx=P.x+cy*0.26+sy*0.28; by=P.y+sy*0.26-cy*0.28; bz=alt;
+  } else {                                           // in soggettiva: in basso a destra
+    const D=1.35-ric*0.10, th=Math.tan(CAM.fov*0.5), tv=th*VH/VW;
+    const lat=D*th*0.52+ond, giu=D*tv*0.62+ond2;
+    const fx2=cy*cp, fy2=sy*cp, fz2=sp;
+    const ux2=-cy*sp, uy2=-sy*sp, uz2=cp;
+    bx=P.x+fx2*D+sy*lat-ux2*giu;
+    by=P.y+fy2*D-cy*lat-uy2*giu;
+    bz=P.z+EYE+fz2*D-uz2*giu;
+  }
+  preparaTilt(bx,by,bz,gy,0,gp);                     // la canna guarda dove guardi tu
+  const k=primaPersona?1.25:1;
+  const av=(p,q)=>[bx+c*p-s*q, by+s*p+c*q];
+  usaMesh({buf:M.box.buf,n:M.box.n,tex:TEX.lamiera,spec:0.35});
+  const q1=av(A.canna*0.5*k,0);
+  disegna(M.box,q1[0],q1[1],bz+0.012,gy,A.canna*k,0.044*k,0.044*k,0.20,0.21,0.24);   // canna
+  disegna(M.box,bx,by,bz-0.022,gy,0.19*k,0.062*k,0.10*k,0.16,0.17,0.19);             // castello
+  const q5=av(0.02*k,0);
+  disegna(M.box,q5[0],q5[1],bz+0.058*k,gy,0.17*k,0.032*k,0.024*k,0.30,0.31,0.34);    // carrello
+  const q6=av(A.canna*0.9*k,0);
+  disegna(M.box,q6[0],q6[1],bz+0.075*k,gy,0.022*k,0.02*k,0.028*k,0.42,0.43,0.46);    // mirino
+  const q2=av(-0.05*k,0);
+  disegna(M.box,q2[0],q2[1],bz-0.17*k,gy,0.075*k,0.056*k,0.16*k,0.13,0.11,0.10);     // impugnatura
+  if(id==='mitra'){ const q3=av(0.01*k,0);
+    disegna(M.box,q3[0],q3[1],bz-0.16*k,gy,0.05*k,0.045*k,0.14*k,0.12,0.13,0.15); }  // caricatore
+  if(id==='fucile'){ const q4=av(A.canna*0.42*k,0);
+    disegna(M.box,q4[0],q4[1],bz-0.045*k,gy,A.canna*0.6*k,0.038*k,0.038*k,0.28,0.20,0.14); }
+  if(primaPersona){                                  // la mano che impugna
+    const pe=PELLI[0];
+    const m1=av(-0.045*k,-0.015*k);
+    disegna(M.box,m1[0],m1[1],bz-0.155*k,gy,0.10*k,0.10*k,0.13*k,pe[0],pe[1],pe[2]);
+    const m2=av(-0.12*k,-0.05*k);
+    disegna(M.box,m2[0],m2[1],bz-0.30*k,gy,0.11*k,0.11*k,0.20*k,pe[0]*0.94,pe[1]*0.94,pe[2]*0.94);
+    if(id!=='pistola'){                              // la seconda mano regge l'astina
+      const m3=av(A.canna*0.62*k,0.01*k);
+      disegna(M.box,m3[0],m3[1],bz-0.10*k,gy,0.10*k,0.10*k,0.12*k,pe[0],pe[1],pe[2]);
+    }
+  }
+  TILT=null; lastObjs++;
+}
 function disegnaPersona(x,y,z,ang,fase,col,pelle,vicino){
   const t=tint(col), c=Math.cos(ang), s=Math.sin(ang);
   const fx=(p,q)=>x+c*p-s*q, fy=(p,q)=>y+s*p+c*q;
@@ -3204,13 +3431,23 @@ function disegnaScena(){
   /* --- persone --- */
   usaMesh(M.box);
   for(const p of peds){
-    const q=pedPos(p), d=dist2cam(q[0],q[1]);
+    const q=p.giu?[p.fx,p.fy]:pedPos(p), d=dist2cam(q[0],q[1]);
     if(d>110) continue;
     const pelle=PELLI[Math.floor(hash2(p.gx*7+Math.round(p.t*97),p.gy*13)*PELLI.length)%PELLI.length];
+    if(p.giu){                                      // ferito: coricato per terra
+      preparaTilt(q[0],q[1],0.30,p.fang||0,0,Math.PI*0.47);
+      disegnaPersona(q[0],q[1],0,p.fang||0,0,p.col,pelle,d<35);
+      TILT=null; lastObjs++; continue;
+    }
     const fermo=(p.aspetta>0&&!p.att);
-    disegnaPersona(q[0],q[1],0,pedAng(p),fermo?0:(tempo*7+p.t*20),p.col,pelle,d<35); lastObjs++;
+    const passo=p.fuga>0?(tempo*15+p.t*20):(tempo*7+p.t*20);
+    disegnaPersona(q[0],q[1],0,pedAng(p),fermo?0:passo,p.col,pelle,d<35); lastObjs++;
   }
   if(tps&&!P.veh&&CAM.dist>1.3) disegnaPersona(P.x,P.y,P.z,P.yaw,P.bob*2,P.hurt>0?'#d0453c':'#3d7fd6',PELLI[0],true);
+  {
+    const arma=armaInMano();
+    if(arma) disegnaArma(arma);
+  }
   /* --- oggetti --- */
   for(const c of crates){
     const d=dist2cam(c.x,c.y); if(d>110) continue;
@@ -3341,6 +3578,17 @@ function disegnaScena(){
     }
     gl.uniform1f(LOC.uAlpha,1);
     gl.depthMask(true); gl.disable(gl.BLEND);
+  }
+  if(P.vampa&&tempo-P.vampa<0.06&&notte>0.25){                 // la vampa illumina attorno
+    const b=boccaDiFuoco();
+    gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA,gl.ONE); gl.depthMask(false);
+    usaMesh({buf:M.quad.buf,n:M.quad.n,tex:TEX.sbuffo,piatto:1});
+    gl.uniform1f(LOC.uAlpha,0.5*notte);
+    disegna(M.quad,b[0]+Math.cos(P.yaw)*3,b[1]+Math.sin(P.yaw)*3,0.27,P.yaw,11,9,1,1.0,0.86,0.55);
+    gl.uniform1f(LOC.uAlpha,1);
+    gl.depthMask(true); gl.disable(gl.BLEND);
+    gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
+    lastObjs++;
   }
   if(notte>0.15){                                              // pozze di luce della notte
     gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA,gl.ONE); gl.depthMask(false);
@@ -3626,7 +3874,7 @@ function statoDaSalvare(){
   const cas=[]; for(const c of crates){cas.push(Math.round(c.x*10)/10,Math.round(c.y*10)/10);}
   return {v:2,
     x:P.x,y:P.y,z:P.z,yaw:P.yaw,pitch:P.pitch,
-    soldi:P.soldi,vita:P.vita,cibo:P.cibo,energia:P.energia,nome:P.nome,ora:ora,
+    soldi:P.soldi,vita:P.vita,cibo:P.cibo,energia:P.energia,nome:P.nome,ora:ora,colpi:P.colpi,
     inv:inv,eq:EQ,tps:tps,
     job:job?{f:shops.indexOf(job.from),t:shops.indexOf(job.to),s:job.stage,r:job.reward,k:job.tipo||'consegna'}:null,
     veh:vehicles.map(v=>[v.type,Math.round(v.x*10)/10,Math.round(v.y*10)/10,Math.round(v.z*10)/10,
@@ -3646,6 +3894,7 @@ function applicaSalvataggio(d){
     P.soldi=d.soldi;P.vita=d.vita;P.cibo=d.cibo;P.energia=d.energia;P.veh=null;
     if(d.nome) P.nome=d.nome;
     if(typeof d.ora==='number') ora=d.ora;
+    P.colpi=d.colpi||0;
     for(let i=0;i<10;i++) inv[i]=d.inv[i]||null;
     for(const k in EQ) EQ[k]=!!(d.eq&&d.eq[k]);
     tps=!!d.tps; document.getElementById('cross').style.display=tps?'none':'block';
