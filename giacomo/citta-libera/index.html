@@ -74,9 +74,11 @@ html,body{margin:0;padding:0;height:100%;overflow:hidden;background:#0e1013;
 .ov .sub{opacity:.65;font-size:12px;margin-bottom:10px}
 .close{position:absolute;right:12px;top:calc(env(safe-area-inset-top,0px) + 12px);width:40px;height:40px;border-radius:12px;
   background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;font-size:20px}
-#telList{display:flex;flex-direction:column;gap:8px}
-#shopList{overflow:auto;-webkit-overflow-scrolling:touch;flex:1;display:flex;flex-direction:column;gap:8px;padding-bottom:8px}
-.row{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.09);
+#telList{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;touch-action:pan-y;
+  overscroll-behavior:contain;display:flex;flex-direction:column;gap:8px;padding-bottom:8px}
+#shopList{overflow-y:auto;-webkit-overflow-scrolling:touch;touch-action:pan-y;overscroll-behavior:contain;
+  flex:1;min-height:0;display:flex;flex-direction:column;gap:8px;padding-bottom:8px}
+.row{flex:0 0 auto;display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.09);
   border-radius:14px;padding:9px 11px}
 .row .em{font-size:25px;width:32px;text-align:center}
 .row .tx{flex:1;min-width:0}.row .tx b{display:block;font-size:14px}.row .tx span{font-size:11px;opacity:.62}
@@ -1421,7 +1423,7 @@ function update(dt){
 function updateFoot(ix,iy,im,dt){
   let sp=1.75;
   if(EQ.skate) sp=6.2;
-  const run=key.C&&P.energia>1&&im>0.15;
+  const run=key.C&&P.energia>1&&im>0.15; P.corsa=run;
   if(run){sp*=2.6; P.energia=Math.max(0,P.energia-9*dt);}
   else P.energia=Math.min(100,P.energia+(im>0.1?2.5:6)*dt);
   if(EQ.scarpe) sp*=1.25;
@@ -1532,27 +1534,48 @@ function updateVehicle(v,ix,iy,dt){
   lookOff*=Math.pow(0.35,dt);
 }
 function updCam(dt){
-  const bob=P.veh?0:Math.sin(P.bob*2)*0.045*clamp(Math.hypot(P.vx,P.vy)/4,0,1);
+  const vel=Math.hypot(P.vx,P.vy);
+  const bob=P.veh?0:Math.sin(P.bob*2)*0.052*clamp(vel/4,0,1);
+  const rollio=P.veh?0:Math.sin(P.bob)*0.011*clamp(vel/4,0,1);   // la testa ondeggia camminando
   const eye=P.veh?(P.veh.d.eye+P.veh.z):(P.z+EYE+bob);
   let cx=P.x, cy=P.y, cz=eye;
   if(P.veh&&!tps){cx+=Math.cos(P.veh.ang)*(P.veh.d.l*0.10); cy+=Math.sin(P.veh.ang)*(P.veh.d.l*0.10);}
   if(tps){
-    const back=P.veh?P.veh.d.l*1.5+3:4.2, up=P.veh?P.veh.d.h+1.2:1.7;
-    cx-=Math.cos(P.yaw)*back*Math.cos(P.pitch); cy-=Math.sin(P.yaw)*back*Math.cos(P.pitch);
-    cz=eye+up+Math.sin(P.pitch)*back;
-  }
+    const dv=P.veh?P.veh.d:null;
+    const lungo=dv?(dv.rim?dv.rim.l*0.8+dv.l*0.55:dv.l*1.5):0;   // col rimorchio serve piu' distanza
+    const back=dv?lungo+3.2:4.5, up=dv?dv.h+1.15:0.38, lato=dv?0:0.48;
+    const cp=Math.cos(P.pitch);
+    let vx=-Math.cos(P.yaw)*back*cp, vy=-Math.sin(P.yaw)*back*cp;
+    const vz=up+Math.sin(P.pitch)*back;
+    vx+=Math.sin(P.yaw)*lato; vy+=-Math.cos(P.yaw)*lato;          // un filo sopra la spalla
+    let f=1;                                                      // niente muri fra testa e obiettivo
+    for(let i=1;i<=6;i++){
+      const t=i/6;
+      if(dentroEdificio(P.x+vx*t,P.y+vy*t,eye+vz*t-0.25)){ f=Math.max(0.14,(i-1)/6-0.05); break; }
+    }
+    if(CAM.avv===undefined) CAM.avv=f;
+    CAM.avv=(f<CAM.avv)?f:CAM.avv+(f-CAM.avv)*(1-Math.pow(0.05,dt));  // rientra subito, torna piano
+    f=CAM.avv;
+    cx=P.x+vx*f; cy=P.y+vy*f; cz=eye+vz*f;
+    const suolo=Math.max(0,roofAt(cx,cy));
+    if(cz<suolo+0.45) cz=suolo+0.45;                              // e non finisce sottoterra
+    CAM.dist=Math.hypot(vx*f,vy*f,vz*f);
+  } else CAM.dist=0;
   CAM.x=cx; CAM.y=cy;                       // posizione agganciata: nessun ritardo
   CAM.z=lerp(CAM.z,cz,1-Math.pow(0.00002,dt));
   if(Math.abs(CAM.z-cz)>2.5) CAM.z=cz;      // salti/tetti: niente scivolate lunghe
   const vv=P.veh;
   const rollVis=vv?((vv.rollio||0)*(tps?0.22:0.75)):0;
   const beccVis=vv?((vv.becc||0)*(tps?0:0.55)):0;
-  CAM.roll=lerp(CAM.roll||0,rollVis,1-Math.pow(0.02,dt));
+  CAM.roll=lerp(CAM.roll||0,rollVis+(tps?0:rollio),1-Math.pow(0.02,dt));
   scossa*=Math.pow(0.02,dt);
   CAM.yaw=P.yaw+Math.sin(tempo*61.7)*scossa*0.020;
-  CAM.pitch=P.pitch+beccVis+Math.sin(tempo*47.3)*scossa*0.028;
+  const inquadra=tps?(P.veh?-0.05:-0.12):0;        // in terza persona si guarda un filo in giu'
+  CAM.pitch=P.pitch+inquadra+beccVis+Math.sin(tempo*47.3)*scossa*0.028;
   CAM.z+=Math.sin(tempo*39.1)*scossa*0.05;
-  CAM.fov=lerp(CAM.fov,1.0+(P.veh?clamp(Math.abs(P.veh.sp)/P.veh.d.max,0,1)*0.13:0),1-Math.pow(0.05,dt));
+  const vistaLarga=P.veh?clamp(Math.abs(P.veh.sp)/P.veh.d.max,0,1)*0.13
+                        :(P.corsa?0.075:0)+(P.boost>0?0.03:0);
+  CAM.fov=lerp(CAM.fov,1.0+vistaLarga,1-Math.pow(0.05,dt));
 }
 function updHUD(){
   $money.textContent=Math.floor(P.soldi);
@@ -3141,12 +3164,23 @@ function disegnaPersona(x,y,z,ang,fase,col,pelle,vicino){
   disegna(M.box,fx(-sw,-0.11),fy(-sw,-0.11),z,ang,0.2,0.17,0.92,t[0]*0.55,t[1]*0.55,t[2]*0.6);
   disegna(M.box,x,y,z+0.9,ang,0.28,0.44,0.54,t[0],t[1],t[2]);
   if(vicino){
-    disegna(M.box,fx(-sw*0.8,0.28),fy(-sw*0.8,0.28),z+0.9,ang,0.15,0.14,0.46,t[0]*0.9,t[1]*0.9,t[2]*0.9);
-    disegna(M.box,fx(sw*0.8,-0.28),fy(sw*0.8,-0.28),z+0.9,ang,0.15,0.14,0.46,t[0]*0.9,t[1]*0.9,t[2]*0.9);
+    for(let l=-1;l<=1;l+=2){                                  // braccia, con la mano in fondo
+      const ox=-sw*0.8*l, oq=0.28*l;
+      disegna(M.box,fx(ox,oq),fy(ox,oq),z+1.02,ang,0.15,0.14,0.34,t[0]*0.86,t[1]*0.86,t[2]*0.88);
+      disegna(M.box,fx(ox*1.3,oq),fy(ox*1.3,oq),z+0.86,ang,0.135,0.13,0.17,pelle[0],pelle[1],pelle[2]);
+    }
+    for(let l=-1;l<=1;l+=2){                                  // scarpe
+      const ox=sw*l*-1, oq=0.11*l;
+      disegna(M.box,fx(ox+0.03,oq),fy(ox+0.03,oq),z,ang,0.26,0.19,0.1,0.10,0.11,0.13);
+    }
   }
   disegna(M.box,x,y,z+1.44,ang,0.15,0.15,0.16,pelle[0],pelle[1],pelle[2]);
   disegna(M.box,x,y,z+1.58,ang,0.22,0.24,0.23,pelle[0],pelle[1],pelle[2]);
-  if(vicino) disegna(M.box,x,y,z+1.72,ang,0.235,0.255,0.08,pelle[0]*0.35,pelle[1]*0.32,pelle[2]*0.3);
+  if(vicino){
+    disegna(M.box,x,y,z+1.72,ang,0.235,0.255,0.08,pelle[0]*0.35,pelle[1]*0.32,pelle[2]*0.3);
+    for(let l=-1;l<=1;l+=2)                                   // occhi: si capisce da che parte guarda
+      disegna(M.box,fx(0.115,0.062*l),fy(0.115,0.062*l),z+1.655,ang,0.04,0.05,0.045,0.10,0.10,0.12);
+  }
 }
 function disegnaScena(){
   lastObjs=0;
@@ -3176,7 +3210,7 @@ function disegnaScena(){
     const fermo=(p.aspetta>0&&!p.att);
     disegnaPersona(q[0],q[1],0,pedAng(p),fermo?0:(tempo*7+p.t*20),p.col,pelle,d<35); lastObjs++;
   }
-  if(tps&&!P.veh) disegnaPersona(P.x,P.y,P.z,P.yaw,P.bob*2,P.hurt>0?'#d0453c':'#3d7fd6',PELLI[0],true);
+  if(tps&&!P.veh&&CAM.dist>1.3) disegnaPersona(P.x,P.y,P.z,P.yaw,P.bob*2,P.hurt>0?'#d0453c':'#3d7fd6',PELLI[0],true);
   /* --- oggetti --- */
   for(const c of crates){
     const d=dist2cam(c.x,c.y); if(d>110) continue;
