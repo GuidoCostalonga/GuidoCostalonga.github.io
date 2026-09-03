@@ -1,5 +1,5 @@
 /* Citta Libera 3D - funziona anche senza rete */
-const CACHE = 'citta-libera-v23';
+const CACHE = 'citta-libera-v24';
 const FILES = ['./', './index.html', './manifest.webmanifest', './icona-180.png', './icona-512.png'];
 
 self.addEventListener('install', e => {

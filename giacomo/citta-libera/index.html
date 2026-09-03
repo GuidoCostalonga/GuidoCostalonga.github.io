@@ -1367,7 +1367,7 @@ function drawBigMap(){
   cone(bctx,P.x*k,my(P.y),-P.yaw,34);
   bctx.fillStyle='#ff3b30'; bctx.beginPath(); bctx.arc(P.x*k,my(P.y),8,0,TAU); bctx.fill();
   bctx.strokeStyle='#fff'; bctx.lineWidth=2.5; bctx.stroke();
-  document.getElementById('mapSub').textContent=(altri.size?('🟢 '+altri.size+' amici collegati · '):'')
+  document.getElementById('mapSub').textContent=(altri.size?('🟢 '+altri.size+(altri.size===1?' amico collegato · ':' amici collegati · ')):'')
     +(EQ.gps
     ?'🔴 tu · 🟡 obiettivo · puntini = negozi · quadretti = veicoli'
     :'🔴 tu · 🟡 obiettivo · compra il 📡 GPS per vedere tutti i negozi');
