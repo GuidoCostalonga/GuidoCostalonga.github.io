@@ -1456,9 +1456,9 @@ function creaTexture(){
   /* vetro dei veicoli */
   TEX.vetroAuto=texDa((x,S)=>{
     const g=x.createLinearGradient(0,0,S,S);
-    g.addColorStop(0,'#9dc3e0'); g.addColorStop(0.45,'#2f4353'); g.addColorStop(1,'#1a242e');
+    g.addColorStop(0,'#c2ddf2'); g.addColorStop(0.42,'#5d7a90'); g.addColorStop(1,'#33454f');
     x.fillStyle=g; x.fillRect(0,0,S,S);
-    x.fillStyle='rgba(255,255,255,.14)';
+    x.fillStyle='rgba(255,255,255,.22)';
     x.beginPath(); x.moveTo(0,S*0.7); x.lineTo(S*0.7,0); x.lineTo(S,0); x.lineTo(0,S); x.closePath(); x.fill();
   },64);
 }
@@ -1517,7 +1517,7 @@ function costruisciCitta(){
     const ox=gx*CELL, oy=gy*CELL, aria=(gx>=13&&gy>=13);
     asf.piano(ox,oy,ROAD,CELL,0,8,1,1,1);
     asf.piano(ox+ROAD,oy,CELL-ROAD,ROAD,0,8,1,1,1);
-    if(aria){ mar.piano(ox+ROAD,oy+ROAD,BS,BS,0.02,6,0.95,0.95,0.97); continue; }
+    if(aria){ asf.piano(ox+ROAD,oy+ROAD,BS,BS,0.02,10,1.22,1.22,1.24); continue; }
     const sx0=ox+ROAD-SW, sy0=oy+ROAD-SW, S=BS+SW*2;
     mar.piano(sx0,sy0,S,S,0.15,4,1,1,1);                              // marciapiede
     if(!celleParco[gx+','+gy]) erb.piano(ox+ROAD,oy+ROAD,BS,BS,0.17,6,0.72,0.78,0.66);   // cortile
@@ -1533,6 +1533,13 @@ function costruisciCitta(){
       lin.piano(ox+1.2+k*2.1,oy+ROAD+0.7,1.2,2.4,0.025,1,1,1,1);
       lin.piano(ox+ROAD+0.7,oy+1.2+k*2.1,2.4,1.2,0.025,1,1,1,1);
     }
+  }
+  {                                                     // pista di volo
+    const px0=airfield.x+56, py0=airfield.y+16;
+    asf.piano(px0,py0,16,168,0.03,10,0.92,0.92,0.95);
+    for(let t=6;t<160;t+=14) lin.piano(px0+7.2,py0+t,1.6,7,0.05,1,1,1,1);
+    lin.piano(px0+1.5,py0+4,13,1.4,0.05,1,1,1,1);
+    lin.piano(px0+1.5,py0+162,13,1.4,0.05,1,1,1,1);
   }
   for(const p of parks){
     if(p.plaza){
@@ -1631,12 +1638,88 @@ function primitive(){
   M.chioma=caricaGeo(f,TEX.chioma,{taglia:0.45});
   const p=new Geo(); p.piano(-0.5,-0.5,1,1,0,1,1,1,1);
   M.quad=caricaGeo(p,TEX.piatta);
-  /* auto: profilo a sezioni, coordinate normalizzate (lunghezza x, larghezza y, altezza z) */
-  const anelli=[{z:0.15,a:0.44,b:0.38},{z:0.29,a:0.50,b:0.50},{z:0.50,a:0.495,b:0.50},
-                {z:0.63,a:0.45,b:0.455},{z:0.73,a:0.31,b:0.40,dx:-0.03},{z:1.0,a:0.24,b:0.34,dx:-0.05}];
-  M.auto=caricaGeo(profilo(anelli,true),TEX.piatta,{spec:0.55});
-  const vetri=[{z:0.755,a:0.30,b:0.405,dx:-0.03},{z:0.95,a:0.25,b:0.35,dx:-0.045}];
-  M.autoVetri=caricaGeo(profilo(vetri,false),TEX.vetroAuto,{spec:1.0});
+  /* --- carrozzerie: sezioni orizzontali sovrapposte --- */
+  const CARR={
+    berlina:{corpo:[{z:0.15,a:0.44,b:0.38},{z:0.29,a:0.50,b:0.50},{z:0.50,a:0.495,b:0.50},
+                    {z:0.63,a:0.45,b:0.455},{z:0.73,a:0.31,b:0.40,dx:-0.03},{z:1.0,a:0.24,b:0.34,dx:-0.05}],
+             vetri:[{z:0.755,a:0.30,b:0.405,dx:-0.03},{z:0.95,a:0.25,b:0.35,dx:-0.045}]},
+    suv:{corpo:[{z:0.12,a:0.45,b:0.40},{z:0.26,a:0.50,b:0.50},{z:0.54,a:0.50,b:0.50},
+                {z:0.62,a:0.47,b:0.49},{z:0.70,a:0.38,b:0.46,dx:-0.02},{z:1.0,a:0.34,b:0.43,dx:-0.03}],
+         vetri:[{z:0.72,a:0.37,b:0.465,dx:-0.02},{z:0.96,a:0.335,b:0.435,dx:-0.03}]},
+    furgone:{corpo:[{z:0.10,a:0.46,b:0.42},{z:0.22,a:0.50,b:0.50},{z:0.40,a:0.50,b:0.50},
+                    {z:0.48,a:0.47,b:0.50,dx:-0.05},{z:0.60,a:0.42,b:0.49,dx:-0.07},{z:1.0,a:0.40,b:0.47,dx:-0.07}],
+             vetri:[{z:0.50,a:0.20,b:0.485,dx:0.26},{z:0.78,a:0.17,b:0.455,dx:0.27}]}
+  };
+  M.carr={};
+  for(const k in CARR){
+    M.carr[k]={corpo:caricaGeo(profilo(CARR[k].corpo,true),TEX.piatta,{spec:0.55}),
+               vetri:caricaGeo(profilo(CARR[k].vetri,false),TEX.vetroAuto,{spec:1.0})};
+  }
+  M.auto=M.carr.berlina.corpo; M.autoVetri=M.carr.berlina.vetri;
+  /* --- scafi (elicottero, aereo, cabina del camion) --- */
+  M.eliScafo=caricaGeo(tubo([
+    {x:0.50,w:0.06,h:0.07,z:0.42,p:1},{x:0.455,w:0.26,h:0.28,z:0.40,p:1},
+    {x:0.37,w:0.46,h:0.46,z:0.40,p:0.9},{x:0.20,w:0.52,h:0.54,z:0.42,p:0.85},
+    {x:0.03,w:0.48,h:0.50,z:0.45,p:0.85},{x:-0.09,w:0.30,h:0.33,z:0.52,p:0.9},
+    {x:-0.19,w:0.15,h:0.16,z:0.57,p:1},{x:-0.40,w:0.11,h:0.12,z:0.59,p:1},
+    {x:-0.50,w:0.09,h:0.10,z:0.60,p:1}]),TEX.piatta,{spec:0.5});
+  M.eliVetro=caricaGeo(tubo([
+    {x:0.455,w:0.24,h:0.26,z:0.41,p:1},{x:0.36,w:0.42,h:0.42,z:0.42,p:0.9},
+    {x:0.24,w:0.46,h:0.46,z:0.45,p:0.9}]),TEX.vetroAuto,{spec:1.0});
+  M.aerScafo=caricaGeo(tubo([
+    {x:0.50,w:0.05,h:0.06,z:0.42,p:1},{x:0.45,w:0.16,h:0.18,z:0.42,p:1},
+    {x:0.30,w:0.22,h:0.26,z:0.44,p:1},{x:0.05,w:0.22,h:0.26,z:0.45,p:1},
+    {x:-0.22,w:0.15,h:0.18,z:0.48,p:1},{x:-0.44,w:0.07,h:0.10,z:0.52,p:1},
+    {x:-0.50,w:0.05,h:0.07,z:0.53,p:1}]),TEX.piatta,{spec:0.5});
+  M.aerVetro=caricaGeo(tubo([
+    {x:0.30,w:0.19,h:0.22,z:0.50,p:1},{x:0.12,w:0.20,h:0.23,z:0.52,p:1},
+    {x:-0.02,w:0.18,h:0.21,z:0.52,p:1}]),TEX.vetroAuto,{spec:1.0});
+  M.cabCamion=caricaGeo(tubo([
+    {x:0.50,w:0.46,h:0.30,z:0.38,p:0.4},{x:0.42,w:0.50,h:0.36,z:0.42,p:0.4},
+    {x:0.20,w:0.50,h:0.40,z:0.55,p:0.4},{x:-0.10,w:0.50,h:0.40,z:0.58,p:0.4},
+    {x:-0.18,w:0.48,h:0.38,z:0.56,p:0.4}]),TEX.piatta,{spec:0.45});
+  /* disco del rotore e dell'elica */
+  const dsc=new Geo(), ND=20;
+  for(let i=0;i<ND;i++){
+    const a0=i/ND*TAU,a1=(i+1)/ND*TAU;
+    dsc.q(0,0,0, Math.cos(a0),Math.sin(a0),0, Math.cos(a1),Math.sin(a1),0, 0,0,0, 0,0,1,1, 1,1,1);
+    dsc.q(0,0,0, Math.cos(a1),Math.sin(a1),0, Math.cos(a0),Math.sin(a0),0, 0,0,0, 0,0,1,1, 1,1,1);
+  }
+  M.disco=caricaGeo(dsc,TEX.piatta,{alpha:0.16,piatto:1});
+}
+/* scafo: sezioni trasversali raccordate lungo la lunghezza */
+function tubo(sez){
+  const g=new Geo(), N=8;
+  const punti=(S)=>{
+    const p=S.p===undefined?1:S.p, r=[];
+    for(let k=0;k<N;k++){
+      const a=k/N*TAU, c=Math.cos(a), s2=Math.sin(a);
+      const y=Math.sign(c)*Math.pow(Math.abs(c),p)*S.w;
+      const z=S.z+Math.sign(s2)*Math.pow(Math.abs(s2),p)*S.h;
+      r.push([S.x,y,z]);
+    }
+    return r;
+  };
+  let A=punti(sez[0]);
+  for(let i=1;i<sez.length;i++){
+    const B=punti(sez[i]);
+    for(let k=0;k<N;k++){
+      const j=(k+1)%N;
+      g.q(A[k][0],A[k][1],A[k][2], A[j][0],A[j][1],A[j][2],
+          B[j][0],B[j][1],B[j][2], B[k][0],B[k][1],B[k][2], k/N,0,(k+1)/N,1, 1,1,1);
+    }
+    A=B;
+  }
+  const tappo=(pt,verso)=>{                       // chiusure alle estremita'
+    const cx=pt[0][0], cy=0, cz=pt.reduce((a,p)=>a+p[2],0)/N;
+    for(let k=0;k<N;k++){
+      const j=(k+1)%N;
+      if(verso>0) g.q(cx,cy,cz, pt[k][0],pt[k][1],pt[k][2], pt[j][0],pt[j][1],pt[j][2], cx,cy,cz, 0,0,1,1, 1,1,1);
+      else        g.q(cx,cy,cz, pt[j][0],pt[j][1],pt[j][2], pt[k][0],pt[k][1],pt[k][2], cx,cy,cz, 0,0,1,1, 1,1,1);
+    }
+  };
+  tappo(punti(sez[0]),1); tappo(punti(sez[sez.length-1]),-1);
+  return g;
 }
 /* costruisce una superficie raccordata fra sezioni ottagonali */
 function profilo(anelli,chiudi){
@@ -1748,59 +1831,139 @@ function dist2cam(x,y){return Math.hypot(x-CAM.x,y-CAM.y);}
 
 function disegnaVeicolo(v,d){
   const def=v.d, L=def.l, W=def.w, H=def.h, a=v.ang, c=Math.cos(a), s=Math.sin(a);
-  const t=tint(v.col), scuro=[t[0]*0.5,t[1]*0.5,t[2]*0.5];
+  const t=tint(v.col), scuro=[t[0]*0.45,t[1]*0.45,t[2]*0.45];
   const fx=(p,q)=>v.x+c*p-s*q, fy=(p,q)=>v.y+s*p+c*q;
-  const roll=v.wroll||0;
-  usaMesh(M.box);
+  const roll=v.wroll||0, gomma=[0.10,0.11,0.13];
   if(v.type==='aereo'){
-    disegna(M.box,v.x,v.y,v.z+0.55,a,L,1.2,1.3,t[0],t[1],t[2]);
-    disegna(M.box,fx(-L*0.1,0),fy(-L*0.1,0),v.z+0.95,a,L*0.24,W,0.26,t[0],t[1],t[2]);
-    disegna(M.box,fx(-L*0.42,0),fy(-L*0.42,0),v.z+1.5,a,1.2,0.26,H-1.5,t[0],t[1],t[2]);
-    disegna(M.box,fx(-L*0.42,0),fy(-L*0.42,0),v.z+1.5,a,0.9,W*0.34,0.22,t[0],t[1],t[2]);
-    usaMesh({buf:M.box.buf,n:M.box.n,tex:TEX.vetroAuto,spec:0.9});
-    disegna(M.box,fx(L*0.2,0),fy(L*0.2,0),v.z+1.55,a,L*0.26,0.95,0.3,1,1,1);
-  } else if(v.type==='eli'){
-    disegna(M.box,fx(L*0.1,0),fy(L*0.1,0),v.z+0.45,a,L*0.52,W,H-0.45,t[0],t[1],t[2]);
-    disegna(M.box,fx(-L*0.34,0),fy(-L*0.34,0),v.z+H*0.52,a,L*0.5,0.42,0.42,t[0],t[1],t[2]);
-    disegna(M.box,fx(-L*0.56,0),fy(-L*0.56,0),v.z+H*0.52,a,0.5,0.22,1.0,scuro[0],scuro[1],scuro[2]);
-    disegna(M.box,fx(0,W*0.44),fy(0,W*0.44),v.z,a,L*0.55,0.22,0.42,0.25,0.27,0.3);
-    disegna(M.box,fx(0,-W*0.44),fy(0,-W*0.44),v.z,a,L*0.55,0.22,0.42,0.25,0.27,0.3);
-    disegna(M.box,fx(L*0.05,0),fy(L*0.05,0),v.z+H,a,0.34,0.34,0.45,0.22,0.24,0.28);
-    for(let i=0;i<2;i++)
-      disegna(M.box,fx(L*0.05,0),fy(L*0.05,0),v.z+H+0.45,a+v.rot+i*Math.PI*0.5,10.4,0.3,0.06,0.16,0.17,0.2);
-    usaMesh({buf:M.box.buf,n:M.box.n,tex:TEX.vetroAuto,spec:0.9});
-    disegna(M.box,fx(L*0.26,0),fy(L*0.26,0),v.z+1.05,a,L*0.2,W*0.86,0.95,1,1,1);
-  } else if(v.type==='moto'){
-    disegna(M.box,v.x,v.y,v.z+0.38,a,L*0.78,W,0.42,t[0],t[1],t[2]);
-    disegna(M.box,fx(-L*0.08,0),fy(-L*0.08,0),v.z+0.8,a,L*0.4,W*0.92,0.35,scuro[0],scuro[1],scuro[2]);
-    disegna(M.box,fx(L*0.2,0),fy(L*0.2,0),v.z+0.86,a,0.1,W*1.05,0.09,0.2,0.21,0.24);
-    usaMesh(M.cil);
-    disegnaRuota(fx(L*0.38,0),fy(L*0.38,0),v.z+0.30,a,roll,0.30,0.09,0.11,0.12,0.14);
-    disegnaRuota(fx(-L*0.38,0),fy(-L*0.38,0),v.z+0.30,a,roll,0.30,0.09,0.11,0.12,0.14);
-  } else if(v.type==='camion'){
-    disegna(M.box,fx(L*0.3,0),fy(L*0.3,0),v.z+0.62,a,L*0.34,W,H-0.62,t[0],t[1],t[2]);
-    disegna(M.box,fx(-L*0.18,0),fy(-L*0.18,0),v.z+0.9,a,L*0.6,W,H*0.78,t[0]*0.95,t[1]*0.95,t[2]*0.95);
-    usaMesh({buf:M.box.buf,n:M.box.n,tex:TEX.vetroAuto,spec:0.9});
-    disegna(M.box,fx(L*0.45,0),fy(L*0.45,0),v.z+1.5,a,0.24,W*0.86,1.0,1,1,1);
-    usaMesh(M.cil);
-    const wq=[[L*0.3,W*0.45],[L*0.3,-W*0.45],[-L*0.16,W*0.45],[-L*0.16,-W*0.45],[-L*0.34,W*0.45],[-L*0.34,-W*0.45]];
-    for(const w of wq) disegnaRuota(fx(w[0],w[1]),fy(w[0],w[1]),v.z+0.46,a,roll,0.46,0.16,0.11,0.12,0.14);
-  } else {
-    usaMesh(M.auto);
-    disegna(M.auto,v.x,v.y,v.z,a,L,W,H,t[0],t[1],t[2]);
-    usaMesh(M.autoVetri);
-    disegna(M.autoVetri,v.x,v.y,v.z,a,L,W,H,1,1,1);
+    usaMesh(M.aerScafo); disegna(M.aerScafo,v.x,v.y,v.z,a,L,W*0.30,H,t[0],t[1],t[2]);
     usaMesh(M.box);
-    if(d<70){
-      disegna(M.box,fx(L*0.46,W*0.32),fy(L*0.46,W*0.32),v.z+H*0.42,a,0.16,0.34,0.2,1.9,1.8,1.4);
-      disegna(M.box,fx(L*0.46,-W*0.32),fy(L*0.46,-W*0.32),v.z+H*0.42,a,0.16,0.34,0.2,1.9,1.8,1.4);
-      disegna(M.box,fx(-L*0.47,W*0.32),fy(-L*0.47,W*0.32),v.z+H*0.45,a,0.14,0.34,0.18,1.2,0.16,0.12);
-      disegna(M.box,fx(-L*0.47,-W*0.32),fy(-L*0.47,-W*0.32),v.z+H*0.45,a,0.14,0.34,0.18,1.2,0.16,0.12);
+    /* ali con leggero diedro, in due tronconi per lato */
+    for(const lato of [1,-1]){
+      disegna(M.box,fx(-L*0.06,lato*W*0.16),fy(-L*0.06,lato*W*0.16),v.z+0.92,a,L*0.20,W*0.32,0.16,t[0],t[1],t[2]);
+      disegna(M.box,fx(-L*0.06,lato*W*0.36),fy(-L*0.06,lato*W*0.36),v.z+1.02,a,L*0.16,W*0.30,0.13,t[0],t[1],t[2]);
+      disegna(M.box,fx(-L*0.06,lato*W*0.485),fy(-L*0.06,lato*W*0.485),v.z+1.10,a,L*0.12,0.3,0.11,scuro[0],scuro[1],scuro[2]);
+    }
+    disegna(M.box,fx(-L*0.42,0),fy(-L*0.42,0),v.z+H*0.55,a,L*0.16,0.14,H*0.55,t[0],t[1],t[2]);   // deriva
+    disegna(M.box,fx(-L*0.44,0),fy(-L*0.44,0),v.z+0.95,a,L*0.12,W*0.30,0.11,t[0],t[1],t[2]);     // piani di coda
+    usaMesh(M.aerVetro); disegna(M.aerVetro,v.x,v.y,v.z,a,L,W*0.30,H,1,1,1);
+    usaMesh(M.cil);
+    disegnaRuota(fx(L*0.28,0),fy(L*0.28,0),v.z+0.24,a,roll,0.24,0.09,gomma[0],gomma[1],gomma[2]);
+    disegnaRuota(fx(-L*0.06,W*0.20),fy(-L*0.06,W*0.20),v.z+0.26,a,roll,0.26,0.10,gomma[0],gomma[1],gomma[2]);
+    disegnaRuota(fx(-L*0.06,-W*0.20),fy(-L*0.06,-W*0.20),v.z+0.26,a,roll,0.26,0.10,gomma[0],gomma[1],gomma[2]);
+    usaMesh(M.box);
+    disegna(M.box,fx(L*0.47,0),fy(L*0.47,0),v.z+0.62,a,0.22,0.36,0.36,scuro[0],scuro[1],scuro[2]); // ogiva
+    const gir=v.rot*7;
+    for(let i=0;i<4;i++) elicaX(fx(L*0.52,0),fy(L*0.52,0),v.z+0.72,a,gir+i*Math.PI*0.5,0.1,0.10,1.45,0.16,0.17,0.19);
+    if(Math.abs(v.sp)>2){
+      gl.enable(gl.BLEND); gl.depthMask(false);
+      usaMesh(M.disco);
+      discoX(fx(L*0.53,0),fy(L*0.53,0),v.z+0.72,a,1.5,0.72,0.74,0.78);
+      gl.depthMask(true); gl.disable(gl.BLEND); usaMesh(M.box);
+    }
+  } else if(v.type==='eli'){
+    usaMesh(M.eliScafo); disegna(M.eliScafo,v.x,v.y,v.z,a,L,W,H,t[0],t[1],t[2]);
+    usaMesh(M.box);
+    disegna(M.box,fx(-L*0.47,0),fy(-L*0.47,0),v.z+H*0.60,a,L*0.10,0.12,H*0.42,t[0],t[1],t[2]);      // deriva
+    disegna(M.box,fx(-L*0.44,0),fy(-L*0.44,0),v.z+H*0.62,a,L*0.09,W*0.55,0.10,t[0],t[1],t[2]);      // stabilizzatore
+    for(const lato of [1,-1]){                                                                       // pattini
+      disegna(M.box,fx(-L*0.02,lato*W*0.46),fy(-L*0.02,lato*W*0.46),v.z,a,L*0.42,0.13,0.13,0.30,0.32,0.36);
+      disegna(M.box,fx(L*0.10,lato*W*0.30),fy(L*0.10,lato*W*0.30),v.z+0.1,a,0.11,W*0.34,H*0.30,0.30,0.32,0.36);
+      disegna(M.box,fx(-L*0.14,lato*W*0.30),fy(-L*0.14,lato*W*0.30),v.z+0.1,a,0.11,W*0.34,H*0.30,0.30,0.32,0.36);
+    }
+    disegna(M.box,fx(L*0.02,0),fy(L*0.02,0),v.z+H*0.92,a,0.5,0.5,0.28,0.26,0.28,0.32);              // testa rotore
+    usaMesh({buf:M.box.buf,n:M.box.n,tex:TEX.vetroAuto,spec:0.9});
+    disegna(M.box,fx(L*0.33,0),fy(L*0.33,0),v.z+H*0.30,a,L*0.14,W*0.72,H*0.36,1,1,1);   // parabrezza
+    disegna(M.box,fx(L*0.16,0),fy(L*0.16,0),v.z+H*0.40,a,L*0.22,W*1.01,H*0.26,1,1,1);   // finestrini
+    usaMesh(M.box);
+    for(let i=0;i<2;i++)                                                                             // pale principali
+      disegna(M.box,fx(L*0.02,0),fy(L*0.02,0),v.z+H*1.02,a+v.rot+i*Math.PI*0.5,L*1.05,0.26,0.05,0.16,0.17,0.19);
+    for(let i=0;i<4;i++)                                                                             // rotore di coda
+      elicaX(fx(-L*0.47,W*0.10),fy(-L*0.47,W*0.10),v.z+H*0.62,a+Math.PI*0.5,v.rot*2.6+i*Math.PI*0.5,0.06,0.05,0.95,0.16,0.17,0.19);
+    if(v.rot>0.2){
+      gl.enable(gl.BLEND); gl.depthMask(false);
+      usaMesh(M.disco);
+      disegna(M.disco,fx(L*0.02,0),fy(L*0.02,0),v.z+H*1.02,a,L*0.53,L*0.53,1,0.82,0.84,0.88);
+      discoX(fx(-L*0.47,W*0.10),fy(-L*0.47,W*0.10),v.z+H*0.62,a+Math.PI*0.5,0.95,0.72,0.74,0.78);
+      gl.depthMask(true); gl.disable(gl.BLEND); usaMesh(M.box);
+    }
+  } else if(v.type==='moto'){
+    usaMesh(M.box);
+    disegna(M.box,fx(-L*0.02,0),fy(-L*0.02,0),v.z+0.34,a,L*0.42,W*0.7,0.30,t[0],t[1],t[2]);        // serbatoio
+    disegna(M.box,fx(-L*0.24,0),fy(-L*0.24,0),v.z+0.60,a,L*0.32,W*0.85,0.13,0.16,0.17,0.19);       // sella
+    disegna(M.box,fx(-L*0.02,0),fy(-L*0.02,0),v.z+0.18,a,L*0.30,W*0.9,0.22,0.28,0.30,0.33);        // motore
+    disegna(M.box,fx(L*0.30,0),fy(L*0.30,0),v.z+0.46,a,0.10,0.10,0.42,0.35,0.37,0.40);             // forcella
+    disegna(M.box,fx(L*0.26,0),fy(L*0.26,0),v.z+0.84,a,0.09,W*1.15,0.07,0.30,0.32,0.36);           // manubrio
+    disegna(M.box,fx(L*0.33,0),fy(L*0.33,0),v.z+0.70,a,0.12,0.26,0.20,1.9,1.8,1.4);                // faro
+    disegna(M.box,fx(-L*0.34,W*0.26),fy(-L*0.34,W*0.26),v.z+0.30,a,L*0.28,0.11,0.11,0.55,0.57,0.6);// scarico
+    usaMesh(M.cil);
+    disegnaRuota(fx(L*0.36,0),fy(L*0.36,0),v.z+0.31,a,roll,0.31,0.10,gomma[0],gomma[1],gomma[2]);
+    disegnaRuota(fx(-L*0.36,0),fy(-L*0.36,0),v.z+0.32,a,roll,0.32,0.12,gomma[0],gomma[1],gomma[2]);
+  } else if(v.type==='camion'){
+    usaMesh(M.cabCamion);
+    disegna(M.cabCamion,fx(L*0.30,0),fy(L*0.30,0),v.z,a,L*0.36,W,H,t[0],t[1],t[2]);
+    usaMesh(M.box);
+    disegna(M.box,fx(-L*0.16,0),fy(-L*0.16,0),v.z+0.85,a,L*0.62,W,H*0.72,t[0]*0.96,t[1]*0.96,t[2]*0.96);
+    disegna(M.box,fx(-L*0.16,0),fy(-L*0.16,0),v.z+0.85+H*0.72,a,L*0.63,W*1.01,0.09,scuro[0],scuro[1],scuro[2]);
+    disegna(M.box,fx(-L*0.16,0),fy(-L*0.16,0),v.z+0.55,a,L*0.66,W*0.86,0.3,0.22,0.23,0.26);        // telaio
+    disegna(M.box,fx(L*0.47,0),fy(L*0.47,0),v.z+0.42,a,0.2,W*0.96,0.5,0.3,0.31,0.34);              // paraurti
+    disegna(M.box,fx(L*0.46,0),fy(L*0.46,0),v.z+0.95,a,0.16,W*0.8,0.5,0.42,0.44,0.48);             // calandra
+    disegna(M.box,fx(L*0.12,W*0.52),fy(L*0.12,W*0.52),v.z+H*0.72,a,0.1,0.1,0.6,0.5,0.52,0.56);     // scarico
+    if(d<50){
+      disegna(M.box,fx(L*0.485,W*0.34),fy(L*0.485,W*0.34),v.z+0.72,a,0.14,0.36,0.26,1.9,1.8,1.4);
+      disegna(M.box,fx(L*0.485,-W*0.34),fy(L*0.485,-W*0.34),v.z+0.72,a,0.14,0.36,0.26,1.9,1.8,1.4);
+      disegna(M.box,fx(-L*0.48,W*0.36),fy(-L*0.48,W*0.36),v.z+0.75,a,0.12,0.3,0.24,1.2,0.16,0.12);
+      disegna(M.box,fx(-L*0.48,-W*0.36),fy(-L*0.48,-W*0.36),v.z+0.75,a,0.12,0.3,0.24,1.2,0.16,0.12);
+    }
+    usaMesh({buf:M.box.buf,n:M.box.n,tex:TEX.vetroAuto,spec:0.9});
+    disegna(M.box,fx(L*0.44,0),fy(L*0.44,0),v.z+H*0.62,a,0.22,W*0.84,H*0.30,1,1,1);
+    usaMesh(M.cil);
+    const wq=[[L*0.30,W*0.47],[L*0.30,-W*0.47],[-L*0.16,W*0.47],[-L*0.16,-W*0.47],[-L*0.34,W*0.47],[-L*0.34,-W*0.47]];
+    for(const w of wq) disegnaRuota(fx(w[0],w[1]),fy(w[0],w[1]),v.z+0.46,a,roll,0.46,0.17,gomma[0],gomma[1],gomma[2]);
+  } else {
+    const va=v.variante||(v.variante=['berlina','berlina','suv','furgone'][Math.floor(hash2(Math.round(v.x*3),Math.round(v.y*3))*4)%4]);
+    const mod=M.carr[va]||M.carr.berlina;
+    const alt=va==='furgone'?H*1.45:(va==='suv'?H*1.16:H);
+    usaMesh(mod.corpo); disegna(mod.corpo,v.x,v.y,v.z,a,L,W,alt,t[0],t[1],t[2]);
+    usaMesh(mod.vetri); disegna(mod.vetri,v.x,v.y,v.z,a,L,W,alt,1,1,1);
+    usaMesh(M.box);
+    if(d<45){
+      disegna(M.box,fx(L*0.46,W*0.32),fy(L*0.46,W*0.32),v.z+alt*0.36,a,0.16,0.34,0.2,1.9,1.8,1.4);
+      disegna(M.box,fx(L*0.46,-W*0.32),fy(L*0.46,-W*0.32),v.z+alt*0.36,a,0.16,0.34,0.2,1.9,1.8,1.4);
+      disegna(M.box,fx(-L*0.47,W*0.32),fy(-L*0.47,W*0.32),v.z+alt*0.38,a,0.14,0.34,0.18,1.2,0.16,0.12);
+      disegna(M.box,fx(-L*0.47,-W*0.32),fy(-L*0.47,-W*0.32),v.z+alt*0.38,a,0.14,0.34,0.18,1.2,0.16,0.12);
+      disegna(M.box,fx(L*0.47,0),fy(L*0.47,0),v.z+alt*0.22,a,0.1,W*0.85,0.16,0.34,0.36,0.4);        // paraurti
+      disegna(M.box,fx(-L*0.47,0),fy(-L*0.47,0),v.z+alt*0.22,a,0.1,W*0.85,0.16,0.34,0.36,0.4);
+      for(const lato of [1,-1])                                                                      // specchietti
+        disegna(M.box,fx(L*0.16,lato*W*0.56),fy(L*0.16,lato*W*0.56),v.z+alt*0.55,a,0.09,0.16,0.09,scuro[0],scuro[1],scuro[2]);
     }
     usaMesh(M.cil);
     const wq=[[L*0.31,W*0.53],[L*0.31,-W*0.53],[-L*0.31,W*0.53],[-L*0.31,-W*0.53]];
-    for(const w of wq) disegnaRuota(fx(w[0],w[1]),fy(w[0],w[1]),v.z+0.34,a,roll,0.34,0.14,0.13,0.14,0.16);
+    const rr=va==='furgone'?0.36:(va==='suv'?0.38:0.34);
+    for(const w of wq) disegnaRuota(fx(w[0],w[1]),fy(w[0],w[1]),v.z+rr,a,roll,rr,0.15,gomma[0],gomma[1],gomma[2]);
   }
+}
+/* elica/rotore di coda: gira attorno all'asse longitudinale */
+function elicaX(x,y,z,yaw,spin,lung,largh,rag,r,g,b){
+  const c=Math.cos(yaw),s=Math.sin(yaw),cx2=Math.cos(spin),sx2=Math.sin(spin);
+  MMOD[0]=c*lung;      MMOD[1]=s*lung;      MMOD[2]=0;      MMOD[3]=0;
+  MMOD[4]=-s*cx2*largh;MMOD[5]=c*cx2*largh; MMOD[6]=sx2*largh;MMOD[7]=0;
+  MMOD[8]=s*sx2*rag;   MMOD[9]=-c*sx2*rag;  MMOD[10]=cx2*rag; MMOD[11]=0;
+  MMOD[12]=x; MMOD[13]=y; MMOD[14]=z; MMOD[15]=1;
+  gl.uniformMatrix4fv(LOC.uModel,false,MMOD);
+  gl.uniform3f(LOC.uTint,r,g,b);
+  gl.drawArrays(gl.TRIANGLES,0,M.box.n); lastCalls++;
+}
+/* disco trasparente su un asse longitudinale */
+function discoX(x,y,z,yaw,rag,r,g,b){
+  const c=Math.cos(yaw),s=Math.sin(yaw);
+  MMOD[0]=0;   MMOD[1]=0;   MMOD[2]=0;   MMOD[3]=0;
+  MMOD[4]=-s*rag; MMOD[5]=c*rag; MMOD[6]=0; MMOD[7]=0;
+  MMOD[8]=0;   MMOD[9]=0;   MMOD[10]=rag; MMOD[11]=0;
+  MMOD[12]=x; MMOD[13]=y; MMOD[14]=z; MMOD[15]=1;
+  MMOD[0]=c*0.02; MMOD[1]=s*0.02;
+  gl.uniformMatrix4fv(LOC.uModel,false,MMOD);
+  gl.uniform3f(LOC.uTint,r,g,b);
+  gl.drawArrays(gl.TRIANGLES,0,M.disco.n); lastCalls++;
 }
 const PELLI=[[0.94,0.79,0.63],[0.91,0.73,0.55],[0.85,0.64,0.45],[0.73,0.52,0.36],[0.55,0.37,0.24],[0.43,0.28,0.19]];
 function disegnaPersona(x,y,z,ang,fase,col,pelle,vicino){
