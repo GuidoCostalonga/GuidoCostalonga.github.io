@@ -3976,12 +3976,14 @@ function entraStanza(cod){
   });
   ws.addEventListener('close',()=>{
     if(statoRete!=='spento'){ statoRete='caduto'; toast('🌐 Collegamento caduto'); }
+    for(const g of altri.values()) chiudiCanale(g);
     altri.clear(); pannelloRete();
   });
   ws.addEventListener('error',()=>{ ultimoErrore='rete non raggiungibile'; });
   pannelloRete();
 }
 function esciStanza(zitto){
+  for(const g of altri.values()) chiudiCanale(g);
   if(ws){ try{ statoRete='spento'; ws.close(); }catch(e){} }
   ws=null; ioId=0; altri.clear(); statoRete='spento';
   if(!zitto){ toast('🌐 Sei uscito dalla stanza'); pannelloRete(); }
@@ -3989,11 +3991,22 @@ function esciStanza(zitto){
 function messaggioRete(m){
   if(m.t==='io'){
     ioId=m.id;
-    for(const g of (m.presenti||[])) nuovoAltro(g.id,g.nome,g.s);
+    for(const p of (m.presenti||[])){
+      const g=nuovoAltro(p.id,p.nome,p.s);
+      if(ioId<p.id) creaCanale(g,true);              // chi c'era prima ha numero piu' basso: propone lui
+    }
     pannelloRete(); return;
   }
-  if(m.t==='entra'){ nuovoAltro(m.id,m.nome,null); toast('🌐 '+m.nome+' è entrato'); pannelloRete(); return; }
-  if(m.t==='via'){ altri.delete(m.id); toast('🌐 '+(m.nome||'Un giocatore')+' è uscito'); pannelloRete(); return; }
+  if(m.t==='entra'){
+    const g=nuovoAltro(m.id,m.nome,null);
+    if(ioId&&ioId<m.id) creaCanale(g,true);          // il numero piu' basso fa la proposta
+    toast('🌐 '+m.nome+' è entrato'); pannelloRete(); return;
+  }
+  if(m.t==='via'){
+    chiudiCanale(altri.get(m.id)); altri.delete(m.id);
+    toast('🌐 '+(m.nome||'Un giocatore')+' è uscito'); pannelloRete(); return;
+  }
+  if(m.t==='a'){ segnale(m.da,m.m||{}); return; }
   if(m.t==='s'){
     let g=altri.get(m.id); if(!g){ g=nuovoAltro(m.id,'Giocatore',null); }
     if(m.s) aggiornaAltro(g,m.s);
@@ -4013,10 +4026,81 @@ function messaggioRete(m){
   }
 }
 function nuovoAltro(id,nome,s0){
-  const g={id,nome:nome||'Giocatore',vita:100,pre:null,ora:null,col:'hsl('+((id*97)%360)+',55%,52%)',_v:null};
+  const g={id,nome:nome||'Giocatore',vita:100,pre:null,ora:null,col:'hsl('+((id*97)%360)+',55%,52%)',_v:null,
+           pc:null,dc:null,via:'server',ping:null,ultimoPing:0};
   altri.set(id,g);
   if(s0) aggiornaAltro(g,s0);
   return g;
+}
+/* ---- WebRTC: due telefoni che si parlano senza passare dal server ----
+   Il server serve solo per lo scambio iniziale (poche righe di testo).
+   Chi ha il numero piu' basso fa la proposta, l'altro risponde. */
+const STUN=[{urls:'stun:stun.cloudflare.com:3478'},{urls:'stun:stun.l.google.com:19302'}];
+function inviaA(id,m){
+  if(!ws||ws.readyState!==1) return;
+  try{ ws.send(JSON.stringify({t:'a',a:id,m})); }catch(e){}
+}
+function creaCanale(g,proponi){
+  if(g.pc) return g.pc;
+  let pc;
+  try{ pc=new RTCPeerConnection({iceServers:STUN}); }
+  catch(e){ g.via='server'; return null; }
+  g.pc=pc;
+  pc.onicecandidate=e=>{ if(e.candidate) inviaA(g.id,{t:'ghiaccio',c:e.candidate}); };
+  pc.onconnectionstatechange=()=>{
+    if(pc.connectionState==='failed'||pc.connectionState==='closed'){
+      g.via='server'; g.dc=null;
+      try{pc.close();}catch(e){}
+      if(g.pc===pc) g.pc=null;
+    }
+  };
+  pc.ondatachannel=e=>agganciaCanale(g,e.channel);
+  if(proponi){
+    const dc=pc.createDataChannel('gioco',{ordered:false,maxRetransmits:0});
+    agganciaCanale(g,dc);
+    pc.createOffer().then(o=>pc.setLocalDescription(o))
+      .then(()=>inviaA(g.id,{t:'proposta',d:pc.localDescription}))
+      .catch(()=>{ g.via='server'; });
+  }
+  return pc;
+}
+function agganciaCanale(g,dc){
+  g.dc=dc;
+  dc.onopen=()=>{ g.via='diretto'; pannelloRete(); };
+  dc.onclose=()=>{ if(g.dc===dc){ g.dc=null; g.via='server'; } };
+  dc.onerror=()=>{ if(g.dc===dc){ g.dc=null; g.via='server'; } };
+  dc.onmessage=ev=>{
+    let m; try{ m=JSON.parse(ev.data); }catch(e){ return; }
+    if(m.t==='s'){ aggiornaAltro(g,m.s); return; }
+    if(m.t==='eco'){ try{ dc.send(JSON.stringify({t:'rieco',a:m.a})); }catch(e){} return; }
+    if(m.t==='rieco'){ g.ping=Math.round(performance.now()-m.a); return; }
+  };
+}
+function segnale(daId,m){
+  let g=altri.get(daId); if(!g) g=nuovoAltro(daId,'Giocatore',null);
+  if(m.t==='proposta'){
+    const pc=creaCanale(g,false); if(!pc) return;
+    pc.setRemoteDescription(m.d)
+      .then(()=>pc.createAnswer()).then(a=>pc.setLocalDescription(a))
+      .then(()=>inviaA(daId,{t:'risposta',d:pc.localDescription}))
+      .catch(()=>{ g.via='server'; });
+    return;
+  }
+  if(m.t==='risposta'){
+    if(g.pc) g.pc.setRemoteDescription(m.d).catch(()=>{ g.via='server'; });
+    return;
+  }
+  if(m.t==='ghiaccio'){
+    if(g.pc) g.pc.addIceCandidate(m.c).catch(()=>{});
+    return;
+  }
+  if(m.t==='s'){ aggiornaAltro(g,m.s); return; }   // ripiego: stato passato dal server
+}
+function chiudiCanale(g){
+  if(!g) return;
+  try{ if(g.dc) g.dc.close(); }catch(e){}
+  try{ if(g.pc) g.pc.close(); }catch(e){}
+  g.dc=null; g.pc=null; g.via='server';
 }
 function aggiornaAltro(g,s){
   const t=performance.now()/1000;
@@ -4045,7 +4129,14 @@ function inviaStato(){
   const s={x:r2(P.x),y:r2(P.y),z:r2(P.z),a:r2(P.yaw),
            v:v?v.type:0, c:v?v.col:0, va:v?(v.variante||'berlina'):0,
            sp:v?r2(v.sp):0, b:r2(P.bob*2), w:armaInMano()||0, vt:Math.round(P.vita)};
-  try{ ws.send(JSON.stringify({t:'s',s})); }catch(e){}
+  const testo=JSON.stringify({t:'s',s});
+  for(const g of altri.values()){
+    if(g.dc&&g.dc.readyState==='open'){               // dritto all'amico, senza server
+      try{ g.dc.send(testo); }catch(e){}
+      if(t-g.ultimoPing>2){ g.ultimoPing=t;
+        try{ g.dc.send(JSON.stringify({t:'eco',a:performance.now()})); }catch(e){} }
+    } else inviaA(g.id,{t:'s',s});                    // ripiego: glielo gira il server
+  }
 }
 function inviaColpo(id,dan){
   if(!ws||statoRete!=='dentro'||ws.readyState!==1) return;
@@ -4076,8 +4167,9 @@ function pannelloRete(){
     for(const g of altri.values()){
       const p=posaAltro(g);
       const d=p?Math.round(Math.hypot(p.x-P.x,p.y-P.y)):null;
+      const come=g.via==='diretto'?('🔗 diretto'+(g.ping!==null?' · '+g.ping+' ms':'')):'☁️ tramite server';
       riga('🧍',g.nome,(d===null?'in arrivo…':'a '+d+' m'+(p.v?' · in '+(VEHDEF[p.v]?VEHDEF[p.v].n:'auto'):' · a piedi'))
-           +' · vita '+Math.round(g.vita)+'%','',false,null);
+           +' · vita '+Math.round(g.vita)+'% · '+come,'',false,null);
     }
     return;
   }
@@ -4098,6 +4190,7 @@ function pannelloRete(){
     entraStanza(c);
   });
   riga('ℹ️','Come funziona','Vi vedete camminare e guidare, e potete spararvi. Traffico e passanti restano diversi per ognuno','',false,null);
+  riga('🔗','Collegamento diretto','I telefoni si parlano fra loro: il server serve solo a farvi trovare. Se la rete non lo permette si passa dal server e si gioca lo stesso','',false,null);
 }
 function apriRete(){ paused=true; $net.classList.add('show'); pannelloRete(); }
 function chiudiRete(){
