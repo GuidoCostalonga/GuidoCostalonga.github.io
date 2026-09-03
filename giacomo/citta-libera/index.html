@@ -1171,6 +1171,40 @@ function apriTelefono(){
       chiudiTelefono();
     });
   }
+  /* pilota automatico */
+  if(P.veh&&!P.veh.d.air){
+    if(autoGuida){
+      riga('🧭','Pilota automatico','Ti sta portando a '+autoGuida.nome+' · '+
+           Math.round(dist(P.x,P.y,autoGuida.x,autoGuida.y))+' m','SPEGNI',true,()=>{
+        fermaPilota('🧭 Pilota automatico spento'); chiudiTelefono();
+      });
+    } else {
+      const mete=[];
+      if(job){ const t=job.stage===0?job.from:job.to;
+        mete.push(['📦','Dove serve per il lavoro',t.name?t.name.split('"')[0].trim():'consegna',t.x,t.y]); }
+      const mia=abitazioni.find(c=>c.mia);
+      if(mia) mete.push(['🏠','Casa mia',mia.nome,mia.x,mia.y]);
+      const vicino=(k,emo,nome)=>{
+        let b=null,bd=1e9;
+        for(const sh of shops) if(sh.def.k===k){const dd=dist(P.x,P.y,sh.x,sh.y); if(dd<bd){bd=dd;b=sh;}}
+        if(b) mete.push([emo,nome,b.name.split('"')[1]||b.name,b.x,b.y]);
+      };
+      vicino('off','🔧','Officina');
+      vicino('armi','🎯','Armeria');
+      vicino('conc','🏎️','Concessionaria');
+      vicino('imm','🏠','Agenzia Case');
+      vicino('alim','🛒','Alimentari');
+      mete.push(['✈️','Aeroporto','pista e hangar',airfield.x+40,airfield.y+30]);
+      for(const m of mete){
+        const dd=Math.round(dist(P.x,P.y,m[3],m[4]));
+        riga(m[0],'Portami: '+m[1],m[2]+' · '+dd+' m','VAI',true,()=>{
+          autoGuida={x:m[3],y:m[4],nome:m[1]};
+          toast('🧭 Ti porto a '+m[1]+' · rilassati',2800); beep(700,.1,'triangle');
+          chiudiTelefono();
+        });
+      }
+    }
+  }
   /* meccanico */
   const v=veicoloVicino();
   const costo=v?costoRiparazione(v,4,30):0;
@@ -1330,6 +1364,12 @@ function drawMini(){
     const q=to(p.x,p.y); if(q[0]<0||q[1]<0||q[0]>S||q[1]>S) continue;
     mctx.fillStyle='#fff'; mctx.beginPath(); mctx.arc(q[0],q[1],6,0,TAU); mctx.fill();
     mctx.fillStyle=g.col;  mctx.beginPath(); mctx.arc(q[0],q[1],4,0,TAU); mctx.fill();
+  }
+  if(autoGuida){
+    const q=to(autoGuida.x,autoGuida.y);
+    mctx.fillStyle='#7ad0ff'; mctx.beginPath();
+    mctx.arc(clamp(q[0],8,S-8),clamp(q[1],8,S-8),7,0,TAU); mctx.fill();
+    mctx.strokeStyle='#04202e'; mctx.lineWidth=2; mctx.stroke();
   }
   cone(mctx,S/2,S/2,-P.yaw,42);
   mctx.fillStyle='#ff3b30'; mctx.beginPath(); mctx.arc(S/2,S/2,6,0,TAU); mctx.fill();
@@ -1646,6 +1686,7 @@ function azione(){
     if(dentroEdificio(P.x,P.y,v.z)){P.x=v.x;P.y=v.y;}
     if(dentroEdificio(P.x,P.y,v.z)){const q=nearRoadFree(v.x,v.y);P.x=q.x;P.y=q.y;}
     P.z=v.z; P.vz=0; P.yaw=v.ang+lookOff; lookOff=0; P.veh=null; v.sp*=0.15;
+    fermaPilota();
     v.rollio=0; v.becc=0; stridore=0;
     toast(v.z>3?'😱 Fuori in volo!':'🚶 Sei sceso'); beep(320,.09,'triangle'); setLabels(); return;
   }
@@ -1845,6 +1886,10 @@ function updateFoot(ix,iy,im,dt){
   solve(P,0.42);
 }
 function updateVehicle(v,ix,iy,dt){
+  if(autoGuida&&!v.d.air){
+    if(Math.abs(ix)>0.3||Math.abs(iy)>0.3||key.C) fermaPilota('🧭 Pilota automatico spento: guidi tu');
+    else { const c=comandiAuto(v,dt); ix=c.ix; iy=c.iy; }
+  }
   const d=v.d, thr=-iy, steer=ix;
   const eff=1-(v.danno||0)/100*0.75;                       // motore acciaccato
   const fori=gommeARota(v);
@@ -1985,6 +2030,7 @@ function updHUD(){
                    +(dnn>4?' · 🔧'+dnn+'%':'')
                    +(arma?' · 🔶'+P.colpi:'')
                    +(allarme>=0.5?' · '+'⭐'.repeat(Math.min(5,Math.round(allarme))):'')
+                   +(autoGuida?' · 🧭 '+Math.round(dist(P.x,P.y,autoGuida.x,autoGuida.y))+' m':'')
                    +' · '+(hh<10?'0':'')+hh+':'+(mi<10?'0':'')+mi;
 }
 let promptTxt='';
@@ -4258,6 +4304,84 @@ function chiamaServizio(tipo,mx,my){
 function togliServizio(m){
   const i=servizi.indexOf(m); if(i>=0) servizi.splice(i,1);
   const k=vehicles.indexOf(m.v); if(k>=0&&P.veh!==m.v) vehicles.splice(k,1);
+}
+let autoGuida=null;                                  // {x,y,nome} dove ci stiamo facendo portare
+function semaforoDavanti(v){                         // rosso in arrivo?
+  const cx=Math.cos(v.ang), cy=Math.sin(v.ang);
+  const vert=Math.abs(cy)>Math.abs(cx);
+  const pos=vert?v.y:v.x, dir=(vert?cy:cx)>=0?1:-1;
+  const d=versoIncrocio(pos,dir);
+  if(d<0||d>30) return null;
+  const k=dir>0?Math.floor(pos/CELL)+1:Math.floor(pos/CELL);
+  const gx=vert?Math.floor(v.x/CELL):k, gy=vert?k:Math.floor(v.y/CELL);
+  return {d, st:statoSemaforo(gx,gy,vert)};
+}
+function ostacoloDavanti(v){                         // quanto spazio libero ho davanti
+  const cx=Math.cos(v.ang), cy=Math.sin(v.ang);
+  let libero=999;
+  const guarda=(x,y,raggio)=>{
+    const dx=x-v.x, dy=y-v.y;
+    const avanti=dx*cx+dy*cy;
+    if(avanti<0.5||avanti>26) return;
+    const lato=Math.abs(-dx*Math.sin(v.ang)+dy*Math.cos(v.ang));
+    if(lato>raggio+v.d.w*0.5) return;
+    libero=Math.min(libero,avanti);
+  };
+  for(const o of vehicles){ if(o===v) continue; if(o.z>2) continue; guarda(o.x,o.y,o.d.w*0.6); }
+  for(const c of traffic){
+    const x=c.vert?c.line:c.pos, y=c.vert?c.pos:c.line;
+    guarda(x,y,VEHDEF[c.type].w*0.6);
+  }
+  for(const p of peds){ if(p.giu) continue; const q=pedPos(p); guarda(q[0],q[1],0.7); }
+  return libero;
+}
+function comandiAuto(v,dt){                          // restituisce lo sterzo e il gas del pilota
+  const meta=autoGuida;
+  const d=Math.hypot(meta.x-v.x,meta.y-v.y);
+  if(d<8){
+    autoGuida=null;
+    toast('🧭 Arrivato: '+meta.nome,2600); beep(880,.14,'square');
+    return {ix:0, iy:0.6};
+  }
+  const w=prossimoWaypoint(v,meta);
+  const voluto=Math.atan2(w.y-v.y,w.x-v.x);
+  const err=angDelta(v.ang,voluto);
+  let ix=clamp(-err*1.7,-1,1);                       // nel motore lo sterzo positivo gira dall'altra parte
+  let vmax=Math.min(v.d.max*0.60,19);
+  const dw=Math.hypot(w.x-v.x,w.y-v.y);
+  if(Math.abs(err)>0.35) vmax=Math.min(vmax,7);      // in curva si rallenta
+  if(dw<14) vmax=Math.min(vmax,10);
+  if(d<26) vmax=Math.min(vmax,Math.max(3,d*0.42));   // arrivo morbido
+  const sem=semaforoDavanti(v);
+  if(sem&&(sem.st===0||(sem.st===1&&sem.d>8)))
+    vmax=Math.min(vmax,Math.sqrt(2*3.2*Math.max(0,sem.d-2.5)));
+  const lib=ostacoloDavanti(v);
+  if(lib<22) vmax=Math.min(vmax,Math.max(0,(lib-5)*0.8));
+  if(gommeARota(v)) vmax=Math.min(vmax,8);
+  let iy;                                            // iy negativo = gas (thr=-iy)
+  if(v.sp<vmax-0.6) iy=-1;
+  else if(v.sp>vmax+1.2) iy=1;
+  else iy=0;
+  if(vmax<0.6&&v.sp<1.5) iy=0;
+  /* fermo troppo a lungo: aggira l'ostacolo, e se non basta fa retromarcia */
+  const rosso=sem&&sem.st===0;
+  if(Math.abs(v.sp)<0.9&&!rosso&&d>12){
+    v._bloccoAuto=(v._bloccoAuto||0)+dt;
+    if(v._bloccoAuto>1.8){
+      if(!v._latoSorp) v._latoSorp=(rnd()<0.5?1:-1);
+      ix=clamp(ix+v._latoSorp*0.55,-1,1);            // scarta di lato e passa piano
+      vmax=Math.max(vmax,3.6);
+      iy=v.sp<vmax-0.6?-1:0;
+    }
+    if(v._bloccoAuto>5&&v._bloccoAuto<6.4){ iy=1; ix=-ix; }   // retromarcia
+    if(v._bloccoAuto>6.4){ v._bloccoAuto=0; v._latoSorp=null; }
+  } else { v._bloccoAuto=0; v._latoSorp=null; }
+  return {ix,iy};
+}
+function fermaPilota(msg){
+  if(!autoGuida) return;
+  autoGuida=null;
+  if(msg) toast(msg);
 }
 function prossimoWaypoint(v,meta){                   // si viaggia lungo le strade, non a vista
   const dReale=Math.hypot(meta.x-v.x,meta.y-v.y);
