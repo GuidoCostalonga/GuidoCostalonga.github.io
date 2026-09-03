@@ -5013,7 +5013,11 @@ function controllaAdmin(annuncia){
   if(admin){
     P.soldi=SOLDI_ADMIN;
     if(annuncia&&!era) toast('👑 ADMIN: soldi infiniti · pannello 👑 in alto',3600);
-  } else { admVolo=false; admImmune=false; }
+  } else {
+    admVolo=false; admImmune=false;
+    if(P.soldi>SOLDI_ADMIN*0.5) P.soldi=20000;       // finita la pacchia: si torna ai 20.000
+    chiudiAdmin&&chiudiAdmin();
+  }
   updHUD();
 }
 let admVolo=false, admImmune=false;
