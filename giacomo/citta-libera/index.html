@@ -75,6 +75,7 @@ html,body{margin:0;padding:0;height:100%;overflow:hidden;background:#0e1013;
 .ov .sub{opacity:.65;font-size:12px;margin-bottom:10px}
 .close{position:absolute;right:12px;top:calc(env(safe-area-inset-top,0px) + 12px);width:40px;height:40px;border-radius:12px;
   background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;font-size:20px}
+#telList{display:flex;flex-direction:column;gap:8px}
 #shopList{overflow:auto;-webkit-overflow-scrolling:touch;flex:1;display:flex;flex-direction:column;gap:8px;padding-bottom:8px}
 .row{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.09);
   border-radius:14px;padding:9px 11px}
@@ -136,6 +137,7 @@ html,body{margin:0;padding:0;height:100%;overflow:hidden;background:#0e1013;
   <div id="rightTop">
     <canvas id="mini" width="224" height="224"></canvas>
     <div id="topBtns">
+      <div class="sbtn" id="btnTel">📱</div>
       <div class="sbtn" id="btnView">👁️</div>
       <div class="sbtn" id="btnMap">🗺️</div>
       <div class="sbtn" id="btnFull">⛶</div>
@@ -165,6 +167,13 @@ html,body{margin:0;padding:0;height:100%;overflow:hidden;background:#0e1013;
   <div id="shopList"></div>
 </div>
 
+<div class="ov" id="tel">
+  <div class="close" id="telClose">✕</div>
+  <h2>📱 Telefono</h2>
+  <div class="sub" id="telSub"></div>
+  <div id="telList"></div>
+</div>
+
 <div class="ov" id="map">
   <div class="close" id="mapClose">✕</div>
   <h2>Mappa della città</h2>
@@ -185,6 +194,8 @@ html,body{margin:0;padding:0;height:100%;overflow:hidden;background:#0e1013;
       <li><b>Soldi</b>: 💰 per strada, 📦 casse a sorpresa e le consegne segnate sulla mappa.</li>
       <li><b>❤️ vita e 🍗 cibo</b>: mangia per non restare a stomaco vuoto (altrimenti la vita cala) e curati in 🩹 farmacia. Se la vita finisce ti risvegli in piazza.</li>
       <li><b>Mappa</b> 🗺️ con posizione in tempo reale · <b>👁️</b> prima/terza persona.</li>
+      <li><b>📱 Telefono</b>: chiama la <b>tua auto</b> dove sei o il <b>meccanico</b>. I veicoli si
+      ammaccano negli incidenti, perdono potenza e fumano: in <b>officina</b> 🔧 si riparano a metà prezzo.</li>
     </ul>
     <div class="sub">Da PC: <span class="k">W</span> avanti · <span class="k">S</span> indietro · <span class="k">A</span> sinistra · <span class="k">D</span> destra · <span class="k">tasto destro del mouse</span> tenuto premuto per girare la visuale · <span class="k">Shift</span> corri · <span class="k">Spazio</span> salta · <span class="k">E</span> azione · <span class="k">1-0</span> slot · <span class="k">F</span> usa · <span class="k">M</span> mappa · <span class="k">V</span> vista</div>
     <button id="play">GIOCA</button>
@@ -399,7 +410,7 @@ function roadPoint(){
 }
 function spawnVehicle(type,x,y,ang){
   const d=VEHDEF[type];
-  const v={type,d,x,y,z:0,ang:ang||0,sp:0,vz:0,rot:0,col:d.col};
+  const v={type,d,x,y,z:0,ang:ang||0,sp:0,vz:0,rot:0,col:d.col,danno:0,botte:[]};
   vehicles.push(v); return v;
 }
 genCity();
@@ -408,7 +419,8 @@ genCity();
 const EYE=1.68;
 const P={x:8*CELL+CELL/2+8,y:8*CELL+CELL/2+14,z:0,vz:0,vx:0,vy:0,
   yaw:-Math.PI/2,pitch:-0.04,energia:100,vita:100,cibo:100,soldi:320,veh:null,
-  boost:0,spring:0,bob:0,hurt:0,step:0,ultimoDanno:-99};
+  boost:0,spring:0,bob:0,hurt:0,step:0,ultimoDanno:-99,
+  mia:{type:'auto',col:'#c8453a',variante:'berlina',danno:0}, telAttesa:0};
 const EQ={scarpe:false,skate:false,jet:false,para:false,gps:false,faro:false};
 const inv=new Array(10).fill(null);
 let sel=0, job=null, paused=true, tempo=0, tps=false, lastCrash=-9;
@@ -484,6 +496,7 @@ addEventListener('keydown',e=>{
   if(k===' '){key.A=true;e.preventDefault();}
   if(k==='shift')key.C=true;
   if(k==='e')azione(); if(k==='f')usaSlot(sel); if(k==='m')toggleMap(); if(k==='v')toggleView();
+  if(k==='t'){ if($tel.classList.contains('show')) chiudiTelefono(); else apriTelefono(); }
   if(k>='0'&&k<='9'){sel=(k==='0')?9:(+k-1); drawHotbar();}
   if(k==='escape') closeShop();
 },{passive:false});
@@ -621,6 +634,22 @@ function openShop(s){
   document.getElementById('shopName').textContent=s.e+' '+s.name;
   shopSub();
   const list=document.getElementById('shopList'); list.innerHTML='';
+  if(s.def.k==='off'){                                   // il meccanico ripara qui
+    const v=veicoloVicino(), costo=v?costoRiparazione(v,2.5,0):0;
+    const row=document.createElement('div'); row.className='row';
+    row.innerHTML='<div class="em">🔧</div><div class="tx"><b>Riparazione</b><span>'+
+      (v?(v.danno>0?v.d.n+' · danni al '+Math.round(v.danno)+'%':v.d.n+' · non ha bisogno di nulla')
+        :'Porta il veicolo qui davanti')+'</span></div>';
+    const b=document.createElement('button'); b.className='buy';
+    b.textContent=(v&&v.danno>0)?costo+' €':'—';
+    b.disabled=!(v&&v.danno>0&&P.soldi>=costo);
+    b.addEventListener('click',()=>{
+      P.soldi-=costo; riparaSubito(v);
+      if(v.personale) P.mia.danno=0;
+      toast('🔧 Veicolo riparato'); beep(760,.12,'square'); shopSub(); updHUD(); openShop(s);
+    });
+    row.appendChild(b); list.appendChild(row);
+  }
   for(const id of s.items){
     const isV=id.startsWith('V:'), k2=isV?id.slice(2):id, d=isV?VEHDEF[k2]:ITEMS[k2];
     const row=document.createElement('div'); row.className='row';
@@ -635,7 +664,10 @@ function compra(id,d){
   if(P.soldi<d.p){toast('💸 Non hai abbastanza soldi');return;}
   if(id.startsWith('V:')){
     const t=id.slice(2), p=nearRoadFree(P.x,P.y);
-    spawnVehicle(t,p.x,p.y,rnd()*TAU); P.soldi-=d.p;
+    const nv=spawnVehicle(t,p.x,p.y,rnd()*TAU); P.soldi-=d.p;
+    for(const ov of vehicles) if(ov!==nv) ov.personale=false;
+    nv.personale=true;
+    P.mia={type:t,col:nv.col,variante:nv.variante||'berlina',danno:0};
     toast('🎉 '+d.n+' comprato! È qui fuori.'); closeShop();
   } else {
     if(!addItem(id,1)) return;
@@ -653,6 +685,71 @@ function closeShop(){
   if(!document.getElementById('start').classList.contains('show')&&!document.getElementById('map').classList.contains('show')) paused=false;
 }
 document.getElementById('shopClose').addEventListener('click',closeShop);
+const $tel=document.getElementById('tel');
+function veicoloVicino(){
+  if(P.veh) return P.veh;
+  let b=null,bd=14;
+  for(const v of vehicles){const d=dist(P.x,P.y,v.x,v.y); if(d<bd){bd=d;b=v;}}
+  return b;
+}
+function costoRiparazione(v,tariffa,chiamata){
+  return Math.max(0,Math.round((v.danno||0)*tariffa+((v.danno||0)>0?chiamata:0)));
+}
+function riparaSubito(v){ v.danno=0; v.botte=[]; }
+function apriTelefono(){
+  paused=true;
+  const L=document.getElementById('telList'); L.innerHTML='';
+  document.getElementById('telSub').textContent='Hai '+Math.floor(P.soldi)+' € in tasca';
+  const riga=(emo,tit,sot,tasto,attivo,fn)=>{
+    const r=document.createElement('div'); r.className='row';
+    r.innerHTML=`<div class="em">${emo}</div><div class="tx"><b>${tit}</b><span>${sot}</span></div>`;
+    const b=document.createElement('button'); b.className='buy'; b.textContent=tasto; b.disabled=!attivo;
+    b.addEventListener('click',fn); r.appendChild(b); L.appendChild(r);
+  };
+  /* auto personale */
+  const mia=P.mia, giaFuori=vehicles.find(v=>v.personale);
+  const attesa=Math.max(0,(P.telAuto||0)-tempo);
+  riga('🚗','La mia '+VEHDEF[mia.type].n,
+       'Danni '+Math.round(mia.danno||0)+'% · te la portano dove sei'+(attesa>0?' · fra '+Math.ceil(attesa)+'s':''),
+       attesa>0?Math.ceil(attesa)+'s':'CHIAMA', attesa<=0, ()=>{
+    if(giaFuori){ mia.danno=giaFuori.danno||0; const i=vehicles.indexOf(giaFuori); if(i>=0) vehicles.splice(i,1); }
+    const p=nearRoadFree(P.x,P.y);
+    const v=spawnVehicle(mia.type,p.x,p.y,P.yaw);
+    v.col=mia.col; v.variante=mia.variante; v.danno=mia.danno||0; v.personale=true;
+    P.telAuto=tempo+25;
+    toast('🚗 La tua '+VEHDEF[mia.type].n+' è arrivata qui fuori'); beep(660,.12,'square');
+    chiudiTelefono();
+  });
+  /* meccanico */
+  const v=veicoloVicino();
+  const costo=v?costoRiparazione(v,4,30):0;
+  riga('🔧','Meccanico a domicilio',
+       v?(v.danno>0?'Ripara la '+v.d.n+' ('+Math.round(v.danno)+'% di danni) in 3 secondi':'La '+v.d.n+' è già a posto')
+        :'Nessun veicolo qui vicino',
+       v&&v.danno>0?costo+' €':'—', !!(v&&v.danno>0&&P.soldi>=costo), ()=>{
+    P.soldi-=costo; P.telVeicolo=v; P.telAttesa=3;
+    toast('📞 Meccanico in arrivo…',2200); beep(520,.1,'triangle');
+    updHUD(); chiudiTelefono();
+  });
+  /* officina piu' vicina */
+  let off=null,od=1e9;
+  for(const sh of shops) if(sh.def.k==='off'){const d=dist(P.x,P.y,sh.x,sh.y); if(d<od){od=d;off=sh;}}
+  if(off) riga('🗺️','Officina più vicina', off.name+' · '+Math.round(od)+' m (ripara a metà prezzo)','SEGNA',true,()=>{
+    job={from:off,to:off,stage:1,reward:0,officina:true};
+    toast('🧭 Officina segnata sulla bussola'); chiudiTelefono();
+  });
+  $tel.classList.add('show');
+  beep(880,.05,'sine',.03);
+}
+function chiudiTelefono(){
+  $tel.classList.remove('show');
+  if(!document.getElementById('start').classList.contains('show')
+   &&!document.getElementById('shop').classList.contains('show')
+   &&!document.getElementById('map').classList.contains('show')) paused=false;
+}
+document.getElementById('btnTel').addEventListener('click',apriTelefono);
+document.getElementById('telClose').addEventListener('click',chiudiTelefono);
+
 const $map=document.getElementById('map');
 function toggleMap(){
   if($map.classList.contains('show')){$map.classList.remove('show');paused=false;}
@@ -852,6 +949,11 @@ function veicoloVsVeicoli(v,dt){
         beep(80,.18,'sawtooth',.06); lastCrash=tempo;
         ferisci((Math.abs(v.sp)-7)*1.2,'💥 Tamponamento!');
       }
+      if(Math.abs(v.sp)>4){
+        const seg=(q.x*c+q.y*s)<0?1:-1;
+        ammacca(v,(Math.abs(v.sp)-4)*1.3,seg);
+        if(o.danno!==undefined) ammacca(o,(Math.abs(v.sp)-4)*0.8,-seg);
+      }
       v.sp*=0.55;
     }
   }
@@ -867,9 +969,24 @@ function veicoloVsVeicoli(v,dt){
       if(!q) continue;
       v.x+=q.x; v.y+=q.y;
       if(Math.abs(v.sp)>7&&tempo-lastCrash>0.5){beep(80,.18,'sawtooth',.06);lastCrash=tempo;}
+      if(Math.abs(v.sp)>4) ammacca(v,(Math.abs(v.sp)-4)*1.2,1);
       v.sp*=0.5;
     }
   }
+}
+/* ammaccatura: segna il danno e la zona colpita (1 = davanti, -1 = dietro) */
+function ammacca(v,quanto,dove){
+  if(!v||quanto<=0) return;
+  const prima=v.danno||0;
+  v.danno=Math.min(100,prima+quanto);
+  if(!v.botte) v.botte=[];
+  if(v.botte.length<5&&quanto>3)
+    v.botte.push({x:(dove>0?0.34:-0.34)+R(-0.06,0.06), y:R(-0.4,0.4), z:R(0.25,0.6)});
+  for(let i=0;i<Math.min(8,quanto|0);i++)
+    parts.push({x:v.x+R(-1,1),y:v.y+R(-1,1),z:v.z+R(0.4,1.2),vx:R(-3,3),vy:R(-3,3),vz:R(1,5),
+                life:R(.25,.6),c:'#ffd88a',r:.06});
+  if(v===P.veh&&prima<100&&v.danno>=100) toast('🔧 Il motore è andato: chiama il meccanico col 📱',3000);
+  else if(v===P.veh&&Math.floor(prima/25)<Math.floor(v.danno/25)) toast('🔧 Danni al '+Math.round(v.danno)+'%');
 }
 /* muri: tre punti lungo il mezzo, cosi' non si incastra e non "sente" i muri da lontano */
 const _tp={x:0,y:0,z:0};
@@ -976,7 +1093,23 @@ function update(dt){
     }}
   for(let i=parts.length-1;i>=0;i--){const p=parts[i]; p.life-=dt;
     if(p.life<=0){parts.splice(i,1);continue;}
-    p.x+=p.vx*dt;p.y+=p.vy*dt;p.z+=p.vz*dt;p.vz-=9.8*dt; if(p.z<0){p.z=0;p.vz*=-.3;}}
+    if(p.fumo){ p.x+=p.vx*dt;p.y+=p.vy*dt;p.z+=p.vz*dt; p.vz*=Math.pow(0.55,dt); p.r=Math.min(0.42,p.r+dt*0.22); }
+    else { p.x+=p.vx*dt;p.y+=p.vy*dt;p.z+=p.vz*dt;p.vz-=9.8*dt; if(p.z<0){p.z=0;p.vz*=-.3;} }}
+  if(P.veh&&P.veh.danno>50&&rnd()<(P.veh.danno-50)/40*dt*30){
+    const vv=P.veh, cc=Math.cos(vv.ang), ss=Math.sin(vv.ang);
+    parts.push({x:vv.x+cc*vv.d.l*0.35,y:vv.y+ss*vv.d.l*0.35,z:vv.z+vv.d.h*0.6,
+                vx:R(-.4,.4),vy:R(-.4,.4),vz:R(1.2,2.6),life:R(1.2,2.2),
+                c:vv.danno>85?'#4a4a4a':'#b0b0b0',r:R(.10,.18),fumo:1});
+  }
+  if(P.telAttesa>0){
+    P.telAttesa-=dt;
+    if(P.telAttesa<=0&&P.telVeicolo){
+      const t=P.telVeicolo; t.danno=0; t.botte=[]; P.telVeicolo=null;
+      toast('🔧 Meccanico: rimessa a nuovo!',2600); beep(760,.12,'square');
+      for(let i=0;i<26;i++) parts.push({x:t.x+R(-1.5,1.5),y:t.y+R(-1.5,1.5),z:t.z+R(0.3,1.6),
+        vx:R(-2,2),vy:R(-2,2),vz:R(1,4),life:R(.4,.9),c:'#8fe9ff',r:.07});
+    }
+  }
   updJob(); updCam(dt); updHUD(); updPrompt(); engineSound();
 }
 function updateFoot(ix,iy,im,dt){
@@ -1023,7 +1156,8 @@ function updateFoot(ix,iy,im,dt){
 }
 function updateVehicle(v,ix,iy,dt){
   const d=v.d, thr=-iy, steer=ix;
-  if(thr>0.05) v.sp=Math.min(d.max,v.sp+d.acc*thr*dt);
+  const eff=1-(v.danno||0)/100*0.75;                       // motore acciaccato
+  if(thr>0.05) v.sp=Math.min(d.max*eff, v.sp+d.acc*eff*thr*dt);
   else if(thr<-0.05) v.sp=Math.max(d.air?0:-6,v.sp-(v.sp>0?d.acc*2.2:d.acc*0.8)*dt);
   else v.sp*=(d.air?Math.pow(0.75,dt):Math.pow(0.55,dt));
   if(!d.air&&key.C) v.sp*=Math.pow(0.02,dt);
@@ -1043,6 +1177,7 @@ function updateVehicle(v,ix,iy,dt){
   v.x+=Math.cos(v.ang)*v.sp*dt; v.y+=Math.sin(v.ang)*v.sp*dt;
   v.x=clamp(v.x,2,WSIZE-2); v.y=clamp(v.y,2,WSIZE-2);
   const hit=solveVeh(v);
+  if(hit&&Math.abs(v.sp)>5) ammacca(v,(Math.abs(v.sp)-5)*1.5,1);
   veicoloVsVeicoli(v,dt);
   if(hit){                                   // striscia lungo il muro invece di inchiodare
     const tang=(hit===1)?(Math.sin(v.ang)>=0?Math.PI*0.5:-Math.PI*0.5):(Math.cos(v.ang)>=0?0:Math.PI);
@@ -1083,7 +1218,9 @@ function updHUD(){
   if(male!==$chipVita.classList.contains('low')) $chipVita.classList.toggle('low',male);
   const ms=P.veh?Math.abs(P.veh.sp):Math.hypot(P.vx,P.vy);
   const ico=P.veh?P.veh.d.e:(EQ.jet&&P.z>0.5?'🎒':(EQ.skate?'🛹':'🚶'));
-  $spd.textContent=ico+' '+Math.round(ms*3.6)+' km/h'+(P.z>1?' · '+Math.round(P.z)+' m':'');
+  const dnn=P.veh?Math.round(P.veh.danno||0):0;
+  $spd.textContent=ico+' '+Math.round(ms*3.6)+' km/h'+(P.z>1?' · '+Math.round(P.z)+' m':'')
+                   +(dnn>4?' · 🔧'+dnn+'%':'');
 }
 let promptTxt='';
 function updPrompt(){
@@ -1490,6 +1627,64 @@ function creaTexture(){
     x.fillStyle='#8d949c'; x.beginPath(); x.arc(cx,cy,R*0.13,0,6.283); x.fill();
     x.strokeStyle='#6d747c'; x.lineWidth=2; x.beginPath(); x.arc(cx,cy,R*0.82,0,6.283); x.stroke();
   },256);
+  /* vernice segnata e ammaccata */
+  TEX.vernice2=texDa((x,S)=>{
+    const g=x.createLinearGradient(0,S,0,0);
+    g.addColorStop(0,'#bdbdbd'); g.addColorStop(0.4,'#e2e2e2'); g.addColorStop(1,'#efefef');
+    x.fillStyle=g; x.fillRect(0,0,S,S);
+    for(let i=0;i<70;i++){                                   // graffi
+      x.strokeStyle='rgba(60,55,50,'+(0.25+Math.random()*0.5)+')';
+      x.lineWidth=0.6+Math.random()*1.6;
+      const px2=Math.random()*S, py2=Math.random()*S, l=6+Math.random()*40, a=Math.random()*0.6-0.3;
+      x.beginPath(); x.moveTo(px2,py2); x.lineTo(px2+Math.cos(a)*l,py2+Math.sin(a)*l); x.stroke();
+    }
+    for(let i=0;i<14;i++){                                   // ammaccature
+      const px2=Math.random()*S, py2=Math.random()*S, r=6+Math.random()*16;
+      const gg=x.createRadialGradient(px2,py2,1,px2,py2,r);
+      gg.addColorStop(0,'rgba(40,38,36,.45)'); gg.addColorStop(1,'rgba(40,38,36,0)');
+      x.fillStyle=gg; x.beginPath(); x.arc(px2,py2,r,0,6.283); x.fill();
+    }
+  },128);
+  TEX.vernice3=texDa((x,S)=>{
+    x.fillStyle='#c0b6aa'; x.fillRect(0,0,S,S);
+    for(let i=0;i<26;i++){                                   // ruggine e lamiera scoperta
+      const px2=Math.random()*S, py2=Math.random()*S, r=8+Math.random()*26;
+      const gg=x.createRadialGradient(px2,py2,1,px2,py2,r);
+      gg.addColorStop(0,'rgba(96,52,26,.75)'); gg.addColorStop(0.6,'rgba(120,80,50,.35)');
+      gg.addColorStop(1,'rgba(120,80,50,0)');
+      x.fillStyle=gg; x.beginPath(); x.arc(px2,py2,r,0,6.283); x.fill();
+    }
+    for(let i=0;i<120;i++){
+      x.strokeStyle='rgba(45,40,36,'+(0.3+Math.random()*0.5)+')'; x.lineWidth=0.6+Math.random()*2;
+      const px2=Math.random()*S, py2=Math.random()*S, l=8+Math.random()*50, a=Math.random()*6.283;
+      x.beginPath(); x.moveTo(px2,py2); x.lineTo(px2+Math.cos(a)*l,py2+Math.sin(a)*l); x.stroke();
+    }
+  },128);
+  TEX.vetroRotto=texDa((x,S)=>{
+    const g=x.createLinearGradient(0,0,S,S);
+    g.addColorStop(0,'#c2ddf2'); g.addColorStop(0.42,'#5d7a90'); g.addColorStop(1,'#33454f');
+    x.fillStyle=g; x.fillRect(0,0,S,S);
+    x.strokeStyle='rgba(255,255,255,.85)'; x.lineWidth=1.2;
+    for(let c=0;c<3;c++){                                    // ragnatele di crepe
+      const cx=S*(0.2+Math.random()*0.6), cy=S*(0.2+Math.random()*0.6);
+      for(let i=0;i<10;i++){
+        const a=i/10*6.283+Math.random()*0.3;
+        x.beginPath(); x.moveTo(cx,cy);
+        let px2=cx,py2=cy;
+        for(let k=0;k<4;k++){px2+=Math.cos(a)*S*0.07;py2+=Math.sin(a)*S*0.07;x.lineTo(px2+(Math.random()-0.5)*6,py2+(Math.random()-0.5)*6);}
+        x.stroke();
+      }
+      for(let r=1;r<4;r++){
+        x.beginPath();
+        for(let i=0;i<=12;i++){
+          const a=i/12*6.283, rr=S*0.055*r;
+          const px2=cx+Math.cos(a)*rr+(Math.random()-0.5)*4, py2=cy+Math.sin(a)*rr+(Math.random()-0.5)*4;
+          i?x.lineTo(px2,py2):x.moveTo(px2,py2);
+        }
+        x.stroke();
+      }
+    }
+  },128);
   /* calandra e targa */
   TEX.griglia=texDa((x,S)=>{
     x.fillStyle='#22252a'; x.fillRect(0,0,S,S);
@@ -1503,6 +1698,14 @@ function creaTexture(){
     x.fillStyle='#1b1f24'; x.font='bold '+Math.round(S*0.5)+'px system-ui';
     x.textAlign='center'; x.textBaseline='middle'; x.fillText('GC 42',S*0.58,S*0.55);
   },64);
+  /* sbuffo: tondo sfumato, per fumo e scintille */
+  TEX.sbuffo=texDa((x,S)=>{
+    x.clearRect(0,0,S,S);
+    const g=x.createRadialGradient(S*0.5,S*0.5,0,S*0.5,S*0.5,S*0.48);
+    g.addColorStop(0,'rgba(255,255,255,1)'); g.addColorStop(0.45,'rgba(255,255,255,.75)');
+    g.addColorStop(1,'rgba(255,255,255,0)');
+    x.fillStyle=g; x.beginPath(); x.arc(S*0.5,S*0.5,S*0.48,0,6.283); x.fill();
+  },64,true);
   /* macchia d'ombra: bianca ai bordi, grigia al centro (si moltiplica al fondo) */
   TEX.ombraBlob=texDa((x,S)=>{
     x.fillStyle='#ffffff'; x.fillRect(0,0,S,S);
@@ -1724,6 +1927,10 @@ function primitive(){
   M.chioma=caricaGeo(f,TEX.chioma,{taglia:0.45});
   const p=new Geo(); p.piano(-0.5,-0.5,1,1,0,1,1,1,1);
   M.quad=caricaGeo(p,TEX.piatta);
+  const bl=new Geo();                                   // cartellino verticale
+  bl.q(0,-0.5,-0.5, 0,0.5,-0.5, 0,0.5,0.5, 0,-0.5,0.5, 0,0,1,1, 1,1,1);
+  bl.q(0,0.5,-0.5, 0,-0.5,-0.5, 0,-0.5,0.5, 0,0.5,0.5, 0,0,1,1, 1,1,1);
+  M.bill=caricaGeo(bl,TEX.sbuffo,{piatto:1});
   /* --- carrozzerie: sezioni orizzontali sovrapposte --- */
   const CARR={
     berlina:{corpo:[{z:0.10,a:0.42,b:0.34,p:0.7},{z:0.18,a:0.47,b:0.44,p:0.66},{z:0.30,a:0.50,b:0.50,p:0.6},
@@ -1925,10 +2132,16 @@ function dist2cam(x,y){return Math.hypot(x-CAM.x,y-CAM.y);}
 function disegnaVeicolo(v,d){
   const def=v.d, L=def.l, W=def.w, H=def.h, a=v.ang, c=Math.cos(a), s=Math.sin(a);
   const t=tint(v.col), scuro=[t[0]*0.45,t[1]*0.45,t[2]*0.45];
+  const dn=v.danno||0;
+  const texV=dn>65?TEX.vernice3:(dn>25?TEX.vernice2:TEX.vernice);
+  const specV=dn>65?0.16:(dn>25?0.34:0.62);
+  const texG=dn>45?TEX.vetroRotto:TEX.vetroAuto;
+  const vern=(m)=>({buf:m.buf,n:m.n,tex:texV,spec:specV});
+  const vetr=(m)=>({buf:m.buf,n:m.n,tex:texG,spec:dn>45?0.4:0.9});
   const fx=(p,q)=>v.x+c*p-s*q, fy=(p,q)=>v.y+s*p+c*q;
   const roll=v.wroll||0, gomma=[0.10,0.11,0.13];
   if(v.type==='aereo'){
-    usaMesh(M.aerScafo); disegna(M.aerScafo,v.x,v.y,v.z,a,L,W*0.30,H,t[0],t[1],t[2]);
+    usaMesh(vern(M.aerScafo)); disegna(M.aerScafo,v.x,v.y,v.z,a,L,W*0.30,H,t[0],t[1],t[2]);
     usaMesh(M.box);
     /* ali con leggero diedro, in due tronconi per lato */
     for(const lato of [1,-1]){
@@ -1938,7 +2151,7 @@ function disegnaVeicolo(v,d){
     }
     disegna(M.box,fx(-L*0.42,0),fy(-L*0.42,0),v.z+H*0.55,a,L*0.16,0.14,H*0.55,t[0],t[1],t[2]);   // deriva
     disegna(M.box,fx(-L*0.44,0),fy(-L*0.44,0),v.z+0.95,a,L*0.12,W*0.30,0.11,t[0],t[1],t[2]);     // piani di coda
-    usaMesh(M.aerVetro); disegna(M.aerVetro,v.x,v.y,v.z,a,L,W*0.30,H,1,1,1);
+    usaMesh(vetr(M.aerVetro)); disegna(M.aerVetro,v.x,v.y,v.z,a,L,W*0.30,H,1,1,1);
     usaMesh(M.ruota);
     disegnaRuota(fx(L*0.28,0),fy(L*0.28,0),v.z+0.24,a,roll,0.24,0.09,gomma[0],gomma[1],gomma[2]);
     disegnaRuota(fx(-L*0.06,W*0.20),fy(-L*0.06,W*0.20),v.z+0.26,a,roll,0.26,0.10,gomma[0],gomma[1],gomma[2]);
@@ -1954,7 +2167,7 @@ function disegnaVeicolo(v,d){
       gl.depthMask(true); gl.disable(gl.BLEND); usaMesh(M.box);
     }
   } else if(v.type==='eli'){
-    usaMesh(M.eliScafo); disegna(M.eliScafo,v.x,v.y,v.z,a,L,W,H,t[0],t[1],t[2]);
+    usaMesh(vern(M.eliScafo)); disegna(M.eliScafo,v.x,v.y,v.z,a,L,W,H,t[0],t[1],t[2]);
     usaMesh(M.box);
     disegna(M.box,fx(-L*0.47,0),fy(-L*0.47,0),v.z+H*0.60,a,L*0.10,0.12,H*0.42,t[0],t[1],t[2]);      // deriva
     disegna(M.box,fx(-L*0.44,0),fy(-L*0.44,0),v.z+H*0.62,a,L*0.09,W*0.55,0.10,t[0],t[1],t[2]);      // stabilizzatore
@@ -1964,7 +2177,7 @@ function disegnaVeicolo(v,d){
       disegna(M.box,fx(-L*0.14,lato*W*0.30),fy(-L*0.14,lato*W*0.30),v.z+0.1,a,0.11,W*0.34,H*0.30,0.30,0.32,0.36);
     }
     disegna(M.box,fx(L*0.02,0),fy(L*0.02,0),v.z+H*0.92,a,0.5,0.5,0.28,0.26,0.28,0.32);              // testa rotore
-    usaMesh({buf:M.box.buf,n:M.box.n,tex:TEX.vetroAuto,spec:0.9});
+    usaMesh({buf:M.box.buf,n:M.box.n,tex:texG,spec:0.9});
     disegna(M.box,fx(L*0.33,0),fy(L*0.33,0),v.z+H*0.30,a,L*0.14,W*0.72,H*0.36,1,1,1);   // parabrezza
     disegna(M.box,fx(L*0.16,0),fy(L*0.16,0),v.z+H*0.40,a,L*0.22,W*1.01,H*0.26,1,1,1);   // finestrini
     usaMesh(M.box);
@@ -1992,7 +2205,7 @@ function disegnaVeicolo(v,d){
     disegnaRuota(fx(L*0.36,0),fy(L*0.36,0),v.z+0.31,a,roll,0.31,0.10,gomma[0],gomma[1],gomma[2]);
     disegnaRuota(fx(-L*0.36,0),fy(-L*0.36,0),v.z+0.32,a,roll,0.32,0.12,gomma[0],gomma[1],gomma[2]);
   } else if(v.type==='camion'){
-    usaMesh(M.cabCamion);
+    usaMesh(vern(M.cabCamion));
     disegna(M.cabCamion,fx(L*0.30,0),fy(L*0.30,0),v.z,a,L*0.36,W,H,t[0],t[1],t[2]);
     usaMesh(M.box);
     disegna(M.box,fx(-L*0.16,0),fy(-L*0.16,0),v.z+0.85,a,L*0.62,W,H*0.72,t[0]*0.96,t[1]*0.96,t[2]*0.96);
@@ -2007,7 +2220,7 @@ function disegnaVeicolo(v,d){
       disegna(M.box,fx(-L*0.48,W*0.36),fy(-L*0.48,W*0.36),v.z+0.75,a,0.12,0.3,0.24,1.2,0.16,0.12);
       disegna(M.box,fx(-L*0.48,-W*0.36),fy(-L*0.48,-W*0.36),v.z+0.75,a,0.12,0.3,0.24,1.2,0.16,0.12);
     }
-    usaMesh({buf:M.box.buf,n:M.box.n,tex:TEX.vetroAuto,spec:0.9});
+    usaMesh({buf:M.box.buf,n:M.box.n,tex:texG,spec:0.9});
     disegna(M.box,fx(L*0.44,0),fy(L*0.44,0),v.z+H*0.62,a,0.22,W*0.84,H*0.30,1,1,1);
     usaMesh(M.ruota);
     const wq=[[L*0.30,W*0.47],[L*0.30,-W*0.47],[-L*0.16,W*0.47],[-L*0.16,-W*0.47],[-L*0.34,W*0.47],[-L*0.34,-W*0.47]];
@@ -2016,10 +2229,10 @@ function disegnaVeicolo(v,d){
     const va=v.variante||(v.variante=['berlina','berlina','suv','furgone'][Math.floor(hash2(Math.round(v.x*3),Math.round(v.y*3))*4)%4]);
     const mod=M.carr[va]||M.carr.berlina;
     const alt=va==='furgone'?H*1.45:(va==='suv'?H*1.16:H);
-    usaMesh(mod.corpo); disegna(mod.corpo,v.x,v.y,v.z,a,L,W,alt,t[0],t[1],t[2]);
-    usaMesh(mod.vetri); disegna(mod.vetri,v.x,v.y,v.z,a,L,W,alt,1,1,1);
+    usaMesh(vern(mod.corpo)); disegna(mod.corpo,v.x,v.y,v.z,a,L,W,alt,t[0],t[1],t[2]);
+    usaMesh(vetr(mod.vetri)); disegna(mod.vetri,v.x,v.y,v.z,a,L,W,alt,1,1,1);
     usaMesh(M.box);
-    if(d<45){
+    if(d<45&&dn<70){
       disegna(M.box,fx(L*0.425,W*0.30),fy(L*0.425,W*0.30),v.z+alt*0.34,a,0.1,0.30,0.14,2.0,1.9,1.5);
       disegna(M.box,fx(L*0.425,-W*0.30),fy(L*0.425,-W*0.30),v.z+alt*0.34,a,0.1,0.30,0.14,2.0,1.9,1.5);
       disegna(M.box,fx(-L*0.445,W*0.30),fy(-L*0.445,W*0.30),v.z+alt*0.36,a,0.09,0.28,0.13,1.3,0.15,0.11);
@@ -2038,7 +2251,16 @@ function disegnaVeicolo(v,d){
     usaMesh(M.ruota);
     const wq=[[L*0.31,W*0.53],[L*0.31,-W*0.53],[-L*0.31,W*0.53],[-L*0.31,-W*0.53]];
     const rr=va==='furgone'?0.36:(va==='suv'?0.38:0.34);
-    for(const w of wq) disegnaRuota(fx(w[0],w[1]),fy(w[0],w[1]),v.z+rr,a,roll,rr,0.15,gomma[0],gomma[1],gomma[2]);
+    for(let i=0;i<4;i++){
+      const w=wq[i], stort=(dn>80&&i===0)?0.13:0;              // con danni forti una ruota va storta
+      disegnaRuota(fx(w[0],w[1]),fy(w[0],w[1]),v.z+rr,a+stort,roll,rr,0.15,gomma[0],gomma[1],gomma[2]);
+    }
+  }
+  if(dn>12&&v.botte&&v.botte.length&&d<60){                     // bolli e lamiere piegate
+    usaMesh({buf:M.box.buf,n:M.box.n,tex:TEX.vernice3,spec:0.1});
+    for(const b of v.botte)
+      disegna(M.box,fx(b.x*L,b.y*W),fy(b.x*L,b.y*W),v.z+b.z*H,a+b.y,L*0.13,W*0.2,H*0.14,
+              t[0]*0.75,t[1]*0.75,t[2]*0.75);
   }
 }
 /* elica/rotore di coda: gira attorno all'asse longitudinale */
@@ -2212,6 +2434,19 @@ function disegnaScena(){
   }
   gl.depthMask(true); gl.disable(gl.BLEND);
   gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
+  if(parts.length){                                            // scintille, fumo, fuochi
+    gl.enable(gl.BLEND); gl.depthMask(false);
+    usaMesh(M.bill);
+    for(const p of parts){
+      if(dist2cam(p.x,p.y)>130) continue;
+      const cc=tint(p.c), r2=p.r*(p.fumo?4.5:3.2);
+      const verso=Math.atan2(CAM.y-p.y,CAM.x-p.x);
+      gl.uniform1f(LOC.uAlpha,clamp(p.life,0,1)*(p.fumo?0.30:0.85));
+      disegna(M.bill,p.x,p.y,p.z,verso,1,r2,r2,cc[0],cc[1],cc[2]);
+    }
+    gl.uniform1f(LOC.uAlpha,1);
+    gl.depthMask(true); gl.disable(gl.BLEND);
+  }
 }
 
 /* ---------- cielo ---------- */
@@ -2367,7 +2602,9 @@ function statoDaSalvare(){
     soldi:P.soldi,vita:P.vita,cibo:P.cibo,energia:P.energia,
     inv:inv,eq:EQ,tps:tps,
     job:job?{f:shops.indexOf(job.from),t:shops.indexOf(job.to),s:job.stage,r:job.reward}:null,
-    veh:vehicles.map(v=>[v.type,Math.round(v.x*10)/10,Math.round(v.y*10)/10,Math.round(v.z*10)/10,Math.round(v.ang*100)/100]),
+    veh:vehicles.map(v=>[v.type,Math.round(v.x*10)/10,Math.round(v.y*10)/10,Math.round(v.z*10)/10,
+                         Math.round(v.ang*100)/100,Math.round(v.danno||0),v.personale?1:0,v.variante||'']),
+    mia:P.mia,
     mon:mon,cas:cas,t:Date.now()};
 }
 function salva(){
@@ -2384,7 +2621,11 @@ function applicaSalvataggio(d){
     for(const k in EQ) EQ[k]=!!(d.eq&&d.eq[k]);
     tps=!!d.tps; document.getElementById('cross').style.display=tps?'none':'block';
     vehicles.length=0;
-    for(const v of d.veh) if(VEHDEF[v[0]]) spawnVehicle(v[0],v[1],v[2],v[4]).z=v[3];
+    for(const v of d.veh) if(VEHDEF[v[0]]){
+      const nv=spawnVehicle(v[0],v[1],v[2],v[4]); nv.z=v[3];
+      nv.danno=v[5]||0; nv.personale=!!v[6]; if(v[7]) nv.variante=v[7];
+    }
+    if(d.mia) P.mia=d.mia;
     coins.length=0;
     for(let i=0;i<d.mon.length;i+=3) coins.push({x:d.mon[i],y:d.mon[i+1],t:rnd()*TAU,v:d.mon[i+2]});
     crates.length=0;
