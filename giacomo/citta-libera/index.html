@@ -9,11 +9,10 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Città Libera">
 <meta name="format-detection" content="telephone=no">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' fill='%237bb0df'/%3E%3Crect y='120' width='180' height='60' fill='%233c4148'/%3E%3Crect x='18' y='46' width='38' height='74' fill='%238d8477'/%3E%3Crect x='66' y='28' width='42' height='92' fill='%239aa0a8'/%3E%3Crect x='118' y='58' width='44' height='62' fill='%23a98f7c'/%3E%3Crect x='26' y='58' width='10' height='12' fill='%235d7488'/%3E%3Crect x='40' y='58' width='10' height='12' fill='%235d7488'/%3E%3Crect x='74' y='42' width='12' height='14' fill='%235d7488'/%3E%3Crect x='90' y='42' width='12' height='14' fill='%235d7488'/%3E%3Crect x='126' y='72' width='12' height='14' fill='%235d7488'/%3E%3Crect x='144' y='72' width='12' height='14' fill='%235d7488'/%3E%3Crect x='40' y='134' width='58' height='22' rx='6' fill='%23c8453a'/%3E%3Ccircle cx='56' cy='158' r='9' fill='%23191c21'/%3E%3Ccircle cx='86' cy='158' r='9' fill='%23191c21'/%3E%3C/svg%3E">
+<title>Città Libera 3D</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icona-180.png">
-<link rel="icon" href="icona-180.png">
-<link rel="alternate icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' fill='%237bb0df'/%3E%3Crect y='120' width='180' height='60' fill='%233c4148'/%3E%3Crect x='18' y='46' width='38' height='74' fill='%238d8477'/%3E%3Crect x='66' y='28' width='42' height='92' fill='%239aa0a8'/%3E%3Crect x='118' y='58' width='44' height='62' fill='%23a98f7c'/%3E%3Crect x='26' y='58' width='10' height='12' fill='%235d7488'/%3E%3Crect x='40' y='58' width='10' height='12' fill='%235d7488'/%3E%3Crect x='74' y='42' width='12' height='14' fill='%235d7488'/%3E%3Crect x='90' y='42' width='12' height='14' fill='%235d7488'/%3E%3Crect x='126' y='72' width='12' height='14' fill='%235d7488'/%3E%3Crect x='144' y='72' width='12' height='14' fill='%235d7488'/%3E%3Crect x='40' y='134' width='58' height='22' rx='6' fill='%23c8453a'/%3E%3Ccircle cx='56' cy='158' r='9' fill='%23191c21'/%3E%3Ccircle cx='86' cy='158' r='9' fill='%23191c21'/%3E%3C/svg%3E">
-<title>Città Libera 3D</title>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
 html,body{margin:0;padding:0;height:100%;overflow:hidden;background:#0e1013;
@@ -261,6 +260,10 @@ document.addEventListener('touchmove',e=>{if(e.touches.length>1)e.preventDefault
 const CELL=64, GRID=16, ROAD=14, SW=2.6, WSIZE=CELL*GRID;   // 1024 m x 1024 m
 const BS=CELL-ROAD;                                          // isolato 50 m
 const buildings=[], shops=[], parks=[], lamps=[], trees=[], semafori=[], panchine=[], cassonetti=[];
+const strisce=[];                                    // segni delle gomme sull'asfalto
+function suAsfalto(x,y){                             // le strade stanno nei primi ROAD metri di ogni cella
+  return (x-Math.floor(x/CELL)*CELL)<ROAD || (y-Math.floor(y/CELL)*CELL)<ROAD;
+}
 const airfield={x:13*CELL,y:13*CELL,w:CELL*3,h:CELL*3};
 const cellB=new Array(GRID*GRID); for(let i=0;i<cellB.length;i++) cellB[i]=[];
 const coins=[], crates=[], vehicles=[], peds=[], traffic=[], decals=[], parts=[];
@@ -523,6 +526,8 @@ addEventListener('keyup',e=>{
 
 /* ===================== AUDIO ===================== */
 let AC=null,eng=null,engG=null,engF=null;
+let rumSrc=null,strG=null,rotG=null;
+let stridore=0, scossa=0;
 function audioOn(){
   if(!AC){ try{AC=new (window.AudioContext||window.webkitAudioContext)();}catch(e){return;} }
   if(AC.state==='suspended') AC.resume();
@@ -531,6 +536,18 @@ function audioOn(){
     engF=AC.createBiquadFilter(); engF.type='lowpass'; engF.frequency.value=420;
     engG=AC.createGain(); engG.gain.value=0;
     eng.connect(engF); engF.connect(engG); engG.connect(AC.destination); eng.start();
+  }
+  if(!rumSrc){                                   // fruscio: serve per gomme e asfalto
+    const n=AC.sampleRate*2, buf=AC.createBuffer(1,n,AC.sampleRate), dd=buf.getChannelData(0);
+    for(let i=0;i<n;i++) dd[i]=Math.random()*2-1;
+    rumSrc=AC.createBufferSource(); rumSrc.buffer=buf; rumSrc.loop=true;
+    const fs=AC.createBiquadFilter(); fs.type='bandpass'; fs.frequency.value=1450; fs.Q.value=3.2;
+    strG=AC.createGain(); strG.gain.value=0;
+    rumSrc.connect(fs); fs.connect(strG); strG.connect(AC.destination);
+    const fr=AC.createBiquadFilter(); fr.type='lowpass'; fr.frequency.value=560;
+    rotG=AC.createGain(); rotG.gain.value=0;
+    rumSrc.connect(fr); fr.connect(rotG); rotG.connect(AC.destination);
+    rumSrc.start();
   }
 }
 function beep(f,dur,type,vol){
@@ -548,6 +565,12 @@ function engineSound(){
   engG.gain.value+=(tgt-engG.gain.value)*0.12;
   if(v){ eng.frequency.value=(v.d.air?55:38)+Math.abs(v.sp)*(v.d.air?5.5:3.4);
          engF.frequency.value=300+Math.abs(v.sp)*22; }
+  if(!v||v.d.air) stridore=0;
+  if(strG) strG.gain.value+=(stridore*0.045-strG.gain.value)*0.25;
+  if(rotG){
+    const tr=(v&&!v.d.air)?clamp(Math.abs(v.sp)/32,0,1)*0.030:0;
+    rotG.gain.value+=(tr-rotG.gain.value)*0.10;
+  }
 }
 
 /* ===================== UI ===================== */
@@ -751,6 +774,20 @@ function apriTelefono(){
     riga(L.e,L.n,L.dice(prova)+' · '+Math.round(dist(prova.from.x,prova.from.y,prova.to.x,prova.to.y))+' m',
          prova.reward+' €',true,()=>{
       job=prova; toast(L.e+' Accettato: '+L.n+' — '+prova.reward+' €',2600); chiudiTelefono();
+    });
+  }
+  /* ora del giorno */
+  {
+    const tappe=[['\u{1F305}','Mattina',8],['\u2600\uFE0F','Mezzogiorno',13],
+                 ['\u{1F307}','Tramonto',19.6],['\u{1F319}','Notte',23]];
+    let vic=0;
+    for(let k=1;k<tappe.length;k++) if(Math.abs(ora-tappe[k][2])<Math.abs(ora-tappe[vic][2])) vic=k;
+    const pros=tappe[(vic+1)%tappe.length];
+    const hh=Math.floor(ora), mi=Math.floor((ora-hh)*60);
+    riga('\u{1F550}','Ora del giorno',
+         'Adesso le '+(hh<10?'0':'')+hh+':'+(mi<10?'0':'')+mi+" \u00b7 un giorno intero dura un quarto d'ora",
+         pros[0]+' '+pros[1],true,()=>{
+      ora=pros[2]; aggiornaLuce(0); toast(pros[0]+' '+pros[1]); apriTelefono();
     });
   }
   /* qualita' dell'immagine */
@@ -1040,6 +1077,7 @@ function veicoloVsVeicoli(v,dt){
       }
       if(Math.abs(v.sp)>7&&tempo-lastCrash>0.5){
         beep(80,.18,'sawtooth',.06); lastCrash=tempo;
+        if(v===P.veh||o===P.veh) scossa=Math.min(1,scossa+clamp(Math.abs(v.sp)/22,0.2,1));
         ferisci((Math.abs(v.sp)-7)*1.2,'💥 Tamponamento!');
       }
       if(Math.abs(v.sp)>4){
@@ -1061,7 +1099,8 @@ function veicoloVsVeicoli(v,dt){
       const q=obbPush(v.x+c*t,v.y+s*t,r,x,y,ang,dd.l,dd.w);
       if(!q) continue;
       v.x+=q.x; v.y+=q.y;
-      if(Math.abs(v.sp)>7&&tempo-lastCrash>0.5){beep(80,.18,'sawtooth',.06);lastCrash=tempo;}
+      if(Math.abs(v.sp)>7&&tempo-lastCrash>0.5){beep(80,.18,'sawtooth',.06);lastCrash=tempo;
+        if(v===P.veh) scossa=Math.min(1,scossa+clamp(Math.abs(v.sp)/22,0.2,1));}
       if(Math.abs(v.sp)>4) ammacca(v,(Math.abs(v.sp)-4)*1.2,1);
       v.sp*=0.5;
     }
@@ -1123,6 +1162,7 @@ function azione(){
     if(dentroEdificio(P.x,P.y,v.z)){P.x=v.x;P.y=v.y;}
     if(dentroEdificio(P.x,P.y,v.z)){const q=nearRoadFree(v.x,v.y);P.x=q.x;P.y=q.y;}
     P.z=v.z; P.vz=0; P.yaw=v.ang+lookOff; lookOff=0; P.veh=null; v.sp*=0.15;
+    v.rollio=0; v.becc=0; stridore=0;
     toast(v.z>3?'😱 Fuori in volo!':'🚶 Sei sceso'); beep(320,.09,'triangle'); setLabels(); return;
   }
   let bs=null,bd=6;
@@ -1263,6 +1303,7 @@ function update(dt){
         vx:R(-2,2),vy:R(-2,2),vz:R(1,4),life:R(.4,.9),c:'#8fe9ff',r:.07});
     }
   }
+  aggiornaLuce(dt);
   updJob(); updCam(dt); updHUD(); updPrompt(); engineSound();
 }
 function updateFoot(ix,iy,im,dt){
@@ -1339,9 +1380,40 @@ function updateVehicle(v,ix,iy,dt){
     v.ang+=angDelta(v.ang,tang)*Math.min(1,dt*7);
     if(head>0.45&&Math.abs(v.sp)>9&&tempo-lastCrash>0.6){
       beep(90,.14,'sawtooth',.05); lastCrash=tempo;
+      if(v===P.veh) scossa=Math.min(1,scossa+clamp(Math.abs(v.sp)/20,0.25,1));
       ferisci((Math.abs(v.sp)-9)*1.5,'💥 Incidente!');
     }
     v.sp*=1-clamp(head,0,1)*0.7;
+  }
+  /* --- come si sente: la cassa si corica in curva e si tuffa in frenata --- */
+  const spPr=(v._spPr===undefined?v.sp:v._spPr);
+  const accL=(v.sp-spPr)/Math.max(dt,0.004); v._spPr=v.sp;
+  const lat=d.air?0:steer*d.turn*grip*Math.abs(v.sp);
+  const kR=clamp(-lat*0.030,-0.15,0.15), kB=clamp(-accL*0.0075,-0.10,0.10);
+  const q=1-Math.pow(0.0007,dt);
+  v.rollio=(v.rollio||0)+(kR-(v.rollio||0))*q;
+  v.becc =(v.becc ||0)+(kB-(v.becc ||0))*q;
+  /* --- gomme che slittano: rumore e segni per terra --- */
+  if(!d.air){
+    const sli=clamp((Math.abs(lat)-11)/16,0,1);
+    const fre=(key.C&&Math.abs(v.sp)>7)?clamp((Math.abs(v.sp)-7)/14,0,1):0;
+    const gas=(thr>0.7&&Math.abs(v.sp)<7&&v.sp*thr>=0)?0.5:0;
+    const sl=Math.max(sli,fre,gas);
+    if(v===P.veh) stridore=sl;
+    if(sl>0.25){
+      v._skid=(v._skid||0)+dt;
+      if(v._skid>0.05){
+        v._skid=0;
+        const cc=Math.cos(v.ang), ss=Math.sin(v.ang);
+        for(let lo=-1;lo<=1;lo+=2){
+          const px=-d.l*0.30, py=lo*d.w*0.42;
+          const sx=v.x+cc*px-ss*py, sy=v.y+ss*px+cc*py;
+          if(!suAsfalto(sx,sy)) continue;                 // la gomma segna solo l'asfalto
+          strisce.push({x:sx, y:sy, a:v.ang, t:tempo, f:Math.min(1,sl)});
+        }
+        while(strisce.length>320) strisce.shift();
+      }
+    }
   }
   P.x=v.x; P.y=v.y; P.z=v.z; P.yaw=v.ang+lookOff;
   P.energia=Math.min(100,P.energia+3*dt);
@@ -1360,7 +1432,14 @@ function updCam(dt){
   CAM.x=cx; CAM.y=cy;                       // posizione agganciata: nessun ritardo
   CAM.z=lerp(CAM.z,cz,1-Math.pow(0.00002,dt));
   if(Math.abs(CAM.z-cz)>2.5) CAM.z=cz;      // salti/tetti: niente scivolate lunghe
-  CAM.yaw=P.yaw; CAM.pitch=P.pitch;
+  const vv=P.veh;
+  const rollVis=vv?((vv.rollio||0)*(tps?0.22:0.75)):0;
+  const beccVis=vv?((vv.becc||0)*(tps?0:0.55)):0;
+  CAM.roll=lerp(CAM.roll||0,rollVis,1-Math.pow(0.02,dt));
+  scossa*=Math.pow(0.02,dt);
+  CAM.yaw=P.yaw+Math.sin(tempo*61.7)*scossa*0.020;
+  CAM.pitch=P.pitch+beccVis+Math.sin(tempo*47.3)*scossa*0.028;
+  CAM.z+=Math.sin(tempo*39.1)*scossa*0.05;
   CAM.fov=lerp(CAM.fov,1.0+(P.veh?clamp(Math.abs(P.veh.sp)/P.veh.d.max,0,1)*0.13:0),1-Math.pow(0.05,dt));
 }
 function updHUD(){
@@ -1373,8 +1452,10 @@ function updHUD(){
   const ms=P.veh?Math.abs(P.veh.sp):Math.hypot(P.vx,P.vy);
   const ico=P.veh?P.veh.d.e:(EQ.jet&&P.z>0.5?'🎒':(EQ.skate?'🛹':'🚶'));
   const dnn=P.veh?Math.round(P.veh.danno||0):0;
+  const hh=Math.floor(ora), mi=Math.floor((ora-hh)*60);
   $spd.textContent=ico+' '+Math.round(ms*3.6)+' km/h'+(P.z>1?' · '+Math.round(P.z)+' m':'')
-                   +(dnn>4?' · 🔧'+dnn+'%':'');
+                   +(dnn>4?' · 🔧'+dnn+'%':'')
+                   +' · '+(hh<10?'0':'')+hh+':'+(mi<10?'0':'')+mi;
 }
 let promptTxt='';
 function updPrompt(){
@@ -1397,9 +1478,34 @@ function updPrompt(){
 /* ===================== MOTORE WEBGL ===================== */
 let FAR=260;
 const CIELO_ORIZ=[0.72,0.79,0.86];
-const ELEV=0.86;                                    // altezza del sole
-const SOLE=0.9, SOLX=-Math.cos(0.9), SOLY=-Math.sin(0.9);
-const SUNV=[Math.cos(SOLE)*Math.cos(ELEV), Math.sin(SOLE)*Math.cos(ELEV), Math.sin(ELEV)];
+let ELEV=0.86, SOLE=0.9;                            // altezza e direzione del sole
+let SOLX=-Math.cos(0.9), SOLY=-Math.sin(0.9);
+const SUNV=[Math.cos(0.9)*Math.cos(0.86), Math.sin(0.9)*Math.cos(0.86), Math.sin(0.86)];
+/* --- ora del giorno: un giro completo in un quarto d'ora --- */
+let ora=10.5; const GIORNO=900;
+let giorno=1, tramonto=0, notte=0;
+const COL_ORIZ=[0.72,0.79,0.86], COL_ZEN=[0.045,0.14,0.42], COL_SOLE=[1.35,1.24,1.02];
+const C_GIO=[0.72,0.79,0.86], C_NOT=[0.045,0.062,0.115], C_TRA=[0.94,0.55,0.30];
+const Z_GIO=[0.045,0.14,0.42], Z_NOT=[0.010,0.016,0.048];
+const S_GIO=[1.35,1.24,1.02], S_TRA=[1.55,0.74,0.34];
+function aggiornaLuce(dt){
+  if(dt) ora=(ora+dt*24/GIORNO)%24;
+  const h=(ora-5)/15*Math.PI;                       // sole su alle 5, giu' alle 20
+  ELEV=Math.sin(h)*1.15;
+  SOLE=0.75+((ora-5)/15)*2.3;
+  const ce=Math.cos(ELEV);
+  SUNV[0]=Math.cos(SOLE)*ce; SUNV[1]=Math.sin(SOLE)*ce; SUNV[2]=Math.sin(ELEV);
+  SOLX=-Math.cos(SOLE); SOLY=-Math.sin(SOLE);
+  giorno=clamp((Math.sin(h)+0.14)/0.40,0,1);
+  notte=1-giorno;
+  tramonto=clamp(1-Math.abs(Math.sin(h))*2.2,0,1);
+  for(let i=0;i<3;i++){
+    const c=C_GIO[i]*giorno+C_NOT[i]*notte;
+    COL_ORIZ[i]=c*(1-tramonto*0.85)+C_TRA[i]*tramonto*0.85;
+    COL_ZEN[i]=Z_GIO[i]*giorno+Z_NOT[i]*notte;
+    COL_SOLE[i]=(S_GIO[i]*(1-tramonto)+S_TRA[i]*tramonto)*Math.min(1,giorno*1.3);
+  }
+}
 
 /* ---------- matrici 4x4 ---------- */
 function mIdent(m){m[0]=1;m[1]=0;m[2]=0;m[3]=0;m[4]=0;m[5]=1;m[6]=0;m[7]=0;m[8]=0;m[9]=0;m[10]=1;m[11]=0;m[12]=0;m[13]=0;m[14]=0;m[15]=1;return m;}
@@ -1420,11 +1526,17 @@ function mMul(o,a,b){                                  // o = a*b
   return o;
 }
 /* vista: mondo con z verso l'alto -> occhio che guarda lungo -Z */
-function mView(m,px,py,pz,yaw,pitch){
+function mView(m,px,py,pz,yaw,pitch,roll){
   const cy=Math.cos(yaw), sy=Math.sin(yaw), cp=Math.cos(pitch), sp=Math.sin(pitch);
   const fx=cy*cp, fy=sy*cp, fz=sp;                     // avanti
-  const rx=sy,    ry=-cy,   rz=0;                      // destra
-  const ux=-cy*sp, uy=-sy*sp, uz=cp;                   // alto
+  let rx=sy,    ry=-cy,   rz=0;                        // destra
+  let ux=-cy*sp, uy=-sy*sp, uz=cp;                     // alto
+  if(roll){                                            // la cassa si corica: si corica anche la vista
+    const cr=Math.cos(roll), sr=Math.sin(roll);
+    const r2x=rx*cr-ux*sr, r2y=ry*cr-uy*sr, r2z=rz*cr-uz*sr;
+    const u2x=ux*cr+rx*sr, u2y=uy*cr+ry*sr, u2z=uz*cr+rz*sr;
+    rx=r2x; ry=r2y; rz=r2z; ux=u2x; uy=u2y; uz=u2z;
+  }
   m[0]=rx; m[4]=ry; m[8]=rz;  m[12]=-(rx*px+ry*py+rz*pz);
   m[1]=ux; m[5]=uy; m[9]=uz;  m[13]=-(ux*px+uy*py+uz*pz);
   m[2]=-fx;m[6]=-fy;m[10]=-fz;m[14]=  fx*px+fy*py+fz*pz;
@@ -1486,8 +1598,9 @@ void main(){
 }`;
 const FS_SCENA=`
 precision mediump float;
+uniform vec3 uZen,uHor;
 vec3 cieloCol(vec3 d, vec3 sun){
-  vec3 zen=vec3(0.045,0.14,0.42), hor=vec3(0.52,0.62,0.76);
+  vec3 zen=uZen, hor=uHor;
   vec3 c=mix(hor,zen,pow(clamp(d.z,0.0,1.0),0.55));
   c+=vec3(1.0,0.86,0.62)*pow(max(dot(d,sun),0.0),50.0)*1.4;
   return mix(vec3(0.12,0.125,0.12),c,smoothstep(-0.30,0.04,d.z));
@@ -1497,7 +1610,8 @@ vec3 filmica(vec3 x){                       // curva di contrasto tipo pellicola
 }
 uniform sampler2D uTex; uniform vec3 uSun,uFog,uCam,uTint;
 uniform vec2 uFogR; uniform float uSpec,uAlpha,uTaglia,uPiatto,uEspos;
-uniform sampler2D uMappa; uniform mat4 uLuce; uniform float uOmbre,uTexel;
+uniform sampler2D uMappa; uniform mat4 uLuce; uniform float uOmbre,uTexel,uEmis,uNotte;
+uniform vec3 uSoleCol;
 varying vec3 vNor,vCol,vW; varying vec2 vUV;
 void main(){
   vec4 t=texture2D(uTex,vUV);
@@ -1525,7 +1639,8 @@ void main(){
       ombra=mix(1.0,acc/9.0,bordo);
     }
   }
-  vec3 col=base*(amb+vec3(1.35,1.24,1.02)*lam*ombra);
+  vec3 col=base*(amb*(0.26+0.74*(1.0-uNotte))+uSoleCol*lam*ombra);
+  col+=base*(1.0-t.a)*uEmis*2.4;                    // finestre e insegne accese
   vec3 piatta=base;
   if(uSpec>0.0){
     vec3 v=normalize(uCam-vW), h=normalize(v+uSun);
@@ -1544,15 +1659,23 @@ void main(){
 const VS_CIELO=`attribute vec2 aP; varying vec2 vP; void main(){vP=aP; gl_Position=vec4(aP,1.0,1.0);}`;
 const FS_CIELO=`
 precision mediump float;
-uniform vec3 uF,uR,uU,uSun,uFog; uniform vec2 uTan; uniform sampler2D uNuv; uniform float uT;
+uniform vec3 uF,uR,uU,uSun,uFog,uZen,uHor; uniform vec2 uTan; uniform sampler2D uNuv; uniform float uT,uNotte;
 varying vec2 vP;
 void main(){
   vec3 dir=normalize(uF+uR*vP.x*uTan.x+uU*vP.y*uTan.y);
-  vec3 zen=vec3(0.045,0.14,0.42), hor=vec3(0.52,0.62,0.76);
+  vec3 zen=uZen, hor=uHor;
   vec3 c=mix(hor,zen,pow(clamp(dir.z,0.0,1.0),0.55));
   float sd=max(dot(dir,uSun),0.0);
-  c+=vec3(1.0,0.94,0.78)*pow(sd,1200.0)*6.0;
-  c+=vec3(1.0,0.88,0.66)*pow(sd,14.0)*0.55;
+  if(uNotte>0.25&&dir.z>0.02){                      // stelle
+    vec3 q=floor(dir*300.0);
+    float r=fract(sin(dot(q,vec3(12.9898,78.233,37.719)))*43758.5453);
+    if(r>0.9977) c+=vec3(0.9,0.93,1.0)*(uNotte-0.25)*2.2*smoothstep(0.02,0.30,dir.z);
+  }
+  c+=vec3(1.0,0.94,0.78)*pow(sd,1200.0)*6.0*(1.0-uNotte);
+  c+=vec3(1.0,0.88,0.66)*pow(sd,14.0)*0.55*(1.0-uNotte*0.8);
+  float md=max(dot(dir,-uSun),0.0);                 // la luna, dalla parte opposta
+  c+=vec3(0.85,0.88,1.0)*pow(md,3000.0)*5.0*uNotte;
+  c+=vec3(0.45,0.5,0.72)*pow(md,80.0)*0.22*uNotte;
   if(dir.z>0.015){
     vec2 uv=dir.xy/dir.z*0.0016+vec2(uT*0.0000045,uT*0.0000022);
     float a=texture2D(uNuv,uv).a*smoothstep(0.02,0.30,dir.z);
@@ -1577,7 +1700,9 @@ function initShader(){
        uTaglia:gl.getUniformLocation(PSC,'uTaglia'),uPiatto:gl.getUniformLocation(PSC,'uPiatto'),
        uEspos:gl.getUniformLocation(PSC,'uEspos'),uMappa:gl.getUniformLocation(PSC,'uMappa'),
        uLuce:gl.getUniformLocation(PSC,'uLuce'),uOmbre:gl.getUniformLocation(PSC,'uOmbre'),
-       uTexel:gl.getUniformLocation(PSC,'uTexel')};
+       uTexel:gl.getUniformLocation(PSC,'uTexel'),uEmis:gl.getUniformLocation(PSC,'uEmis'),
+       uNotte:gl.getUniformLocation(PSC,'uNotte'),uSoleCol:gl.getUniformLocation(PSC,'uSoleCol'),
+       uZen:gl.getUniformLocation(PSC,'uZen'),uHor:gl.getUniformLocation(PSC,'uHor')};
   PSD=programma('attribute vec3 aPos; uniform mat4 uVP,uModel; void main(){gl_Position=uVP*uModel*vec4(aPos,1.0);}',
                 'precision mediump float; void main(){gl_FragColor=vec4(1.0);}');
   LOCD={aPos:gl.getAttribLocation(PSD,'aPos'),uVP:gl.getUniformLocation(PSD,'uVP'),
@@ -1585,7 +1710,8 @@ function initShader(){
   PSK=programma(VS_CIELO,FS_CIELO);
   LOCK={aP:gl.getAttribLocation(PSK,'aP'),uF:gl.getUniformLocation(PSK,'uF'),uR:gl.getUniformLocation(PSK,'uR'),
         uU:gl.getUniformLocation(PSK,'uU'),uSun:gl.getUniformLocation(PSK,'uSun'),uFog:gl.getUniformLocation(PSK,'uFog'),
-        uTan:gl.getUniformLocation(PSK,'uTan'),uNuv:gl.getUniformLocation(PSK,'uNuv'),uT:gl.getUniformLocation(PSK,'uT')};
+        uTan:gl.getUniformLocation(PSK,'uTan'),uNuv:gl.getUniformLocation(PSK,'uNuv'),uT:gl.getUniformLocation(PSK,'uT'),
+        uZen:gl.getUniformLocation(PSK,'uZen'),uHor:gl.getUniformLocation(PSK,'uHor'),uNotte:gl.getUniformLocation(PSK,'uNotte')};
 }
 
 /* ---------- texture disegnate al volo ---------- */
@@ -1643,6 +1769,41 @@ function creaTexture(){
     x.fillStyle='#e6e1d6'; x.fillRect(wx-6,wy+wh,ww+12,S*0.035);            // davanzale
     x.fillStyle='rgba(0,0,0,.18)'; x.fillRect(wx-6,wy+wh+S*0.035,ww+12,3);
     rumore(x,S,10);
+  },512);
+  /* la stessa facciata di notte: l'alfa fa da maschera per le finestre accese */
+  TEX.facciataNotte=texDa((x,S)=>{
+    x.fillStyle='#8b867d'; x.fillRect(0,0,S,S);
+    for(let i=0;i<600;i++){
+      const a=Math.random()*0.06;
+      x.fillStyle='rgba('+(Math.random()<0.5?'0,0,0,':'255,255,255,')+a+')';
+      x.fillRect(Math.random()*S,Math.random()*S,2+Math.random()*7,2+Math.random()*5);
+    }
+    const wx=S*0.22, wy=S*0.18, ww=S*0.56, wh=S*0.52;
+    x.fillStyle='rgba(0,0,0,.28)'; x.fillRect(wx-4,wy-4,ww+8,wh+10);
+    x.fillStyle='#3b3831'; x.fillRect(wx-3,wy-3,ww+6,wh+6);
+    const acc=[1,0,0,1];                                       // due riquadri accesi su quattro
+    for(let k=0;k<4;k++){
+      const px=wx+(k%2)*ww*0.5, py=wy+((k>>1)&1)*wh*0.5;
+      if(acc[k]){
+        const g=x.createLinearGradient(px,py,px,py+wh*0.5);
+        g.addColorStop(0,'#fff0cd'); g.addColorStop(1,'#f6c977');
+        x.fillStyle=g;
+      } else x.fillStyle='#242c36';
+      x.fillRect(px+1,py+1,ww*0.5-2,wh*0.5-2);
+    }
+    x.strokeStyle='#6f6a60'; x.lineWidth=Math.max(2,S*0.020);
+    x.beginPath(); x.moveTo(wx+ww*0.5,wy); x.lineTo(wx+ww*0.5,wy+wh);
+    x.moveTo(wx,wy+wh*0.5); x.lineTo(wx+ww,wy+wh*0.5); x.stroke();
+    x.strokeStyle='#7d776c'; x.lineWidth=Math.max(2,S*0.016); x.strokeRect(wx-3,wy-3,ww+6,wh+6);
+    x.fillStyle='#b4ada2'; x.fillRect(wx-6,wy+wh,ww+12,S*0.035);
+    const img=x.getImageData(0,0,S,S), dd=img.data;            // maschera nell'alfa
+    for(let py=0;py<S;py++) for(let px=0;px<S;px++){
+      const i=(py*S+px)*4;
+      const dentro=(px>wx+1&&px<wx+ww-1&&py>wy+1&&py<wy+wh-1);
+      const su=dentro&&((px<wx+ww*0.5)===(py<wy+wh*0.5));
+      dd[i+3]=su?70:255;
+    }
+    x.putImageData(img,0,0);
   },512);
   /* piano terra: zoccolo in pietra con portone */
   TEX.piano=texDa((x,S)=>{
@@ -2041,7 +2202,8 @@ function caricaGeo(geo,tex,opts){
   gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(geo.a),gl.STATIC_DRAW);
   const o=opts||{};
   return {buf, n:geo.a.length/11, tex, spec:o.spec||0, alpha:o.alpha===undefined?1:o.alpha,
-          taglia:o.taglia||0.01, ombra:!!o.ombra, piatto:o.piatto||0};
+          taglia:o.taglia||0.01, ombra:!!o.ombra, piatto:o.piatto||0, emis:o.emis||0,
+          texGiorno:tex, texNotte:o.notte||null};
 }
 const STATICO=[];
 
@@ -2148,7 +2310,7 @@ function costruisciCitta(){
   STATICO.length=0;
   const add=(g,tex,o)=>{const m=caricaGeo(g,tex,o); if(m) STATICO.push(m);};
   add(asf,TEX.asfalto); add(lin,TEX.linea); add(mar,TEX.marciapiede); add(erb,TEX.erba);
-  add(pia,TEX.piano); add(vet,TEX.vetrina,{spec:0.35}); add(fac,TEX.facciata,{spec:0.12});
+  add(pia,TEX.piano); add(vet,TEX.vetrina,{spec:0.35}); add(fac,TEX.facciata,{spec:0.12,emis:1,notte:TEX.facciataNotte});
   add(teg,TEX.tegole); add(ghi,TEX.ghiaia); add(int,TEX.intonaco);
   add(omb,TEX.piatta,{ombra:true,piatto:1});
 }
@@ -2413,7 +2575,36 @@ function profilo(anelli,chiudi){
 /* ---------- disegno ---------- */
 let lastObjs=0, lastCalls=0;
 let passoProf=false;
-function setModel(){ gl.uniformMatrix4fv(passoProf?LOCD.uModel:LOC.uModel,false,MMOD); }
+let TILT=null;                                      // assetto della cassa (rollio/beccheggio)
+const MTILT=new Float32Array(16), MTMP=new Float32Array(16);
+function preparaTilt(cx,cy,cz,yaw,rollio,becc){
+  if(Math.abs(rollio)<0.002&&Math.abs(becc)<0.002){ TILT=null; return; }
+  const ca=Math.cos(yaw), sa=Math.sin(yaw);
+  const cr=Math.cos(rollio), sr=Math.sin(rollio);
+  const cb=Math.cos(becc),  sb=Math.sin(becc);
+  /* nel sistema del veicolo: x avanti, y sinistra, z alto -> Rx(rollio)*Ry(becc) */
+  const l=[[cb,0,sb],[sr*sb,cr,-sr*cb],[-cr*sb,sr,cr*cb]];
+  const Z=[[ca,-sa,0],[sa,ca,0],[0,0,1]], Zi=[[ca,sa,0],[-sa,ca,0],[0,0,1]];
+  const R=[[0,0,0],[0,0,0],[0,0,0]], T=[[0,0,0],[0,0,0],[0,0,0]];
+  for(let i=0;i<3;i++) for(let j=0;j<3;j++){
+    let a2=0; for(let k=0;k<3;k++) a2+=l[i][k]*Zi[k][j]; T[i][j]=a2;
+  }
+  for(let i=0;i<3;i++) for(let j=0;j<3;j++){
+    let a2=0; for(let k=0;k<3;k++) a2+=Z[i][k]*T[k][j]; R[i][j]=a2;
+  }
+  MTILT[0]=R[0][0]; MTILT[1]=R[1][0]; MTILT[2]=R[2][0]; MTILT[3]=0;
+  MTILT[4]=R[0][1]; MTILT[5]=R[1][1]; MTILT[6]=R[2][1]; MTILT[7]=0;
+  MTILT[8]=R[0][2]; MTILT[9]=R[1][2]; MTILT[10]=R[2][2];MTILT[11]=0;
+  MTILT[12]=cx-(R[0][0]*cx+R[0][1]*cy+R[0][2]*cz);
+  MTILT[13]=cy-(R[1][0]*cx+R[1][1]*cy+R[1][2]*cz);
+  MTILT[14]=cz-(R[2][0]*cx+R[2][1]*cy+R[2][2]*cz);
+  MTILT[15]=1;
+  TILT=MTILT;
+}
+function setModel(){
+  if(TILT){ mMul(MTMP,TILT,MMOD); gl.uniformMatrix4fv(passoProf?LOCD.uModel:LOC.uModel,false,MTMP); return; }
+  gl.uniformMatrix4fv(passoProf?LOCD.uModel:LOC.uModel,false,MMOD);
+}
 function usaMesh(m){
   gl.bindBuffer(gl.ARRAY_BUFFER,m.buf);
   if(passoProf){ gl.vertexAttribPointer(LOCD.aPos,3,gl.FLOAT,false,44,0); return; }
@@ -2426,6 +2617,7 @@ function usaMesh(m){
   gl.uniform1f(LOC.uAlpha,m.alpha===undefined?1:m.alpha);
   gl.uniform1f(LOC.uTaglia,m.taglia||0.01);
   gl.uniform1f(LOC.uPiatto,m.piatto||0);
+  gl.uniform1f(LOC.uEmis,(m.emis||0)*notte);
 }
 function disegna(m,x,y,z,yaw,sx,sy,sz,r,g,b){
   mModel(MMOD,x,y,z,yaw,sx,sy,sz);
@@ -2851,7 +3043,8 @@ function disegnaScena(){
     if(P.veh===v&&!tps) continue;
     const d=dist2cam(v.x,v.y); if(d>Math.max(340,FAR)) continue;   // i mezzi restano visibili
     if(!isFinite(v.x)||!isFinite(v.y)){ v.x=P.x+4; v.y=P.y+4; v.sp=0; }
-    disegnaVeicolo(v,d); lastObjs++;
+    if(v.rollio||v.becc) preparaTilt(v.x,v.y,v.z+0.32,v.ang,v.rollio||0,v.becc||0);
+    disegnaVeicolo(v,d); TILT=null; lastObjs++;
   }
   for(const cc of traffic){
     const x=cc.vert?cc.line:cc.pos, y=cc.vert?cc.pos:cc.line;
@@ -2883,7 +3076,8 @@ function disegnaScena(){
     const d=dist2cam(l.x,l.y); if(d>95) continue;
     disegna(M.box,l.x,l.y,0,0,0.2,0.2,4.6,0.32,0.34,0.38);
     disegna(M.box,l.x+0.45,l.y,4.5,0,1.0,0.24,0.2,0.36,0.38,0.42);
-    disegna(M.box,l.x+0.9,l.y,4.3,0,0.44,0.34,0.22,1.6,1.55,1.2); lastObjs++;
+    disegna(M.box,l.x+0.9,l.y,4.3,0,0.44,0.34,0.22,1.6+notte*2.6,1.55+notte*2.4,1.2+notte*1.5);
+    lastObjs++;
   }
   for(const sm of semafori){
     const d=dist2cam(sm.x,sm.y); if(d>80) continue;
@@ -2926,7 +3120,12 @@ function disegnaScena(){
   for(const sh of shops){
     const d=dist2cam(sh.x,sh.y); if(d>90) continue;
     const t=tint(sh.c), a=[0,Math.PI*0.5,Math.PI,-Math.PI*0.5][sh.side]||0;
-    disegna(M.box,sh.x,sh.y,3.7,a,0.25,2.6,0.9,t[0],t[1],t[2]); lastObjs++;
+    if(notte>0.4){
+      usaMesh({buf:M.box.buf,n:M.box.n,tex:TEX.piatta,piatto:1});
+      disegna(M.box,sh.x,sh.y,3.7,a,0.25,2.6,0.9,t[0]*1.4+0.25,t[1]*1.4+0.25,t[2]*1.4+0.25);
+      usaMesh(M.box);
+    } else disegna(M.box,sh.x,sh.y,3.7,a,0.25,2.6,0.9,t[0],t[1],t[2]);
+    lastObjs++;
   }
   /* pacco della consegna */
   if(job){
@@ -2983,6 +3182,44 @@ function disegnaScena(){
   }
   gl.depthMask(true); gl.disable(gl.BLEND);
   gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
+  }
+  if(strisce.length){                                          // segni delle gomme
+    gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA); gl.depthMask(false);
+    usaMesh({buf:M.quad.buf,n:M.quad.n,tex:TEX.sbuffo,piatto:1});
+    for(let i=strisce.length-1;i>=0;i--){
+      const k=strisce[i], eta=tempo-k.t;
+      if(eta>26){ strisce.splice(i,1); continue; }
+      if(dist2cam(k.x,k.y)>85) continue;
+      gl.uniform1f(LOC.uAlpha,clamp(1-eta/26,0,1)*0.5*k.f);
+      disegna(M.quad,k.x,k.y,0.235,k.a,1.5,0.34,1,0.05,0.05,0.06); lastObjs++;
+    }
+    gl.uniform1f(LOC.uAlpha,1);
+    gl.depthMask(true); gl.disable(gl.BLEND);
+  }
+  if(notte>0.15){                                              // pozze di luce della notte
+    gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA,gl.ONE); gl.depthMask(false);
+    usaMesh({buf:M.quad.buf,n:M.quad.n,tex:TEX.sbuffo,piatto:1});
+    gl.uniform1f(LOC.uAlpha,0.42*notte);
+    for(const l of lamps){                                     // lampioni
+      if(dist2cam(l.x,l.y)>90) continue;
+      disegna(M.quad,l.x+0.9,l.y,0.26,0,12,12,1,1.0,0.86,0.55); lastObjs++;
+    }
+    gl.uniform1f(LOC.uAlpha,0.5*notte);
+    for(const v of vehicles){                                  // fari dei mezzi
+      if(v.d.air&&v.z>2) continue;
+      if(dist2cam(v.x,v.y)>90) continue;
+      const c2=Math.cos(v.ang), s2=Math.sin(v.ang);
+      disegna(M.quad,v.x+c2*6.5,v.y+s2*6.5,0.25,v.ang,15,6,1,1.0,0.95,0.74); lastObjs++;
+    }
+    for(const cc of traffic){
+      const x=cc.vert?cc.line:cc.pos, y=cc.vert?cc.pos:cc.line;
+      if(dist2cam(x,y)>90) continue;
+      const a=cc.vert?(cc.dir>0?Math.PI*0.5:-Math.PI*0.5):(cc.dir>0?0:Math.PI);
+      disegna(M.quad,x+Math.cos(a)*6,y+Math.sin(a)*6,0.25,a,13,5.4,1,1.0,0.95,0.74); lastObjs++;
+    }
+    gl.uniform1f(LOC.uAlpha,1);
+    gl.depthMask(true); gl.disable(gl.BLEND);
+    gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
   }
   if(parts.length){                                            // scintille, fumo, fuochi
     gl.enable(gl.BLEND); gl.depthMask(false);
@@ -3088,7 +3325,10 @@ function disegnaCielo(){
   gl.uniform3f(LOCK.uR,sy,-cy,0);
   gl.uniform3f(LOCK.uU,-cy*sp,-sy*sp,cp);
   gl.uniform3f(LOCK.uSun,SUNV[0],SUNV[1],SUNV[2]);
-  gl.uniform3f(LOCK.uFog,CIELO_ORIZ[0],CIELO_ORIZ[1],CIELO_ORIZ[2]);
+  gl.uniform3f(LOCK.uFog,COL_ORIZ[0],COL_ORIZ[1],COL_ORIZ[2]);
+  gl.uniform3f(LOCK.uZen,COL_ZEN[0],COL_ZEN[1],COL_ZEN[2]);
+  gl.uniform3f(LOCK.uHor,COL_ORIZ[0]*0.78,COL_ORIZ[1]*0.80,COL_ORIZ[2]*0.86);
+  gl.uniform1f(LOCK.uNotte,notte);
   gl.uniform2f(LOCK.uTan,tanX,tanX/asp);
   gl.uniform1f(LOCK.uT,tempo*1000);
   gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D,TEX.nuvole);
@@ -3158,11 +3398,11 @@ function drawCompass(){
 let glPronto=false;
 function initGL(){
   if(!gl) return false;
-  initShader(); creaTexture(); primitive(); costruisciCitta(); creaOmbre();
+  initShader(); creaTexture(); primitive(); costruisciCitta(); creaOmbre(); aggiornaLuce(0);
   gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LEQUAL);
   gl.enable(gl.CULL_FACE); gl.cullFace(gl.BACK); gl.frontFace(gl.CCW);
   gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
-  gl.clearColor(CIELO_ORIZ[0],CIELO_ORIZ[1],CIELO_ORIZ[2],1);
+  gl.clearColor(COL_ORIZ[0],COL_ORIZ[1],COL_ORIZ[2],1);
   gl.viewport(0,0,cv.width,cv.height);
   glPronto=true; return true;
 }
@@ -3171,9 +3411,9 @@ function render(){
   lastCalls=0;
   const asp=cv.width/cv.height;
   mPersp(MPROJ, 2*Math.atan(Math.tan(CAM.fov*0.5)/asp), asp, 0.12, Math.max(400,FAR*2));
-  mView(MVIEW, CAM.x,CAM.y,CAM.z, CAM.yaw, CAM.pitch);
+  mView(MVIEW, CAM.x,CAM.y,CAM.z, CAM.yaw, CAM.pitch, CAM.roll||0);
   mMul(MVP,MPROJ,MVIEW);
-  const ombreVive=ombreOK&&QUAL==='alta';
+  const ombreVive=ombreOK&&QUAL==='alta'&&SUNV[2]>0.10;
   if(ombreVive) passoOmbre();
   gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
   disegnaCielo();
@@ -3182,7 +3422,11 @@ function render(){
   gl.enableVertexAttribArray(LOC.aUV);  gl.enableVertexAttribArray(LOC.aCol);
   gl.uniformMatrix4fv(LOC.uVP,false,MVP);
   gl.uniform3f(LOC.uSun,SUNV[0],SUNV[1],SUNV[2]);
-  gl.uniform3f(LOC.uFog,CIELO_ORIZ[0],CIELO_ORIZ[1],CIELO_ORIZ[2]);
+  gl.uniform3f(LOC.uFog,COL_ORIZ[0],COL_ORIZ[1],COL_ORIZ[2]);
+  gl.uniform3f(LOC.uZen,COL_ZEN[0],COL_ZEN[1],COL_ZEN[2]);
+  gl.uniform3f(LOC.uHor,COL_ORIZ[0]*0.78,COL_ORIZ[1]*0.80,COL_ORIZ[2]*0.86);
+  gl.uniform3f(LOC.uSoleCol,COL_SOLE[0],COL_SOLE[1],COL_SOLE[2]);
+  gl.uniform1f(LOC.uNotte,notte);
   gl.uniform3f(LOC.uCam,CAM.x,CAM.y,CAM.z);
   gl.uniform2f(LOC.uFogR,FAR*0.5,FAR*1.05);
   gl.uniform1i(LOC.uTex,0);
@@ -3199,6 +3443,7 @@ function render(){
   mIdent(MMOD); gl.uniformMatrix4fv(LOC.uModel,false,MMOD);
   gl.uniform3f(LOC.uTint,1,1,1);
   for(const m of STATICO){                                  // citta' ferma: pochi disegni
+    if(m.texNotte) m.tex=(notte>0.45?m.texNotte:m.texGiorno);
     if(m.ombra&&ombreVive) continue;
     if(m.ombra){ gl.enable(gl.BLEND); gl.blendFunc(gl.DST_COLOR,gl.ZERO); gl.depthMask(false); }
     usaMesh(m);
@@ -3235,7 +3480,7 @@ function statoDaSalvare(){
   const cas=[]; for(const c of crates){cas.push(Math.round(c.x*10)/10,Math.round(c.y*10)/10);}
   return {v:2,
     x:P.x,y:P.y,z:P.z,yaw:P.yaw,pitch:P.pitch,
-    soldi:P.soldi,vita:P.vita,cibo:P.cibo,energia:P.energia,nome:P.nome,
+    soldi:P.soldi,vita:P.vita,cibo:P.cibo,energia:P.energia,nome:P.nome,ora:ora,
     inv:inv,eq:EQ,tps:tps,
     job:job?{f:shops.indexOf(job.from),t:shops.indexOf(job.to),s:job.stage,r:job.reward,k:job.tipo||'consegna'}:null,
     veh:vehicles.map(v=>[v.type,Math.round(v.x*10)/10,Math.round(v.y*10)/10,Math.round(v.z*10)/10,
@@ -3254,6 +3499,7 @@ function applicaSalvataggio(d){
     P.x=d.x;P.y=d.y;P.z=d.z;P.yaw=d.yaw;P.pitch=d.pitch||0;
     P.soldi=d.soldi;P.vita=d.vita;P.cibo=d.cibo;P.energia=d.energia;P.veh=null;
     if(d.nome) P.nome=d.nome;
+    if(typeof d.ora==='number') ora=d.ora;
     for(let i=0;i<10;i++) inv[i]=d.inv[i]||null;
     for(const k in EQ) EQ[k]=!!(d.eq&&d.eq[k]);
     tps=!!d.tps; document.getElementById('cross').style.display=tps?'none':'block';
