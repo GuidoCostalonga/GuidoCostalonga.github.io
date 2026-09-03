@@ -267,15 +267,19 @@ document.addEventListener('dblclick',e=>e.preventDefault(),{passive:false});
 document.addEventListener('touchmove',e=>{if(e.touches.length>1)e.preventDefault();},{passive:false});
 
 /* ===================== MONDO (in metri) ===================== */
-const CELL=64, GRID=16, ROAD=14, SW=2.6, WSIZE=CELL*GRID;   // 1024 m x 1024 m
+const CELL=64, GRID=20, ROAD=14, SW=2.6, WSIZE=CELL*GRID;   // 1280 m x 1280 m
 const BS=CELL-ROAD;                                          // isolato 50 m
 const buildings=[], shops=[], parks=[], lamps=[], trees=[], semafori=[], panchine=[], cassonetti=[];
+const abitazioni=[];                                 // case che si possono comprare
+const STANZA={x:WSIZE+420, y:220, w:9.4, d:7.4, h:2.75};   // l'interno, fuori dalla citta'
+let dentroCasa=null, fuoriCasa=null;
 const strisce=[];                                    // segni delle gomme sull'asfalto
 const segni=[];                                      // buchi dei proiettili
 function suAsfalto(x,y){                             // le strade stanno nei primi ROAD metri di ogni cella
   return (x-Math.floor(x/CELL)*CELL)<ROAD || (y-Math.floor(y/CELL)*CELL)<ROAD;
 }
-const airfield={x:13*CELL,y:13*CELL,w:CELL*3,h:CELL*3};
+const AIRG=GRID-3;
+const airfield={x:AIRG*CELL,y:AIRG*CELL,w:CELL*3,h:CELL*3};
 const cellB=new Array(GRID*GRID); for(let i=0;i<cellB.length;i++) cellB[i]=[];
 const coins=[], crates=[], vehicles=[], peds=[], traffic=[], decals=[], parts=[];
 
@@ -294,6 +298,7 @@ const SHOPDEF=[
   {k:'off',  n:'Officina',      e:'🔧', c:'#9aa3ad', items:['chiavi','faro','spray'],                    count:4},
   {k:'conc', n:'Concessionaria', e:'🏎️', c:'#ff8a3d', items:[],                                           count:3},
   {k:'armi', n:'Armeria',       e:'🎯', c:'#6f6252', items:['pistola','fucile','mitra','munizioni'],      count:3},
+  {k:'imm',  n:'Agenzia Case',  e:'🏠', c:'#4fb37a', items:[],                                           count:2},
 ];
 /* --- catalogo della concessionaria: modello, carrozzeria e prezzo --- */
 const MODELLI=[
@@ -363,7 +368,7 @@ function addBuilding(x,y,w,d,h,kind){
 }
 function genCity(){
   for(let gy=0;gy<GRID;gy++)for(let gx=0;gx<GRID;gx++){
-    if(gx>=13&&gy>=13) continue;                       // area aeroporto
+    if(gx>=AIRG&&gy>=AIRG) continue;                       // area aeroporto
     const bx=gx*CELL+ROAD, by=gy*CELL+ROAD;
     if(gx===8&&gy===8){ parks.push({x:bx,y:by,w:BS,h:BS,plaza:true}); continue; }
     const r=rnd();
@@ -416,34 +421,58 @@ function genCity(){
               benz:['Area Servizio Nord','Pit Stop','Benzinaio Sud','Rifornimento Est'],
               off:['Officina Rossi','Garage 22','MotorHub','Carrozzeria Blu'],
               conc:['Auto Palace','Motori & Co','Regina Motors'],
-              armi:['Il Bersaglio','Poligono Nord','Tiro & Caccia']};
+              armi:['Il Bersaglio','Poligono Nord','Tiro & Caccia'],
+              imm:['Casa Dolce Casa','Il Tetto']};
   for(const def of SHOPDEF)
     for(let n=0;n<def.count&&ci<cand.length;n++,ci++)
       mkShop(cand[ci],def,def.n+' "'+(NOMI[def.k]?NOMI[def.k][n%NOMI[def.k].length]:'City')+'"');
   mkShop(hb,HANGAR,'Hangar 7 — Volo');
+  /* --- case in vendita: villette e palazzine senza negozio --- */
+  abitazioni.length=0;
+  const NOMICASE=['Villetta dei Tigli','Casa del Sole','Villa Rosa','Casetta del Parco','Villa Aurora',
+                  'Casa Bianca','Villetta Nord','Casa del Ponte','Villa Serena','Casa Verde',
+                  'Villetta Sud','Casa del Corso','Villa Mimosa','Casa Piccola','Villa Grande','Casa Nuova'];
+  let ic=0;
+  for(let n=0;n<NOMICASE.length&&ci<cand.length;n++){
+    let b=null;
+    while(ci<cand.length){ const q=cand[ci++]; if(!q.shop&&q.h<16){ b=q; break; } }
+    if(!b) break;
+    const cx=b.x+b.w/2, cy=b.y+b.d/2;
+    const gx=Math.floor(cx/CELL), gy=Math.floor(cy/CELL);
+    const dl=cx-(gx*CELL+ROAD), dr=(gx+1)*CELL-cx, dt=cy-(gy*CELL+ROAD), db=(gy+1)*CELL-cy;
+    const m=Math.min(dl,dr,dt,db);
+    let px,py,side;
+    if(m===dl){px=b.x-1.4;py=cy;side=3;}
+    else if(m===dr){px=b.x+b.w+1.4;py=cy;side=1;}
+    else if(m===dt){px=cx;py=b.y-1.4;side=0;}
+    else {px=cx;py=b.y+b.d+1.4;side=2;}
+    const prezzo=Math.round((9000+b.w*b.d*130+b.h*900)/500)*500;
+    abitazioni.push({id:ic++,b,x:px,y:py,side,nome:NOMICASE[n],prezzo,mia:false});
+    b.casa=true;
+  }
 
-  for(let i=0;i<220;i++){const p=roadPoint(); coins.push({x:p.x,y:p.y,t:rnd()*TAU,v:RI(3,16)});}
-  for(let i=0;i<48;i++){const p=roadPoint(); crates.push({x:p.x,y:p.y});}
-  for(let i=0;i<18;i++){const p=roadPoint(); spawnVehicle(pick(['auto','auto','moto','camion']),p.x,p.y,Math.round(rnd()*4)*Math.PI/2);}
+  for(let i=0;i<330;i++){const p=roadPoint(); coins.push({x:p.x,y:p.y,t:rnd()*TAU,v:RI(3,16)});}
+  for(let i=0;i<70;i++){const p=roadPoint(); crates.push({x:p.x,y:p.y});}
+  for(let i=0;i<28;i++){const p=roadPoint(); spawnVehicle(pick(['auto','auto','moto','camion']),p.x,p.y,Math.round(rnd()*4)*Math.PI/2);}
   spawnVehicle('eli',airfield.x+70,airfield.y+40,0);
-  spawnVehicle('eli',8*CELL+ROAD+9,8*CELL+ROAD+9,0.6);
+  spawnVehicle('eli',10*CELL+ROAD+9,10*CELL+ROAD+9,0.6);
   spawnVehicle('aereo',airfield.x+66,airfield.y+110,-Math.PI/2);
   spawnVehicle('aereo',airfield.x+86,airfield.y+140,-Math.PI/2);
 
-  for(let i=0;i<58;i++){
+  for(let i=0;i<86;i++){
     const vert=rnd()<0.5, g=RI(0,GRID-1), lane=rnd()<0.5?-3.4:3.4;
     traffic.push({vert,line:g*CELL+ROAD/2+lane,pos:R(0,WSIZE),sp:R(7,15),
       dir:lane<0?(vert?-1:1):(vert?1:-1),col:`hsl(${RI(0,360)},${RI(25,55)}%,${RI(42,62)}%)`,
       type:rnd()<0.15?'camion':'auto'});
   }
-  for(let i=0;i<100;i++){
+  for(let i=0;i<150;i++){
     const gx=RI(0,GRID-1), gy=RI(0,GRID-1);
-    if(gx>=13&&gy>=13) continue;
+    if(gx>=AIRG&&gy>=AIRG) continue;
     peds.push({gx,gy,t:rnd(),sp:R(0.0022,0.005)*(rnd()<0.5?-1:1),
       col:`hsl(${RI(0,360)},${RI(25,55)}%,${RI(38,60)}%)`});
   }
   for(let gy=0;gy<GRID;gy++)for(let gx=0;gx<GRID;gx++){
-    if(gx>=13&&gy>=13) continue;
+    if(gx>=AIRG&&gy>=AIRG) continue;
     lamps.push({x:gx*CELL+ROAD-1.3,y:gy*CELL+ROAD+BS*0.32});
     lamps.push({x:gx*CELL+ROAD+BS*0.68,y:gy*CELL+ROAD-1.3});
     semafori.push({x:gx*CELL+ROAD-1.5,y:gy*CELL+ROAD-1.5,a:hash2(gx,gy),vert:true});
@@ -488,7 +517,7 @@ genCity();
 
 /* ===================== GIOCATORE / CAMERA ===================== */
 const EYE=1.68;
-const P={x:8*CELL+CELL/2+8,y:8*CELL+CELL/2+14,z:0,vz:0,vx:0,vy:0,
+const P={x:10*CELL+CELL/2+8,y:10*CELL+CELL/2+14,z:0,vz:0,vx:0,vy:0,
   yaw:-Math.PI/2,pitch:-0.04,energia:100,vita:100,cibo:100,soldi:20000,veh:null,
   boost:0,spring:0,bob:0,hurt:0,step:0,ultimoDanno:-99,
   garage:[{type:'auto',col:'#c8453a',variante:'berlina',danno:0,n:'Berlina',e:'🚗'}],
@@ -880,9 +909,52 @@ function ferisci(quanto,msg){
   if(msg) toast(msg);
   if(P.vita<=0) sviene();
 }
+function entraInCasa(c){
+  fuoriCasa={x:P.x,y:P.y,yaw:P.yaw};
+  dentroCasa=c;
+  if(P.veh) P.veh=null;
+  P.x=STANZA.x; P.y=STANZA.y-STANZA.d/2+1.2; P.z=0; P.vx=P.vy=0; P.vz=0;
+  P.yaw=Math.PI*0.5; P.pitch=0;
+  toast('🏠 Sei in '+c.nome+' · AZIONE alla porta per uscire',2800);
+  beep(640,.1,'triangle'); setLabels();
+}
+function esciDaCasa(){
+  const f=fuoriCasa||{x:STANZA.x,y:STANZA.y,yaw:0};
+  dentroCasa=null; fuoriCasa=null;
+  P.x=f.x; P.y=f.y; P.z=0; P.vx=P.vy=0; P.yaw=f.yaw;
+  toast('🚪 Sei uscito di casa'); beep(420,.1,'triangle'); setLabels();
+}
+function murettoCasa(){                               // dentro casa non si esce dalle pareti
+  const X=STANZA.x, Y=STANZA.y, W=STANZA.w, D=STANZA.d, T=0.42;
+  const porta=(Math.abs(P.x-X)<0.75);
+  P.x=clamp(P.x,X-W/2+T,X+W/2-T);
+  P.y=clamp(P.y,porta?Y-D/2-0.9:Y-D/2+T,Y+D/2-T);
+  const mob=[[X-W/2+1.45,Y+D/2-1.4,1.35,1.25],[X+W/2-1.6,Y+D/2-1.15,1.2,1.0],
+             [X+W/2-1.55,Y+D/2-3.2,0.75,0.7],[X,Y-0.65,1.4,0.85]];
+  for(const m of mob){
+    const dx=P.x-m[0], dy=P.y-m[1];
+    if(Math.abs(dx)<m[2]+0.35&&Math.abs(dy)<m[3]+0.35){
+      const px=(m[2]+0.35)-Math.abs(dx), py=(m[3]+0.35)-Math.abs(dy);
+      if(px<py) P.x=m[0]+Math.sign(dx||1)*(m[2]+0.35);
+      else      P.y=m[1]+Math.sign(dy||1)*(m[3]+0.35);
+    }
+  }
+  P.x=clamp(P.x,X-W/2+T,X+W/2-T);                     // i mobili non ti spingono nel muro
+  P.y=clamp(P.y,porta?Y-D/2-0.9:Y-D/2+T,Y+D/2-T);
+}
 function sviene(){
+  if(dentroCasa) esciDaCasa();
+  const mia=abitazioni.find(c=>c.mia);
+  if(mia){                                            // se hai una casa ti risvegli li'
+    P.veh=null; setLabels();
+    P.x=mia.x; P.y=mia.y; P.z=0; P.vz=0; P.vx=P.vy=0;
+    P.vita=50; P.energia=Math.max(P.energia,50); P.cibo=Math.max(P.cibo,30); P.hurt=1.4;
+    toast('😵 Sei svenuto! Ti hanno riportato a casa',3000);
+    beep(120,.5,'sine',.07);
+    return;
+  }
   P.veh=null; setLabels();
-  P.x=8*CELL+CELL/2+8; P.y=8*CELL+CELL/2+14; P.z=0; P.vz=0; P.vx=P.vy=0;
+  P.x=10*CELL+CELL/2+8; P.y=10*CELL+CELL/2+14; P.z=0; P.vz=0; P.vx=P.vy=0;
   P.vita=50; P.energia=Math.max(P.energia,50); P.cibo=Math.max(P.cibo,30); P.hurt=1.4;
   toast('😵 Sei svenuto! Ti hanno riportato in piazza',3000);
   beep(120,.5,'sine',.07);
@@ -926,6 +998,7 @@ function openShop(s){
     row.appendChild(b); list.appendChild(row);
   }
   if(s.def.k==='conc') concessionaria(list,s);
+  if(s.def.k==='imm') agenzia(list,s);
   for(const id of s.items){
     const isV=id.startsWith('V:'), k2=isV?id.slice(2):id, d=isV?VEHDEF[k2]:ITEMS[k2];
     const row=document.createElement('div'); row.className='row';
@@ -934,6 +1007,39 @@ function openShop(s){
     b.addEventListener('click',()=>compra(id,d)); row.appendChild(b); list.appendChild(row);
   }
   $shop.classList.add('show'); beep(520,.08,'triangle');
+}
+function agenzia(list,s){
+  const mie=abitazioni.filter(c=>c.mia);
+  const riga=(emo,tit,sot,tasto,attivo,fn,colore)=>{
+    const r=document.createElement('div'); r.className='row';
+    r.innerHTML='<div class="em">'+emo+'</div><div class="tx"><b>'+tit+'</b><span>'+sot+'</span></div>';
+    if(tasto){
+      const b=document.createElement('button'); b.className='buy'; b.textContent=tasto; b.disabled=!attivo;
+      if(colore&&attivo) b.style.background=colore;
+      b.addEventListener('click',fn); r.appendChild(b);
+    }
+    list.appendChild(r); return r;
+  };
+  riga('🏠','Le tue case',mie.length?mie.map(c=>c.nome).join(', ')
+       :'Nessuna: comprane una e potrai entrarci, dormire e mangiare','',false,null);
+  const inVendita=abitazioni.filter(c=>!c.mia)
+    .sort((a,b)=>dist(P.x,P.y,a.x,a.y)-dist(P.x,P.y,b.x,b.y)).slice(0,8);
+  for(const c of inVendita){
+    riga('🏡',c.nome,'a '+Math.round(dist(P.x,P.y,c.x,c.y))+' m · '+
+         (c.b.h>9?'palazzina':'villetta')+' di '+Math.round(c.b.w)+'x'+Math.round(c.b.d)+' m',
+         c.prezzo+' €',P.soldi>=c.prezzo,()=>{
+      if(P.soldi<c.prezzo){ toast('💸 Non hai abbastanza soldi'); return; }
+      P.soldi-=c.prezzo; c.mia=true;
+      toast('🎉 '+c.nome+' è tua! Vai alla porta e premi AZIONE',3400);
+      beep(760,.14,'square'); shopSub(); updHUD(); openShop(s);
+    });
+  }
+  for(const c of mie){
+    riga('💰','Rivendi '+c.nome,'Te la ricomprano a metà prezzo',Math.round(c.prezzo*0.5)+' €',true,()=>{
+      c.mia=false; P.soldi+=Math.round(c.prezzo*0.5);
+      toast('💰 Casa venduta'); beep(520,.12,'square'); shopSub(); updHUD(); openShop(s);
+    },'#8a4b2f');
+  }
 }
 function concessionaria(list,s){
   /* scelta del colore */
@@ -1510,6 +1616,30 @@ function roofAt(x,y){
 /* ===================== AZIONE ===================== */
 function azione(){
   if(paused) return;
+  if(dentroCasa){                                     // dentro casa: porta, letto, frigo
+    const X=STANZA.x, Y=STANZA.y, W=STANZA.w, D=STANZA.d;
+    if(dist(P.x,P.y,X,Y-D/2)<1.9){ esciDaCasa(); return; }
+    if(dist(P.x,P.y,X-W/2+1.45,Y+D/2-1.4)<2.0){
+      P.vita=100; P.energia=100; P.hurt=0;
+      ora=7.5; aggiornaLuce(0);
+      toast('😴 Hai dormito: sei fresco come una rosa',2600); beep(520,.2,'sine',.04); return;
+    }
+    if(dist(P.x,P.y,X+W/2-1.55,Y+D/2-3.2)<1.8||dist(P.x,P.y,X+W/2-1.6,Y+D/2-1.15)<1.9){
+      P.cibo=100; P.energia=Math.min(100,P.energia+30);
+      toast('🍽️ Hai mangiato a casa tua'); beep(700,.1,'triangle'); return;
+    }
+    toast('🏠 Sei in casa: letto per dormire, cucina per mangiare, porta per uscire');
+    return;
+  }
+  {
+    let vicina=null,vd=4.5;
+    for(const c of abitazioni){ const d=dist(P.x,P.y,c.x,c.y); if(d<vd){vd=d;vicina=c;} }
+    if(vicina&&P.z<4&&!P.veh){
+      if(vicina.mia){ entraInCasa(vicina); return; }
+      toast('🏠 '+vicina.nome+' è in vendita a '+vicina.prezzo+' €: si compra in Agenzia Case 🏠',3000);
+      return;
+    }
+  }
   if(P.veh){
     const v=P.veh;
     P.x=v.x-Math.sin(v.ang)*(v.d.w/2+1.2); P.y=v.y+Math.cos(v.ang)*(v.d.w/2+1.2);
@@ -1703,7 +1833,8 @@ function updateFoot(ix,iy,im,dt){
     if(P.vz<-11){ P.energia=Math.max(0,P.energia-5); ferisci((-P.vz-11)*2.6,'🤕 Che botta!'); }
     P.z=ground; P.vz=0;
   }
-  P.x=clamp(P.x,1,WSIZE-1); P.y=clamp(P.y,1,WSIZE-1);
+  if(dentroCasa){ murettoCasa(); }
+  else { P.x=clamp(P.x,1,WSIZE-1); P.y=clamp(P.y,1,WSIZE-1); }
   solve(P,0.42);
   spingiDaiVeicoli();
   for(const t of trees){                       // non si attraversano i tronchi
@@ -1859,6 +1990,21 @@ function updHUD(){
 let promptTxt='';
 function updPrompt(){
   let t='';
+  if(dentroCasa){
+    const X=STANZA.x, Y=STANZA.y, W=STANZA.w, D=STANZA.d;
+    if(dist(P.x,P.y,X,Y-D/2)<1.9) t='🖐️ AZIONE per uscire di casa';
+    else if(dist(P.x,P.y,X-W/2+1.45,Y+D/2-1.4)<2.0) t='🖐️ AZIONE per dormire';
+    else if(dist(P.x,P.y,X+W/2-1.55,Y+D/2-3.2)<1.8) t='🖐️ AZIONE per mangiare';
+    if(t!==promptTxt){promptTxt=t;$prompt.textContent=t;$prompt.style.display=t?'block':'none';}
+    return;
+  }
+  for(const c of abitazioni){
+    if(dist(P.x,P.y,c.x,c.y)<4.5&&!P.veh&&P.z<4){
+      t=c.mia?'🖐️ AZIONE per entrare in '+c.nome:'🏠 '+c.nome+' in vendita: '+c.prezzo+' €';
+      if(t!==promptTxt){promptTxt=t;$prompt.textContent=t;$prompt.style.display='block';}
+      return;
+    }
+  }
   if(P.veh) t='🖐️ AZIONE per scendere';
   else{
     let bs=null,bd=6;
@@ -2615,7 +2761,7 @@ function costruisciCitta(){
   const celleParco={};
   for(const p of parks) celleParco[Math.floor(p.x/CELL)+','+Math.floor(p.y/CELL)]=1;
   for(let gy=0;gy<GRID;gy++)for(let gx=0;gx<GRID;gx++){
-    const ox=gx*CELL, oy=gy*CELL, aria=(gx>=13&&gy>=13);
+    const ox=gx*CELL, oy=gy*CELL, aria=(gx>=AIRG&&gy>=AIRG);
     asf.piano(ox,oy,ROAD,CELL,0,8,1,1,1);
     asf.piano(ox+ROAD,oy,CELL-ROAD,ROAD,0,8,1,1,1);
     if(aria){ asf.piano(ox+ROAD,oy+ROAD,BS,BS,0.02,10,1.22,1.22,1.24); continue; }
@@ -2705,6 +2851,32 @@ function costruisciCitta(){
     }
     const lung=(casa?b.h+1.0:b.h)/Math.tan(ELEV);                      // ombra al suolo
     omb.ombra(x0,y0,x1,y1,SOLX*lung,SOLY*lung,0.22);
+  }
+  /* --- l'interno di casa, costruito una volta fuori dalla citta' --- */
+  {
+    const X=STANZA.x, Y=STANZA.y, W=STANZA.w, D=STANZA.d, H=STANZA.h, T=0.16;
+    ghi.box(X-W/2-3,Y-D/2-3,-0.3,W+6,D+6,0.3, 3, 1,1,1);                 // basamento
+    pia.box(X-W/2,Y-D/2,0,W,D,0.06, 2, 0.95,0.88,0.78);                  // pavimento
+    int.box(X-W/2,Y-D/2,0,T,D,H, 2, 1,1,1);                              // muro ovest
+    int.box(X+W/2-T,Y-D/2,0,T,D,H, 2, 1,1,1);                            // muro est
+    int.box(X-W/2,Y+D/2-T,0,W,T,H, 2, 1,1,1);                            // muro nord
+    const pw=1.5, px0=X-pw/2;                                            // muro sud con la porta
+    int.box(X-W/2,Y-D/2,0,px0-(X-W/2),T,H, 2, 1,1,1);
+    int.box(px0+pw,Y-D/2,0,(X+W/2)-(px0+pw),T,H, 2, 1,1,1);
+    int.box(px0,Y-D/2,2.1,pw,T,H-2.1, 2, 1,1,1);                         // architrave
+    teg.box(X-W/2,Y-D/2,H,W,D,0.14, 2, 0.9,0.9,0.92);                    // soffitto
+    /* mobili */
+    pia.box(X-W/2+0.4,Y+D/2-2.4,0.06,2.1,2.0,0.5, 1.4, 0.55,0.62,0.78);  // letto
+    pia.box(X-W/2+0.4,Y+D/2-1.0,0.56,2.1,0.55,0.2, 1.4, 1.0,1.0,1.0);    // cuscino
+    pia.box(X+W/2-2.6,Y+D/2-1.9,0.06,2.0,1.5,0.9, 1.4, 0.80,0.80,0.84);  // cucina
+    pia.box(X+W/2-2.0,Y+D/2-3.9,0.06,0.9,0.8,1.8, 1.4, 0.92,0.94,0.96);  // frigo
+    pia.box(X-1.1,Y-1.2,0.06,2.2,1.1,0.74, 1.2, 0.66,0.46,0.30);         // tavolo
+    pia.box(X-1.6,Y-2.2,0.06,0.5,0.5,0.9, 1.0, 0.60,0.42,0.28);          // sedie
+    pia.box(X+0.7,Y-2.2,0.06,0.5,0.5,0.9, 1.0, 0.60,0.42,0.28);
+    pia.box(X+W/2-1.1,Y-2.8,0.06,0.7,1.9,0.45, 1.2, 0.35,0.30,0.28);     // divano
+    pia.box(X-W/2+0.25,Y-2.6,0.9,0.12,1.3,0.75, 1.0, 0.10,0.11,0.13);    // televisore
+    vet.box(X-W/2+0.02,Y-0.6,1.0,0.05,1.6,1.2, 1.6, 1,1,1);              // finestre
+    vet.box(X+W/2-0.07,Y-0.6,1.0,0.05,1.6,1.2, 1.6, 1,1,1);
   }
   STATICO.length=0;
   const add=(g,tex,o)=>{const m=caricaGeo(g,tex,o); if(m) STATICO.push(m);};
@@ -3633,6 +3805,17 @@ function disegnaScena(){
     const d=dist2cam(c.x,c.y); if(d>70) continue;
     disegna(M.box,c.x,c.y,0.3+Math.sin(tempo*2+c.t)*0.1,tempo*2+c.t,0.34,0.1,0.34,1.9,1.5,0.3); lastObjs++;
   }
+  /* cartelli delle case */
+  for(const c of abitazioni){
+    const d=dist2cam(c.x,c.y); if(d>70) continue;
+    const a=[0,Math.PI*0.5,Math.PI,-Math.PI*0.5][c.side]||0;
+    disegna(M.box,c.x,c.y,0,a,0.09,0.09,1.5,0.42,0.36,0.28);            // palo
+    usaMesh({buf:M.box.buf,n:M.box.n,tex:TEX.piatta,piatto:1});
+    if(c.mia) disegna(M.box,c.x,c.y,1.5,a,0.1,0.75,0.42,0.30,1.30,0.75);
+    else      disegna(M.box,c.x,c.y,1.5,a,0.1,0.75,0.42,1.30,0.95,0.25);
+    usaMesh(M.box);
+    lastObjs++;
+  }
   /* insegne dei negozi */
   for(const sh of shops){
     const d=dist2cam(sh.x,sh.y); if(d>90) continue;
@@ -4490,6 +4673,7 @@ function statoDaSalvare(){
     veh:vehicles.map(v=>[v.type,Math.round(v.x*10)/10,Math.round(v.y*10)/10,Math.round(v.z*10)/10,
                          Math.round(v.ang*100)/100,Math.round(v.danno||0),v.personale?1:0,v.variante||'']),
     garage:P.garage, miaIdx:Math.max(0,P.garage.indexOf(P.mia)),
+    case:abitazioni.filter(c=>c.mia).map(c=>c.id),
     mon:mon,cas:cas,t:Date.now()};
 }
 function salva(){
@@ -4505,6 +4689,7 @@ function applicaSalvataggio(d){
     if(d.nome) P.nome=d.nome;
     if(typeof d.ora==='number') ora=d.ora;
     P.colpi=d.colpi||0;
+    if(Array.isArray(d.case)) for(const c of abitazioni) c.mia=d.case.indexOf(c.id)>=0;
     for(let i=0;i<10;i++) inv[i]=d.inv[i]||null;
     for(const k in EQ) EQ[k]=!!(d.eq&&d.eq[k]);
     tps=!!d.tps; document.getElementById('cross').style.display=tps?'none':'block';
