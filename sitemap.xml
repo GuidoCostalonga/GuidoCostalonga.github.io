@@ -33,6 +33,11 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://costalonga.org/meteo/</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://costalonga.org/english-quest/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
