@@ -404,7 +404,8 @@ function genCity(){
     if(gx>=13&&gy>=13) continue;
     lamps.push({x:gx*CELL+ROAD-1.3,y:gy*CELL+ROAD+BS*0.32});
     lamps.push({x:gx*CELL+ROAD+BS*0.68,y:gy*CELL+ROAD-1.3});
-    semafori.push({x:gx*CELL+ROAD-1.5,y:gy*CELL+ROAD-1.5,a:hash2(gx,gy)});
+    semafori.push({x:gx*CELL+ROAD-1.5,y:gy*CELL+ROAD-1.5,a:hash2(gx,gy),vert:true});
+    semafori.push({x:gx*CELL+ROAD-1.5,y:gy*CELL+ROAD+2.6,a:hash2(gx,gy),vert:false});
     cassonetti.push({x:gx*CELL+ROAD+BS*(0.25+hash2(gx+5,gy)*0.5),y:gy*CELL+ROAD-1.7,
                      c:hash2(gx,gy+3)<0.5?'#3f7a4a':'#3f5f8a'});
   }
@@ -436,7 +437,7 @@ const P={x:8*CELL+CELL/2+8,y:8*CELL+CELL/2+14,z:0,vz:0,vx:0,vy:0,
   mia:{type:'auto',col:'#c8453a',variante:'berlina',danno:0}, telAttesa:0, nome:'Giocatore'};
 const EQ={scarpe:false,skate:false,jet:false,para:false,gps:false,faro:false};
 const inv=new Array(10).fill(null);
-let sel=0, job=null, paused=true, tempo=0, tps=false, lastCrash=-9;
+let sel=0, job=null, paused=true, tempo=0, tps=false, lastCrash=-9, ultimoClacson=-9;
 const CAM={x:P.x,y:P.y,z:EYE,yaw:P.yaw,pitch:P.pitch,fov:1.0};
 let lookOff=0;
 
@@ -919,6 +920,21 @@ function updJob(){
   }
 }
 
+/* ===================== SEMAFORI ===================== */
+/* un incrocio, un ciclo: 0 rosso, 1 giallo, 2 verde. asseVert = strade nord-sud */
+const CICLO=9.0;
+function statoSemaforo(gx,gy,asseVert){
+  const f=(tempo*0.14+hash2(gx,gy)*CICLO)%CICLO;
+  if(asseVert) return f<3.9?2:(f<4.5?1:0);
+  return f<4.5?0:(f<8.4?2:1);
+}
+/* distanza dalla linea d'arresto del prossimo incrocio (negativa se ci sei dentro) */
+function versoIncrocio(pos,dir){
+  const u=pos-Math.floor(pos/CELL)*CELL;
+  if(dir>0) return u>ROAD?(CELL-u):-1;
+  return u>ROAD?(u-ROAD):-1;
+}
+
 /* ===================== COLLISIONI ===================== */
 function nearBuildings(x,y,rad){
   const out=[],g0x=clamp(Math.floor((x-rad)/CELL),0,GRID-1),g1x=clamp(Math.floor((x+rad)/CELL),0,GRID-1),
@@ -1152,23 +1168,70 @@ function update(dt){
   }
 
   for(const c of traffic){
-    c.pos+=c.sp*c.dir*dt;
-    if(c.pos>WSIZE+20)c.pos=-20; if(c.pos<-20)c.pos=WSIZE+20;
+    if(c.v===undefined){ c.v=c.sp; c.vmax=c.sp; c.fermo=0; }
+    let voluta=c.vmax;
     const cx=c.vert?c.line:c.pos, cy=c.vert?c.pos:c.line;
-    if(!P.veh&&P.z<2&&P.hurt<=0&&dist(cx,cy,P.x,P.y)<2.2){
+    /* 1) semaforo del prossimo incrocio */
+    const dInc=versoIncrocio(c.pos,c.dir);
+    if(dInc>0){
+      const k=c.dir>0?Math.floor(c.pos/CELL)+1:Math.floor(c.pos/CELL);
+      const gx=c.vert?Math.floor(c.line/CELL):k, gy=c.vert?k:Math.floor(c.line/CELL);
+      const st=statoSemaforo(gx,gy,c.vert);
+      if(st===0||(st===1&&dInc>7)){
+        const spazio=Math.max(0,dInc-1.6);
+        voluta=Math.min(voluta,Math.sqrt(2*3.0*spazio));
+      }
+    }
+    /* 2) chi ho davanti nella mia corsia */
+    for(const o of traffic){
+      if(o===c||o.vert!==c.vert||Math.abs(o.line-c.line)>0.8) continue;
+      const gap=(o.pos-c.pos)*c.dir;
+      if(gap>0&&gap<30) voluta=Math.min(voluta,Math.max(0,(gap-7)*0.6+(o.v||0)*0.85));
+    }
+    /* 3) il giocatore, in auto o a piedi */
+    let bloccatoDaTe=false;
+    if(P.veh&&!P.veh.d.air){
+      const lungo=c.vert?P.veh.y:P.veh.x, lato=c.vert?P.veh.x:P.veh.y;
+      if(Math.abs(lato-c.line)<2.8){
+        const gap=(lungo-c.pos)*c.dir;
+        if(gap>0&&gap<26){ voluta=Math.min(voluta,Math.max(0,(gap-8)*0.5)); if(gap<14) bloccatoDaTe=true; }
+      }
+    } else if(P.z<2){
+      const lungo=c.vert?P.y:P.x, lato=c.vert?P.x:P.y;
+      if(Math.abs(lato-c.line)<3.2){
+        const gap=(lungo-c.pos)*c.dir;
+        if(gap>0&&gap<18) voluta=Math.min(voluta,Math.max(0,(gap-5)*0.45));
+      }
+    }
+    /* 4) pedoni che stanno attraversando */
+    for(const p of peds){
+      if(!p.att) continue;
+      const q=pedPos(p);
+      const lungo=c.vert?q[1]:q[0], lato=c.vert?q[0]:q[1];
+      if(Math.abs(lato-c.line)>4) continue;
+      const gap=(lungo-c.pos)*c.dir;
+      if(gap>0&&gap<16){ voluta=Math.min(voluta,Math.max(0,(gap-6)*0.4)); }
+    }
+    const acc=(voluta>c.v)?3.2:9.0;
+    c.v+=clamp(voluta-c.v,-acc*dt,acc*dt);
+    if(c.v<0.05) c.v=0;
+    c.pos+=c.v*c.dir*dt;
+    c.roll=(c.roll||0)+c.v*dt/0.32;
+    if(c.pos>WSIZE+20)c.pos=-20; if(c.pos<-20)c.pos=WSIZE+20;
+    /* clacson di chi resta bloccato dietro di te */
+    if(bloccatoDaTe&&c.v<0.6){
+      c.fermo+=dt;
+      if(c.fermo>2.2&&dist(cx,cy,P.x,P.y)<45&&tempo-(ultimoClacson||0)>1.6){
+        ultimoClacson=tempo; beep(330,.35,'square',.05); setTimeout(()=>beep(300,.25,'square',.04),260);
+      }
+    } else c.fermo=0;
+    if(!P.veh&&P.z<2&&P.hurt<=0&&c.v>1&&dist(cx,cy,P.x,P.y)<2.2){
       const a=Math.atan2(P.y-cy,P.x-cx); P.x+=Math.cos(a)*2.4; P.y+=Math.sin(a)*2.4; P.vz=3;
       P.energia=Math.max(0,P.energia-8);
       ferisci(11,'💥 Ahia! Attento alle auto'); beep(140,.15,'sawtooth',.07);
     }
   }
-  for(const p of peds){
-    p.t+=p.sp*dt*4;
-    if(!P.veh&&P.z<2){                       // si scansano se gli stai addosso
-      const q=pedPos(p);
-      if((q[0]-P.x)*(q[0]-P.x)+(q[1]-P.y)*(q[1]-P.y)<2.6) p.t+=p.sp*dt*22;
-    }
-    if(p.t>1)p.t-=1; if(p.t<0)p.t+=1;
-  }
+  for(const p of peds) aggiornaPedone(p,dt);
 
   for(let i=coins.length-1;i>=0;i--){const c=coins[i];
     if(dist(c.x,c.y,P.x,P.y)<(P.veh?3.2:1.8)&&P.z<3){
@@ -2416,13 +2479,65 @@ function hash2(a,b){
   let h=Math.imul(a*73856093^b*19349663,2654435761);
   h^=h>>>13; return ((h>>>0)%1000)/1000;
 }
+/* il pedone: cammina attorno all'isolato, aspetta il verde e attraversa sulle strisce */
+function aggiornaPedone(p,dt){
+  if(p.att){                                        // sta attraversando
+    p.att.u+=dt*1.35/p.att.len;
+    if(p.att.u>=1){
+      p.gx=p.att.gx; p.gy=p.att.gy;
+      p.t=pedParam(p.gx,p.gy,p.att.x1,p.att.y1);
+      p.att=null;
+    }
+    return;
+  }
+  if(p.aspetta>0){                                  // fermo al bordo, aspetta il verde
+    p.aspetta-=dt;
+    const vd=p.versoW?statoSemaforo(p.gx,p.gy,true):statoSemaforo(p.gx,p.gy,false);
+    if(vd===0){ avviaAttraversamento(p); }
+    else if(p.aspetta<=0){ p.versoW=undefined; }
+    return;
+  }
+  p.t+=p.sp*dt*4;
+  if(!P.veh&&P.z<2){                                // si scansano se gli stai addosso
+    const q=pedPos(p);
+    if((q[0]-P.x)*(q[0]-P.x)+(q[1]-P.y)*(q[1]-P.y)<2.6) p.t+=p.sp*dt*22;
+  }
+  if(p.t>1)p.t-=1; if(p.t<0)p.t+=1;
+  /* vicino a un attraversamento? */
+  if(p.gx>0&&Math.abs(p.t-TW)<0.012&&Math.random()<dt*2.2){ p.versoW=true;  p.aspetta=14; }
+  else if(p.gy>0&&Math.abs(p.t-TN)<0.012&&Math.random()<dt*2.2){ p.versoW=false; p.aspetta=14; }
+}
+/* parametri dei due attraversamenti sul perimetro dell'isolato */
+const LATO=BS+SW*1.2, TN=(ROAD+1.9-(ROAD-SW*0.6))/LATO/4, TW=3+((ROAD+1.9-(ROAD-SW*0.6))/LATO);
+function avviaAttraversamento(p){
+  const q=pedPos(p);
+  let x1,y1,gx=p.gx,gy=p.gy,len;
+  if(p.versoW){ gx=p.gx-1; x1=gx*CELL+ROAD+BS+SW*0.6; y1=q[1]; len=Math.abs(x1-q[0]); }
+  else        { gy=p.gy-1; y1=gy*CELL+ROAD+BS+SW*0.6; x1=q[0]; len=Math.abs(y1-q[1]); }
+  p.att={x0:q[0],y0:q[1],x1:x1,y1:y1,u:0,len:Math.max(1,len),gx:gx,gy:gy};
+  p.aspetta=0;
+}
+/* dal punto al parametro sul perimetro (l'inverso di pedPos) */
+function pedParam(gx,gy,x,y){
+  const bx=gx*CELL+ROAD-SW*0.6, by=gy*CELL+ROAD-SW*0.6, sL=LATO, per=sL*4;
+  const dx=x-bx, dy=y-by;
+  let t;
+  if(Math.abs(dy)<Math.abs(dy-sL)&&Math.abs(dy)<1.2) t=clamp(dx,0,sL);
+  else if(Math.abs(dx-sL)<1.2) t=sL+clamp(dy,0,sL);
+  else if(Math.abs(dy-sL)<1.2) t=2*sL+clamp(sL-dx,0,sL);
+  else t=3*sL+clamp(sL-dy,0,sL);
+  return (t/per+1)%1;
+}
 function pedAng(p){
+  if(p.att) return Math.atan2(p.att.y1-p.att.y0,p.att.x1-p.att.x0);
   const t=((p.t%1)+1)%1, seg=Math.floor(t*4);
   let a=[0,Math.PI*0.5,Math.PI,-Math.PI*0.5][seg];
   if(p.sp<0) a+=Math.PI;
   return a;
 }
 function pedPos(p){
+  if(p.att){ const u=clamp(p.att.u,0,1);
+    return [p.att.x0+(p.att.x1-p.att.x0)*u, p.att.y0+(p.att.y1-p.att.y0)*u]; }
   const bx=p.gx*CELL+ROAD-SW*0.6, by=p.gy*CELL+ROAD-SW*0.6, s=BS+SW*1.2, per=s*4;
   let t=p.t*per;
   if(t<s) return [bx+t,by];
@@ -2743,7 +2858,7 @@ function disegnaScena(){
     const d=dist2cam(x,y); if(d>Math.max(220,FAR*0.9)) continue;
     if(!cc._v) cc._v={x:0,y:0,z:0,ang:0,rot:0,col:cc.col,type:cc.type==='camion'?'furgo':cc.type,
                       d:cc.type==='camion'?VEHDEF.auto:VEHDEF[cc.type],sp:0,wroll:0,variante:'furgone'};
-    cc._v.x=x; cc._v.y=y; cc._v.wroll=cc.pos*cc.dir/0.32;
+    cc._v.x=x; cc._v.y=y; cc._v.wroll=cc.roll||0; cc._v.sp=cc.v||0;
     cc._v.ang=cc.vert?(cc.dir>0?Math.PI*0.5:-Math.PI*0.5):(cc.dir>0?0:Math.PI);
     disegnaVeicolo(cc._v,d); lastObjs++;
   }
@@ -2753,7 +2868,8 @@ function disegnaScena(){
     const q=pedPos(p), d=dist2cam(q[0],q[1]);
     if(d>110) continue;
     const pelle=PELLI[Math.floor(hash2(p.gx*7+Math.round(p.t*97),p.gy*13)*PELLI.length)%PELLI.length];
-    disegnaPersona(q[0],q[1],0,pedAng(p),tempo*7+p.t*20,p.col,pelle,d<35); lastObjs++;
+    const fermo=(p.aspetta>0&&!p.att);
+    disegnaPersona(q[0],q[1],0,pedAng(p),fermo?0:(tempo*7+p.t*20),p.col,pelle,d<35); lastObjs++;
   }
   if(tps&&!P.veh) disegnaPersona(P.x,P.y,P.z,P.yaw,P.bob*2,P.hurt>0?'#d0453c':'#3d7fd6',PELLI[0],true);
   /* --- oggetti --- */
@@ -2773,7 +2889,9 @@ function disegnaScena(){
     const d=dist2cam(sm.x,sm.y); if(d>80) continue;
     disegna(M.box,sm.x,sm.y,0,0,0.22,0.22,3.1,0.28,0.3,0.34);
     disegna(M.box,sm.x,sm.y,3.1,0,0.42,0.34,1.05,0.18,0.2,0.23);
-    const acceso=Math.floor(tempo*0.35+sm.a*3)%3;
+    const gx=Math.round((sm.x-ROAD+1.5)/CELL), gy=Math.round((sm.y-ROAD+1.5)/CELL);
+    const st=statoSemaforo(gx,gy,sm.vert!==false);
+    const acceso=(st===0?0:(st===1?1:2));
     const luci=[[1.0,0.16,0.12],[1.0,0.78,0.15],[0.2,1.0,0.32]];
     for(let i=0;i<3;i++){
       const on=(i===acceso), L=luci[i];
