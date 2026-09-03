@@ -221,7 +221,7 @@ const gl=cv.getContext('webgl',{antialias:true,alpha:false,depth:true,powerPrefe
        ||cv.getContext('experimental-webgl');
 let DPR=1,VW=0,VH=0,RS=1,MAXRS=1;
 function applyRes(){
-  const s=clamp(RS,0.55,MAXRS);
+  const s=clamp(RS,Math.min((QUALITA[QUAL]||QUALITA.alta).min,MAXRS),MAXRS);
   cv.width=Math.max(2,Math.round(VW*s)); cv.height=Math.max(2,Math.round(VH*s));
   cv.style.width=VW+'px'; cv.style.height=VH+'px';
   const h=Math.min(s,1.6);
@@ -230,6 +230,9 @@ function applyRes(){
   ctx.setTransform(h,0,0,h,0,0);
   if(gl) gl.viewport(0,0,cv.width,cv.height);
 }
+let QUAL='alta';
+try{ QUAL=localStorage.getItem('cittaLiberaQual')||'alta'; }catch(e){}
+const QUALITA={alta:{min:1.0,far:300},media:{min:0.8,far:240},bassa:{min:0.6,far:170}};
 function resize(){
   DPR=Math.min(2,window.devicePixelRatio||1);
   MAXRS=DPR; RS=Math.min(RS||DPR,MAXRS);
@@ -747,6 +750,17 @@ function apriTelefono(){
     riga(L.e,L.n,L.dice(prova)+' · '+Math.round(dist(prova.from.x,prova.from.y,prova.to.x,prova.to.y))+' m',
          prova.reward+' €',true,()=>{
       job=prova; toast(L.e+' Accettato: '+L.n+' — '+prova.reward+' €',2600); chiudiTelefono();
+    });
+  }
+  /* qualita' dell'immagine */
+  {
+    const ordine=['bassa','media','alta'], nomi={bassa:'Bassa (fluida)',media:'Media',alta:'Alta (nitida)'};
+    riga('🎚️','Definizione','Adesso: '+nomi[QUAL]+' · tocca per cambiare',nomi[QUAL].split(' ')[0],true,()=>{
+      QUAL=ordine[(ordine.indexOf(QUAL)+1)%3];
+      try{localStorage.setItem('cittaLiberaQual',QUAL);}catch(e){}
+      RS=Math.min(MAXRS,Math.max(RS,(QUALITA[QUAL]||QUALITA.alta).min)); applyRes();
+      FAR=(QUALITA[QUAL]||QUALITA.alta).far;
+      toast('🎚️ Definizione: '+nomi[QUAL]); apriTelefono();
     });
   }
   /* officina piu' vicina */
@@ -1363,6 +1377,26 @@ function mModel(m,x,y,z,yaw,sx,sy2,sz){
   return m;
 }
 const MVP=new Float32Array(16), MVIEW=new Float32Array(16), MPROJ=new Float32Array(16), MMOD=new Float32Array(16);
+const MLUCE=new Float32Array(16), MLV=new Float32Array(16), MLP=new Float32Array(16);
+function mOrtho(m,l,r,b,t,n,f){
+  mIdent(m);
+  m[0]=2/(r-l); m[5]=2/(t-b); m[10]=-2/(f-n);
+  m[12]=-(r+l)/(r-l); m[13]=-(t+b)/(t-b); m[14]=-(f+n)/(f-n);
+  return m;
+}
+function mGuarda(m,ex,ey,ez,cx,cy,cz){
+  let fx=cx-ex, fy=cy-ey, fz=cz-ez;
+  const fl=Math.hypot(fx,fy,fz)||1; fx/=fl; fy/=fl; fz/=fl;
+  let rx=fy*1-fz*0, ry=fz*0-fx*1, rz=fx*0-fy*0;      // f x (0,0,1)
+  rx=fy; ry=-fx; rz=0;
+  const rl=Math.hypot(rx,ry,rz)||1; rx/=rl; ry/=rl; rz/=rl;
+  const ux=ry*fz-rz*fy, uy=rz*fx-rx*fz, uz=rx*fy-ry*fx;
+  m[0]=rx; m[4]=ry; m[8]=rz;  m[12]=-(rx*ex+ry*ey+rz*ez);
+  m[1]=ux; m[5]=uy; m[9]=uz;  m[13]=-(ux*ex+uy*ey+uz*ez);
+  m[2]=-fx;m[6]=-fy;m[10]=-fz;m[14]=  fx*ex+fy*ey+fz*ez;
+  m[3]=0;  m[7]=0;  m[11]=0;  m[15]=1;
+  return m;
+}
 
 /* ---------- shader ---------- */
 function compila(tipo,src){
@@ -1390,37 +1424,59 @@ void main(){
 const FS_SCENA=`
 precision mediump float;
 vec3 cieloCol(vec3 d, vec3 sun){
-  vec3 zen=vec3(0.13,0.33,0.66), hor=vec3(0.73,0.80,0.87);
+  vec3 zen=vec3(0.045,0.14,0.42), hor=vec3(0.52,0.62,0.76);
   vec3 c=mix(hor,zen,pow(clamp(d.z,0.0,1.0),0.55));
-  c+=vec3(1.0,0.90,0.70)*pow(max(dot(d,sun),0.0),50.0)*0.85;
-  return mix(vec3(0.34,0.35,0.34),c,smoothstep(-0.30,0.04,d.z));
+  c+=vec3(1.0,0.86,0.62)*pow(max(dot(d,sun),0.0),50.0)*1.4;
+  return mix(vec3(0.12,0.125,0.12),c,smoothstep(-0.30,0.04,d.z));
+}
+vec3 filmica(vec3 x){                       // curva di contrasto tipo pellicola
+  return clamp((x*(2.51*x+0.03))/(x*(2.43*x+0.59)+0.14),0.0,1.0);
 }
 uniform sampler2D uTex; uniform vec3 uSun,uFog,uCam,uTint;
-uniform vec2 uFogR; uniform float uSpec,uAlpha,uTaglia,uPiatto;
+uniform vec2 uFogR; uniform float uSpec,uAlpha,uTaglia,uPiatto,uEspos;
+uniform sampler2D uMappa; uniform mat4 uLuce; uniform float uOmbre,uTexel;
 varying vec3 vNor,vCol,vW; varying vec2 vUV;
 void main(){
   vec4 t=texture2D(uTex,vUV);
   if(t.a<uTaglia) discard;
+  vec3 base=pow(t.rgb*vCol*uTint,vec3(2.2));      // dal colore video a quello fisico
   vec3 n=normalize(vNor);
   float lam=max(dot(n,uSun),0.0);
   float cielo=0.5+0.5*n.z;
-  vec3 amb=mix(vec3(0.44,0.47,0.55),vec3(0.62,0.65,0.70),cielo);
-  amb+=vec3(0.09,0.08,0.06)*max(0.0,-n.z);
-  vec3 col=t.rgb*vCol*uTint*(amb+vec3(1.12,1.03,0.88)*lam*0.80);
-  col=col*1.06-0.022;
-  col=mix(vec3(dot(col,vec3(0.299,0.587,0.114))),col,1.14);
-  col=mix(col,t.rgb*vCol*uTint,uPiatto);
+  vec3 amb=mix(vec3(0.17,0.19,0.25),vec3(0.34,0.37,0.44),cielo);
+  amb+=vec3(0.05,0.043,0.03)*max(0.0,-n.z);
+  float ombra=1.0;
+  if(uOmbre>0.5&&lam>0.0){
+    vec4 lp=uLuce*vec4(vW,1.0);
+    vec3 pc=lp.xyz/lp.w*0.5+0.5;
+    if(pc.x>0.005&&pc.x<0.995&&pc.y>0.005&&pc.y<0.995&&pc.z<1.0){
+      float bias=max(0.0040*(1.0-lam),0.0012);
+      float acc=0.0;
+      for(int i=-1;i<=1;i++){
+        for(int j=-1;j<=1;j++){
+          float dz=texture2D(uMappa,pc.xy+vec2(float(i),float(j))*uTexel).r;
+          acc+=(dz+bias<pc.z)?0.0:1.0;
+        }
+      }
+      float bordo=smoothstep(0.50,0.40,max(abs(pc.x-0.5),abs(pc.y-0.5)));
+      ombra=mix(1.0,acc/9.0,bordo);
+    }
+  }
+  vec3 col=base*(amb+vec3(1.35,1.24,1.02)*lam*ombra);
+  vec3 piatta=base;
   if(uSpec>0.0){
     vec3 v=normalize(uCam-vW), h=normalize(v+uSun);
     vec3 env=cieloCol(reflect(-v,n),uSun);
     float fres=pow(1.0-max(dot(n,v),0.0),4.0);
     col=mix(col,env,clamp(uSpec*(0.30+0.62*fres),0.0,0.95));
-    col+=vec3(1.0,0.97,0.90)*pow(max(dot(n,h),0.0),64.0)*uSpec*(0.35+lam);
+    col+=vec3(1.4,1.35,1.24)*pow(max(dot(n,h),0.0),64.0)*uSpec*(0.35+lam);
   }
+  col=mix(col,piatta,uPiatto);
   float d=length(uCam-vW);
   float f=clamp((d-uFogR.x)/(uFogR.y-uFogR.x),0.0,1.0);
-  col=mix(col,uFog,f*f*0.82);
-  gl_FragColor=vec4(col,t.a*uAlpha);
+  col=mix(col,pow(uFog,vec3(2.2)),f*f*0.82);
+  col=filmica(col*uEspos);
+  gl_FragColor=vec4(pow(col,vec3(1.0/2.2)),t.a*uAlpha);
 }`;
 const VS_CIELO=`attribute vec2 aP; varying vec2 vP; void main(){vP=aP; gl_Position=vec4(aP,1.0,1.0);}`;
 const FS_CIELO=`
@@ -1429,22 +1485,23 @@ uniform vec3 uF,uR,uU,uSun,uFog; uniform vec2 uTan; uniform sampler2D uNuv; unif
 varying vec2 vP;
 void main(){
   vec3 dir=normalize(uF+uR*vP.x*uTan.x+uU*vP.y*uTan.y);
-  vec3 zen=vec3(0.13,0.33,0.66), hor=vec3(0.73,0.80,0.87);
+  vec3 zen=vec3(0.045,0.14,0.42), hor=vec3(0.52,0.62,0.76);
   vec3 c=mix(hor,zen,pow(clamp(dir.z,0.0,1.0),0.55));
   float sd=max(dot(dir,uSun),0.0);
-  c+=vec3(1.0,0.94,0.78)*pow(sd,1200.0)*2.0;
-  c+=vec3(1.0,0.88,0.66)*pow(sd,14.0)*0.30;
+  c+=vec3(1.0,0.94,0.78)*pow(sd,1200.0)*6.0;
+  c+=vec3(1.0,0.88,0.66)*pow(sd,14.0)*0.55;
   if(dir.z>0.015){
     vec2 uv=dir.xy/dir.z*0.0016+vec2(uT*0.0000045,uT*0.0000022);
     float a=texture2D(uNuv,uv).a*smoothstep(0.02,0.30,dir.z);
     float b=texture2D(uNuv,uv*2.3+vec2(0.37,0.11)).a*smoothstep(0.05,0.40,dir.z);
     a=clamp(a*0.85+b*0.45,0.0,1.0);
-    c=mix(c,mix(vec3(0.78,0.82,0.88),vec3(1.0),0.6)+vec3(0.02),a*0.9);
+    c=mix(c,vec3(1.25,1.28,1.34),a*0.9);
   }
-  c=mix(uFog,c,smoothstep(-0.02,0.13,dir.z));
-  gl_FragColor=vec4(c,1.0);
+  c=mix(pow(uFog,vec3(2.2)),c,smoothstep(-0.02,0.13,dir.z));
+  c=clamp((c*(2.51*c+0.03))/(c*(2.43*c+0.59)+0.14),0.0,1.0);
+  gl_FragColor=vec4(pow(c*1.02,vec3(1.0/2.2)),1.0);
 }`;
-let PSC=null,PSK=null,LOC={},LOCK={};
+let PSC=null,PSK=null,PSD=null,LOC={},LOCK={},LOCD={};
 function initShader(){
   PSC=programma(VS_SCENA,FS_SCENA);
   LOC={aPos:gl.getAttribLocation(PSC,'aPos'),aNor:gl.getAttribLocation(PSC,'aNor'),
@@ -1454,7 +1511,14 @@ function initShader(){
        uFog:gl.getUniformLocation(PSC,'uFog'),uCam:gl.getUniformLocation(PSC,'uCam'),
        uTint:gl.getUniformLocation(PSC,'uTint'),uFogR:gl.getUniformLocation(PSC,'uFogR'),
        uSpec:gl.getUniformLocation(PSC,'uSpec'),uAlpha:gl.getUniformLocation(PSC,'uAlpha'),
-       uTaglia:gl.getUniformLocation(PSC,'uTaglia'),uPiatto:gl.getUniformLocation(PSC,'uPiatto')};
+       uTaglia:gl.getUniformLocation(PSC,'uTaglia'),uPiatto:gl.getUniformLocation(PSC,'uPiatto'),
+       uEspos:gl.getUniformLocation(PSC,'uEspos'),uMappa:gl.getUniformLocation(PSC,'uMappa'),
+       uLuce:gl.getUniformLocation(PSC,'uLuce'),uOmbre:gl.getUniformLocation(PSC,'uOmbre'),
+       uTexel:gl.getUniformLocation(PSC,'uTexel')};
+  PSD=programma('attribute vec3 aPos; uniform mat4 uVP,uModel; void main(){gl_Position=uVP*uModel*vec4(aPos,1.0);}',
+                'precision mediump float; void main(){gl_FragColor=vec4(1.0);}');
+  LOCD={aPos:gl.getAttribLocation(PSD,'aPos'),uVP:gl.getUniformLocation(PSD,'uVP'),
+        uModel:gl.getUniformLocation(PSD,'uModel')};
   PSK=programma(VS_CIELO,FS_CIELO);
   LOCK={aP:gl.getAttribLocation(PSK,'aP'),uF:gl.getUniformLocation(PSK,'uF'),uR:gl.getUniformLocation(PSK,'uR'),
         uU:gl.getUniformLocation(PSK,'uU'),uSun:gl.getUniformLocation(PSK,'uSun'),uFog:gl.getUniformLocation(PSK,'uFog'),
@@ -1516,7 +1580,7 @@ function creaTexture(){
     x.fillStyle='#e6e1d6'; x.fillRect(wx-6,wy+wh,ww+12,S*0.035);            // davanzale
     x.fillStyle='rgba(0,0,0,.18)'; x.fillRect(wx-6,wy+wh+S*0.035,ww+12,3);
     rumore(x,S,10);
-  },256);
+  },512);
   /* piano terra: zoccolo in pietra con portone */
   TEX.piano=texDa((x,S)=>{
     x.fillStyle='#b7b0a4'; x.fillRect(0,0,S,S);
@@ -1529,7 +1593,7 @@ function creaTexture(){
     }
     x.fillStyle='rgba(0,0,0,.12)'; x.fillRect(0,S-14,S,14);
     rumore(x,S,12);
-  },256);
+  },512);
   /* vetrina di negozio */
   TEX.vetrina=texDa((x,S)=>{
     x.fillStyle='#d8d2c6'; x.fillRect(0,0,S,S);
@@ -1560,7 +1624,7 @@ function creaTexture(){
       x.stroke();
     }
     rumore(x,S,14);
-  },256);
+  },512);
   /* marciapiede a lastre */
   TEX.marciapiede=texDa((x,S)=>{
     x.fillStyle='#a9a69f'; x.fillRect(0,0,S,S);
@@ -1573,7 +1637,7 @@ function creaTexture(){
     x.strokeStyle='rgba(90,88,84,.55)'; x.lineWidth=2;
     for(let a=0;a<=n;a++){x.beginPath();x.moveTo(a*p,0);x.lineTo(a*p,S);x.moveTo(0,a*p);x.lineTo(S,a*p);x.stroke();}
     rumore(x,S,10);
-  },256);
+  },512);
   /* erba */
   TEX.erba=texDa((x,S)=>{
     x.fillStyle='#4e7f3e'; x.fillRect(0,0,S,S);
@@ -1585,7 +1649,7 @@ function creaTexture(){
       x.beginPath(); x.moveTo(px2,py2); x.lineTo(px2+(Math.random()-0.5)*4,py2-2-Math.random()*4); x.stroke();
     }
     rumore(x,S,10);
-  },256);
+  },512);
   /* tegole */
   TEX.tegole=texDa((x,S)=>{
     x.fillStyle='#8a4b38'; x.fillRect(0,0,S,S);
@@ -1806,7 +1870,7 @@ function creaTexture(){
     x.fillStyle='rgba(70,76,84,.5)';                                          // rivetti
     for(let i=1;i<4;i++) for(let k=4;k<S;k+=10) x.fillRect(k,i*S/4-1,2,2);
     x.fillStyle='rgba(255,255,255,.25)'; x.fillRect(0,0,S,3);
-  },128);
+  },256);
   /* disco delle pale in rotazione */
   TEX.discoPale=texDa((x,S)=>{
     x.clearRect(0,0,S,S);
@@ -2285,8 +2349,11 @@ function profilo(anelli,chiudi){
 
 /* ---------- disegno ---------- */
 let lastObjs=0, lastCalls=0;
+let passoProf=false;
+function setModel(){ gl.uniformMatrix4fv(passoProf?LOCD.uModel:LOC.uModel,false,MMOD); }
 function usaMesh(m){
   gl.bindBuffer(gl.ARRAY_BUFFER,m.buf);
+  if(passoProf){ gl.vertexAttribPointer(LOCD.aPos,3,gl.FLOAT,false,44,0); return; }
   gl.vertexAttribPointer(LOC.aPos,3,gl.FLOAT,false,44,0);
   gl.vertexAttribPointer(LOC.aNor,3,gl.FLOAT,false,44,12);
   gl.vertexAttribPointer(LOC.aUV ,2,gl.FLOAT,false,44,24);
@@ -2299,8 +2366,8 @@ function usaMesh(m){
 }
 function disegna(m,x,y,z,yaw,sx,sy,sz,r,g,b){
   mModel(MMOD,x,y,z,yaw,sx,sy,sz);
-  gl.uniformMatrix4fv(LOC.uModel,false,MMOD);
-  gl.uniform3f(LOC.uTint,r,g,b);
+  setModel();
+  if(!passoProf) gl.uniform3f(LOC.uTint,r,g,b);
   gl.drawArrays(gl.TRIANGLES,0,m.n);
   lastCalls++;
 }
@@ -2773,6 +2840,8 @@ function disegnaScena(){
     lastObjs++;
   }
   /* --- ombre morbide sotto gli oggetti --- */
+  if(ombreOK&&QUAL==='alta'){ /* le macchie non servono: ci sono le ombre vere */ }
+  else{
   gl.enable(gl.BLEND); gl.blendFunc(gl.DST_COLOR,gl.ZERO); gl.depthMask(false);
   usaMesh({buf:M.quad.buf,n:M.quad.n,tex:TEX.ombraBlob,piatto:1});
   for(const v of vehicles){
@@ -2796,6 +2865,7 @@ function disegnaScena(){
   }
   gl.depthMask(true); gl.disable(gl.BLEND);
   gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
+  }
   if(parts.length){                                            // scintille, fumo, fuochi
     gl.enable(gl.BLEND); gl.depthMask(false);
     usaMesh(M.bill);
@@ -2809,6 +2879,77 @@ function disegnaScena(){
     gl.uniform1f(LOC.uAlpha,1);
     gl.depthMask(true); gl.disable(gl.BLEND);
   }
+}
+
+/* ---------- mappa d'ombra ---------- */
+let fbOmbra=null, texOmbra=null, SMAP=1024, ombreOK=false;
+function creaOmbre(){
+  const est=gl.getExtension('WEBGL_depth_texture')||gl.getExtension('WEBKIT_WEBGL_depth_texture');
+  if(!est) return false;
+  SMAP=(Math.min(2,window.devicePixelRatio||1)>1.5)?1536:1024;
+  texOmbra=gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D,texOmbra);
+  gl.texImage2D(gl.TEXTURE_2D,0,gl.DEPTH_COMPONENT,SMAP,SMAP,0,gl.DEPTH_COMPONENT,gl.UNSIGNED_INT,null);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.NEAREST);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.NEAREST);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+  const col=gl.createRenderbuffer();
+  gl.bindRenderbuffer(gl.RENDERBUFFER,col);
+  gl.renderbufferStorage(gl.RENDERBUFFER,gl.RGBA4,SMAP,SMAP);
+  fbOmbra=gl.createFramebuffer();
+  gl.bindFramebuffer(gl.FRAMEBUFFER,fbOmbra);
+  gl.framebufferRenderbuffer(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.RENDERBUFFER,col);
+  gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.DEPTH_ATTACHMENT,gl.TEXTURE_2D,texOmbra,0);
+  const ok=gl.checkFramebufferStatus(gl.FRAMEBUFFER)===gl.FRAMEBUFFER_COMPLETE;
+  gl.bindFramebuffer(gl.FRAMEBUFFER,null);
+  ombreOK=ok; return ok;
+}
+function passoOmbre(){
+  const R=95;                                        // metà lato dell'area illuminata
+  const cx=CAM.x+Math.cos(CAM.yaw)*38, cy=CAM.y+Math.sin(CAM.yaw)*38;
+  const px=Math.round(cx*4)/4, py=Math.round(cy*4)/4;   // aggancio a passi fissi: meno tremolio
+  mOrtho(MLP,-R,R,-R,R,1,420);
+  mGuarda(MLV,px+SUNV[0]*200,py+SUNV[1]*200,SUNV[2]*200,px,py,0);
+  mMul(MLUCE,MLP,MLV);
+  gl.bindFramebuffer(gl.FRAMEBUFFER,fbOmbra);
+  gl.viewport(0,0,SMAP,SMAP);
+  gl.clear(gl.DEPTH_BUFFER_BIT|gl.COLOR_BUFFER_BIT);
+  gl.useProgram(PSD);
+  gl.enableVertexAttribArray(LOCD.aPos);
+  gl.uniformMatrix4fv(LOCD.uVP,false,MLUCE);
+  passoProf=true;
+  mIdent(MMOD); gl.uniformMatrix4fv(LOCD.uModel,false,MMOD);
+  for(const m of STATICO){                            // città ferma
+    if(m.ombra||m.alpha<1) continue;
+    gl.bindBuffer(gl.ARRAY_BUFFER,m.buf);
+    gl.vertexAttribPointer(LOCD.aPos,3,gl.FLOAT,false,44,0);
+    gl.drawArrays(gl.TRIANGLES,0,m.n);
+  }
+  usaMesh(M.box);                                     // mezzi, persone e alberi come volumi
+  for(const v of vehicles){
+    if(Math.abs(v.x-px)>R+12||Math.abs(v.y-py)>R+12) continue;
+    disegna(M.box,v.x,v.y,v.z+0.15,v.ang,v.d.l*0.96,v.d.w*0.96,v.d.h*0.9,1,1,1);
+    if(v.rim) disegna(M.box,v.rim.x,v.rim.y,v.z+1.1,v.rim.ang,v.d.rim.l,v.d.rim.w,v.d.rim.h-1.1,1,1,1);
+  }
+  for(const cc of traffic){
+    const x=cc.vert?cc.line:cc.pos, y=cc.vert?cc.pos:cc.line;
+    if(Math.abs(x-px)>R||Math.abs(y-py)>R) continue;
+    const dd=VEHDEF[cc.type==='camion'?'auto':cc.type];
+    disegna(M.box,x,y,0.15,cc.vert?Math.PI*0.5:0,dd.l*0.96,dd.w*0.96,dd.h*0.9,1,1,1);
+  }
+  for(const p of peds){
+    const q=pedPos(p);
+    if(Math.abs(q[0]-px)>R||Math.abs(q[1]-py)>R) continue;
+    disegna(M.box,q[0],q[1],0,0,0.5,0.5,1.75,1,1,1);
+  }
+  for(const t of trees){
+    if(Math.abs(t.x-px)>R||Math.abs(t.y-py)>R) continue;
+    disegna(M.box,t.x,t.y,t.h*0.42,0,t.r*1.5,t.r*1.5,t.h*0.55,1,1,1);
+  }
+  passoProf=false;
+  gl.bindFramebuffer(gl.FRAMEBUFFER,null);
+  gl.viewport(0,0,cv.width,cv.height);
 }
 
 /* ---------- cielo ---------- */
@@ -2899,7 +3040,7 @@ function drawCompass(){
 let glPronto=false;
 function initGL(){
   if(!gl) return false;
-  initShader(); creaTexture(); primitive(); costruisciCitta();
+  initShader(); creaTexture(); primitive(); costruisciCitta(); creaOmbre();
   gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LEQUAL);
   gl.enable(gl.CULL_FACE); gl.cullFace(gl.BACK); gl.frontFace(gl.CCW);
   gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
@@ -2914,6 +3055,8 @@ function render(){
   mPersp(MPROJ, 2*Math.atan(Math.tan(CAM.fov*0.5)/asp), asp, 0.12, Math.max(400,FAR*2));
   mView(MVIEW, CAM.x,CAM.y,CAM.z, CAM.yaw, CAM.pitch);
   mMul(MVP,MPROJ,MVIEW);
+  const ombreVive=ombreOK&&QUAL==='alta';
+  if(ombreVive) passoOmbre();
   gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
   disegnaCielo();
   gl.useProgram(PSC);
@@ -2925,10 +3068,20 @@ function render(){
   gl.uniform3f(LOC.uCam,CAM.x,CAM.y,CAM.z);
   gl.uniform2f(LOC.uFogR,FAR*0.5,FAR*1.05);
   gl.uniform1i(LOC.uTex,0);
+  gl.uniform1f(LOC.uEspos,1.25);
+  gl.uniform1f(LOC.uOmbre,ombreVive?1:0);
+  if(ombreVive){
+    gl.uniformMatrix4fv(LOC.uLuce,false,MLUCE);
+    gl.uniform1f(LOC.uTexel,1/SMAP);
+    gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D,texOmbra);
+    gl.uniform1i(LOC.uMappa,1);
+    gl.activeTexture(gl.TEXTURE0);
+  }
   gl.activeTexture(gl.TEXTURE0);
   mIdent(MMOD); gl.uniformMatrix4fv(LOC.uModel,false,MMOD);
   gl.uniform3f(LOC.uTint,1,1,1);
   for(const m of STATICO){                                  // citta' ferma: pochi disegni
+    if(m.ombra&&ombreVive) continue;
     if(m.ombra){ gl.enable(gl.BLEND); gl.blendFunc(gl.DST_COLOR,gl.ZERO); gl.depthMask(false); }
     usaMesh(m);
     mIdent(MMOD); gl.uniformMatrix4fv(LOC.uModel,false,MMOD);
@@ -3054,9 +3207,10 @@ function frame(now){
     fAcc+=dt; fCnt++;
     if(fCnt>=24){
       fps=fCnt/fAcc; fAcc=0; fCnt=0;
-      if(fps<45){ if(++slow>=2&&RS>0.56){RS=Math.max(0.55,RS*0.86);applyRes();slow=0;} }
+      const Q=QUALITA[QUAL]||QUALITA.alta, giu=Math.min(Q.min,MAXRS);
+      if(fps<45){ if(++slow>=2&&RS>giu+0.02){RS=Math.max(giu,RS*0.9);applyRes();slow=0;} }
       else{ slow=0; if(fps>57&&RS<MAXRS){RS=Math.min(MAXRS,RS*1.08);applyRes();} }
-      FAR=fps<38?170:(fps<50?220:280);
+      FAR=fps<38?Q.far*0.7:(fps<50?Q.far*0.85:Q.far);
     }
   }
   acc+=dt; if(acc>0.14){acc=0; drawMini(); if($map.classList.contains('show')) drawBigMap();}
