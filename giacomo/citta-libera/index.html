@@ -1491,7 +1491,7 @@ const S_GIO=[1.35,1.24,1.02], S_TRA=[1.55,0.74,0.34];
 function aggiornaLuce(dt){
   if(dt) ora=(ora+dt*24/GIORNO)%24;
   const h=(ora-5)/15*Math.PI;                       // sole su alle 5, giu' alle 20
-  ELEV=Math.sin(h)*1.15;
+  ELEV=Math.sin(h)*0.98;
   SOLE=0.75+((ora-5)/15)*2.3;
   const ce=Math.cos(ELEV);
   SUNV[0]=Math.cos(SOLE)*ce; SUNV[1]=Math.sin(SOLE)*ce; SUNV[2]=Math.sin(ELEV);
