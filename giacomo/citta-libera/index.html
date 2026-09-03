@@ -96,6 +96,11 @@ html,body{margin:0;padding:0;height:100%;overflow:hidden;background:#0e1013;
 #start .card{max-width:470px;margin:auto;width:100%}
 .k{display:inline-block;background:rgba(255,255,255,.12);border-radius:6px;padding:1px 6px;font-size:11px;font-weight:800}
 #start ul{padding-left:18px;margin:8px 0;font-size:13px;line-height:1.6;opacity:.92}
+.campoNome{display:block;margin-top:12px;font-size:12px;opacity:.75}
+#nome{display:block;width:100%;margin-top:6px;padding:11px 12px;border-radius:12px;
+  border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.08);color:#eef1f5;
+  font-family:inherit;font-size:15px;font-weight:700}
+#nome:focus{outline:none;border-color:#ffd34d;background:rgba(255,211,77,.12)}
 #play{width:100%;padding:15px;border-radius:14px;border:none;background:#ffd34d;color:#1a1d22;font-weight:900;font-size:17px;
   font-family:inherit;margin-top:12px}
 #play:active{background:#ffbe12}
@@ -198,6 +203,9 @@ html,body{margin:0;padding:0;height:100%;overflow:hidden;background:#0e1013;
       ammaccano negli incidenti, perdono potenza e fumano: in <b>officina</b> 🔧 si riparano a metà prezzo.</li>
     </ul>
     <div class="sub">Da PC: <span class="k">W</span> avanti · <span class="k">S</span> indietro · <span class="k">A</span> sinistra · <span class="k">D</span> destra · <span class="k">tasto destro del mouse</span> tenuto premuto per girare la visuale · <span class="k">Shift</span> corri · <span class="k">Spazio</span> salta · <span class="k">E</span> azione · <span class="k">1-0</span> slot · <span class="k">F</span> usa · <span class="k">M</span> mappa · <span class="k">V</span> vista</div>
+    <label class="campoNome">Come ti chiami?
+      <input id="nome" type="text" maxlength="14" placeholder="il tuo nome" autocomplete="off">
+    </label>
     <button id="play">GIOCA</button>
     <button id="newgame">NUOVA PARTITA</button>
     <div class="foot">@ginopizza</div>
@@ -293,7 +301,7 @@ const ITEMS={
 const VEHDEF={
   auto  :{n:'Auto',       e:'🚗', p:1500, l:4.4, w:1.85, h:1.45, max:33,acc:7,   turn:1.7, air:false, col:'#c8453a', eye:1.15},
   moto  :{n:'Moto',       e:'🏍️', p:900,  l:2.1, w:0.8,  h:1.15, max:40,acc:11,  turn:2.4, air:false, col:'#2f7fc0', eye:1.3},
-  camion:{n:'Camion',     e:'🚚', p:1800, l:8.2, w:2.5,  h:3.2,  max:22,acc:3.6, turn:1.0, air:false, col:'#c9b03f', eye:2.4},
+  camion:{n:'Autoarticolato',e:'🚛',p:3200, l:6.4, w:2.5,  h:3.55, max:25,acc:3.4, turn:0.95,air:false, col:'#2f4d8e', eye:2.55, rim:{l:12.2,w:2.55,h:3.95}},
   eli   :{n:'Elicottero', e:'🚁', p:6500, l:9.5, w:2.2,  h:2.8,  max:45,acc:7,   turn:1.1, air:true,  col:'#98a0a8', eye:1.7},
   aereo :{n:'Caccia',     e:'✈️', p:9500, l:14.0,w:10.6, h:3.6,  max:98,acc:16,  turn:0.9, air:true,  col:'#8f959c', eye:1.9, minSpeed:30},
   sport :{n:'Coupé sportiva',e:'🏎️',p:6800, l:4.5, w:1.92, h:1.26, max:52,acc:12,  turn:2.1, air:false, col:'#c8102e', eye:1.02},
@@ -422,7 +430,7 @@ const EYE=1.68;
 const P={x:8*CELL+CELL/2+8,y:8*CELL+CELL/2+14,z:0,vz:0,vx:0,vy:0,
   yaw:-Math.PI/2,pitch:-0.04,energia:100,vita:100,cibo:100,soldi:320,veh:null,
   boost:0,spring:0,bob:0,hurt:0,step:0,ultimoDanno:-99,
-  mia:{type:'auto',col:'#c8453a',variante:'berlina',danno:0}, telAttesa:0};
+  mia:{type:'auto',col:'#c8453a',variante:'berlina',danno:0}, telAttesa:0, nome:'Giocatore'};
 const EQ={scarpe:false,skate:false,jet:false,para:false,gps:false,faro:false};
 const inv=new Array(10).fill(null);
 let sel=0, job=null, paused=true, tempo=0, tps=false, lastCrash=-9;
@@ -701,7 +709,7 @@ function riparaSubito(v){ v.danno=0; v.botte=[]; }
 function apriTelefono(){
   paused=true;
   const L=document.getElementById('telList'); L.innerHTML='';
-  document.getElementById('telSub').textContent='Hai '+Math.floor(P.soldi)+' € in tasca';
+  document.getElementById('telSub').textContent=(P.nome&&P.nome!=='Giocatore'?P.nome+' · ':'')+'hai '+Math.floor(P.soldi)+' € in tasca';
   const riga=(emo,tit,sot,tasto,attivo,fn)=>{
     const r=document.createElement('div'); r.className='row';
     r.innerHTML=`<div class="em">${emo}</div><div class="tx"><b>${tit}</b><span>${sot}</span></div>`;
@@ -733,6 +741,14 @@ function apriTelefono(){
     toast('📞 Meccanico in arrivo…',2200); beep(520,.1,'triangle');
     updHUD(); chiudiTelefono();
   });
+  /* lavori disponibili */
+  for(const k of ['consegna','taxi','urgente','merci']){
+    const L=LAVORI[k], prova=creaLavoro(k);
+    riga(L.e,L.n,L.dice(prova)+' · '+Math.round(dist(prova.from.x,prova.from.y,prova.to.x,prova.to.y))+' m',
+         prova.reward+' €',true,()=>{
+      job=prova; toast(L.e+' Accettato: '+L.n+' — '+prova.reward+' €',2600); chiudiTelefono();
+    });
+  }
   /* officina piu' vicina */
   let off=null,od=1e9;
   for(const sh of shops) if(sh.def.k==='off'){const d=dist(P.x,P.y,sh.x,sh.y); if(d<od){od=d;off=sh;}}
@@ -833,18 +849,59 @@ function drawMini(){
 }
 
 /* ===================== CONSEGNE ===================== */
-function newJob(){
+const LAVORI={
+  consegna:{e:'📦',n:'Consegna a piedi',  min:180, paga:(d)=>40+d*0.55,  mezzo:null,
+            dice:(j)=>'Ritira da '+j.from.name.split('"')[0].trim()},
+  taxi    :{e:'🚕',n:'Corsa in taxi',     min:260, paga:(d)=>70+d*0.95,  mezzo:'ruote',
+            dice:(j)=>'Carica il cliente da '+j.from.name.split('"')[0].trim()},
+  urgente :{e:'🍕',n:'Consegna urgente',  min:220, paga:(d)=>90+d*1.25,  mezzo:null, tempo:true,
+            dice:(j)=>'Corri: hai '+Math.ceil(j.limite)+' secondi'},
+  merci   :{e:'🚛',n:'Trasporto merci',   min:340, paga:(d)=>320+d*1.6,  mezzo:'camion',
+            dice:(j)=>'Serve un autoarticolato'}
+};
+function creaLavoro(tipo){
+  const L=LAVORI[tipo]||LAVORI.consegna;
   const a=pick(shops); let b=pick(shops), g=0;
-  while((b===a||dist(a.x,a.y,b.x,b.y)<180)&&g++<40) b=pick(shops);
-  job={from:a,to:b,stage:0,reward:Math.round(40+dist(a.x,a.y,b.x,b.y)*0.55)};
-  toast('📦 Nuova consegna: ritira da '+a.name.split('"')[0].trim()+' — '+job.reward+' €',2600);
+  while((b===a||dist(a.x,a.y,b.x,b.y)<L.min)&&g++<60) b=pick(shops);
+  const dd=dist(a.x,a.y,b.x,b.y);
+  const j={from:a,to:b,stage:0,tipo:tipo,reward:Math.round(L.paga(dd))};
+  if(L.tempo){ j.limite=Math.round(dd/7+25); j.scad=tempo+j.limite; }
+  return j;
+}
+function newJob(){
+  job=creaLavoro('consegna');
+  toast('📦 Nuova consegna: ritira da '+job.from.name.split('"')[0].trim()+' — '+job.reward+' €',2600);
 }
 function updJob(){
   if(!job) return;
+  const L=LAVORI[job.tipo]||LAVORI.consegna;
+  if(job.scad&&tempo>job.scad&&job.stage>0){
+    toast('⏰ Tempo scaduto: consegna persa',2600); beep(160,.3,'sawtooth',.06);
+    job=null; setTimeout(newJob,1200); return;
+  }
   const t=job.stage===0?job.from:job.to;
-  if(dist(P.x,P.y,t.x,t.y)<5&&P.z<6){
-    if(job.stage===0){job.stage=1;toast('📦 Pacco ritirato! Consegna a '+job.to.name.split('"')[0].trim(),2400);beep(700,.1,'square');}
-    else{P.soldi+=job.reward;toast('🏁 Consegnato! +'+job.reward+' €',2400);beep(880,.14,'square');job=null;setTimeout(newJob,900);}
+  if(dist(P.x,P.y,t.x,t.y)<6&&P.z<6){
+    if(L.mezzo==='camion'&&(!P.veh||P.veh.type!=='camion')){
+      if(!job.avviso||tempo-job.avviso>6){job.avviso=tempo;toast('🚛 Ti serve l\'autoarticolato per questo carico');}
+      return;
+    }
+    if(L.mezzo==='ruote'&&(!P.veh||P.veh.d.air)){
+      if(!job.avviso||tempo-job.avviso>6){job.avviso=tempo;toast('🚕 Il cliente sale solo se sei in auto');}
+      return;
+    }
+    if(job.stage===0){
+      job.stage=1;
+      if(job.scad) job.scad=tempo+job.limite;
+      const m={consegna:'📦 Pacco ritirato!',taxi:'🚕 Cliente a bordo!',
+               urgente:'🍕 Ordine caldo: vai!',merci:'🚛 Container caricato!'}[job.tipo]||'📦 Ritirato!';
+      toast(m+' Vai da '+job.to.name.split('"')[0].trim(),2600); beep(700,.1,'square');
+    } else {
+      let paga=job.reward;
+      if(job.tipo==='urgente'&&job.scad&&tempo<job.scad-job.limite*0.4){paga=Math.round(paga*1.4);}
+      P.soldi+=paga;
+      toast((LAVORI[job.tipo]||LAVORI.consegna).e+' Fatto! +'+paga+' €',2600); beep(880,.14,'square');
+      job=null; setTimeout(newJob,900);
+    }
   }
 }
 
@@ -908,6 +965,10 @@ function spingiDaiVeicoli(){
     if(P.z+1.75<v.z) continue;                 // ci passi sotto (mezzo in volo)
     const q=obbPush(P.x,P.y,r,v.x,v.y,v.ang,v.d.l,v.d.w);
     if(q){P.x+=q.x;P.y+=q.y;}
+    if(v.rim&&P.z<v.d.rim.h-0.2){
+      const q2=obbPush(P.x,P.y,r,v.rim.x,v.rim.y,v.rim.ang,v.d.rim.l,v.d.rim.w);
+      if(q2){P.x+=q2.x;P.y+=q2.y;}
+    }
   }
   for(const c of traffic){
     const x=c.vert?c.line:c.pos, y=c.vert?c.pos:c.line;
@@ -975,6 +1036,19 @@ function veicoloVsVeicoli(v,dt){
       v.sp*=0.5;
     }
   }
+}
+/* il semirimorchio segue il perno della ralla */
+function muoviRimorchio(v,dt){
+  const R=v.d.rim, c=Math.cos(v.ang), s2=Math.sin(v.ang);
+  const gx=v.x-c*v.d.l*0.34, gy=v.y-s2*v.d.l*0.34;      // perno dietro la cabina
+  if(!v.rim) v.rim={x:gx-c*R.l*0.42,y:gy-s2*R.l*0.42,ang:v.ang};
+  const t=v.rim, braccio=R.l*0.42;
+  const dir=Math.atan2(gy-t.y,gx-t.x);
+  t.ang=dir;
+  t.x=gx-Math.cos(t.ang)*braccio; t.y=gy-Math.sin(t.ang)*braccio;
+  const tmp={x:t.x,y:t.y,z:v.z};                        // non entra nei muri
+  if(solve(tmp,R.w*0.5)){ t.x=tmp.x; t.y=tmp.y; }
+  void dt;
 }
 /* ammaccatura: segna il danno e la zona colpita (1 = davanti, -1 = dietro) */
 function ammacca(v,quanto,dove){
@@ -1176,6 +1250,7 @@ function updateVehicle(v,ix,iy,dt){
     v.rot+=dt*(v.type==='eli'?26:14);
   }
   v.wroll=(v.wroll||0)+v.sp*dt/0.32;
+  if(v.d.rim) muoviRimorchio(v,dt);
   v.x+=Math.cos(v.ang)*v.sp*dt; v.y+=Math.sin(v.ang)*v.sp*dt;
   v.x=clamp(v.x,2,WSIZE-2); v.y=clamp(v.y,2,WSIZE-2);
   const hit=solveVeh(v);
@@ -1700,6 +1775,26 @@ function creaTexture(){
     x.fillStyle='#1b1f24'; x.font='bold '+Math.round(S*0.5)+'px system-ui';
     x.textAlign='center'; x.textBaseline='middle'; x.fillText('GC 42',S*0.58,S*0.55);
   },64);
+  /* fiancata del semirimorchio */
+  TEX.telone=texDa((x,S)=>{
+    x.fillStyle='#ffffff'; x.fillRect(0,0,S,S);
+    x.strokeStyle='rgba(150,155,162,.55)'; x.lineWidth=2;                    // giunzioni dei pannelli
+    for(let i=1;i<8;i++){x.beginPath();x.moveTo(i*S/8,0);x.lineTo(i*S/8,S);x.stroke();}
+    x.fillStyle='rgba(120,126,134,.35)'; x.fillRect(0,S*0.86,S,S*0.03);
+    x.fillStyle='#e9edf2'; x.fillRect(0,S*0.90,S,S*0.10);
+    x.fillStyle='#1f3566'; x.font='bold '+Math.round(S*0.13)+'px system-ui';
+    x.textAlign='center'; x.textBaseline='middle';
+    x.fillText('CITTÀ LIBERA',S*0.5,S*0.40);
+    x.font='bold '+Math.round(S*0.075)+'px system-ui';
+    x.fillText('TRASPORTI REFRIGERATI',S*0.5,S*0.55);
+  },512);
+  /* griglia cromata della motrice */
+  TEX.cromo=texDa((x,S)=>{
+    const g=x.createLinearGradient(0,0,0,S);
+    g.addColorStop(0,'#f2f5f8'); g.addColorStop(0.45,'#aeb6bf');
+    g.addColorStop(0.55,'#e6ebf0'); g.addColorStop(1,'#8d949c');
+    x.fillStyle=g; x.fillRect(0,0,S,S);
+  },64);
   /* lamiera aeronautica: pannelli, rivetti, sporco */
   TEX.lamiera=texDa((x,S)=>{
     x.fillStyle='#d9dde1'; x.fillRect(0,0,S,S);
@@ -2098,6 +2193,19 @@ function primitive(){
   M.aerVetro=caricaGeo(tubo([
     {x:0.30,w:0.19,h:0.22,z:0.50,p:1},{x:0.12,w:0.20,h:0.23,z:0.52,p:1},
     {x:-0.02,w:0.18,h:0.21,z:0.52,p:1}]),TEX.vetroAuto,{spec:1.0});
+  /* cabina cabinata: alta, squadrata, spigoli raccordati */
+  M.cabina=caricaGeo(profilo([
+    {z:0.26,a:0.27,b:0.44,dx:0.20,p:0.45},{z:0.34,a:0.285,b:0.49,dx:0.205,p:0.40},
+    {z:0.60,a:0.285,b:0.50,dx:0.205,p:0.35},{z:0.88,a:0.285,b:0.50,dx:0.205,p:0.35},
+    {z:0.97,a:0.27,b:0.485,dx:0.20,p:0.45},{z:1.0,a:0.24,b:0.45,dx:0.19,p:0.6}],true),
+    TEX.vernice,{spec:0.62});
+  M.cabVetri=caricaGeo(profilo([
+    {z:0.62,a:0.29,b:0.505,dx:0.235,p:0.35},{z:0.86,a:0.29,b:0.505,dx:0.235,p:0.35}],false),
+    TEX.vetroAuto,{spec:1.0});
+  /* semirimorchio: cassone con pannellature */
+  M.rimorchio=caricaGeo((()=>{const g=new Geo();
+    g.box(-0.5,-0.5,0,1,1,1,1,1,1,1);      // scatola unitaria, uv per faccia
+    return g;})(),TEX.telone,{spec:0.30});
   M.cabCamion=caricaGeo(tuboM([
     {x:0.50,w:0.46,h:0.30,z:0.38,p:0.4},{x:0.42,w:0.50,h:0.36,z:0.42,p:0.4},
     {x:0.20,w:0.50,h:0.40,z:0.55,p:0.4},{x:-0.10,w:0.50,h:0.40,z:0.58,p:0.4},
@@ -2266,6 +2374,34 @@ function disegnaVeicolo(v,d){
   const texG=dn>45?TEX.vetroRotto:TEX.vetroAuto;
   const vern=(m)=>({buf:m.buf,n:m.n,tex:texV,spec:specV});
   const vetr=(m)=>({buf:m.buf,n:m.n,tex:texG,spec:dn>45?0.4:0.9});
+  const vetriDentro=(fn)=>{                       // i vetri sono semitrasparenti: si vede dentro
+    gl.enable(gl.BLEND); gl.depthMask(false);
+    gl.uniform1f(LOC.uAlpha,dn>45?0.85:0.62);
+    fn();
+    gl.uniform1f(LOC.uAlpha,1);
+    gl.depthMask(true); gl.disable(gl.BLEND);
+  };
+  /* sedili, cruscotto e chi guida */
+  const abitacolo=(alt,lung,larg,quanti)=>{
+    if(d>42) return;
+    const sed=[0.16,0.20,0.22];
+    usaMesh(M.box);
+    disegna(M.box,fx(lung*0.16,0),fy(lung*0.16,0),v.z+alt*0.42,a,lung*0.10,larg*0.80,alt*0.16,
+            sed[0]*1.4,sed[1]*1.4,sed[2]*1.5);                                  // cruscotto
+    for(let k2=0;k2<quanti;k2++){
+      const dx2=(k2<2?0.0:-0.20)*lung, dy2=((k2%2)?-1:1)*larg*0.22;
+      disegna(M.box,fx(dx2,dy2),fy(dx2,dy2),v.z+alt*0.30,a,lung*0.11,larg*0.30,alt*0.20,sed[0],sed[1],sed[2]);
+      disegna(M.box,fx(dx2-lung*0.06,dy2),fy(dx2-lung*0.06,dy2),v.z+alt*0.30,a,lung*0.05,larg*0.30,alt*0.34,
+              sed[0]*0.9,sed[1]*0.9,sed[2]*0.9);                                 // schienale
+    }
+    if(v.conGuidatore!==false){                                                  // il guidatore
+      const pel=PELLI[Math.floor(hash2(Math.round(v.x*2),Math.round(v.y*2))*PELLI.length)%PELLI.length];
+      const cm=tint(v.colGuida||(v.colGuida='hsl('+((hash2(Math.round(v.y),Math.round(v.x))*360)|0)+',35%,45%)'));
+      disegna(M.box,fx(-lung*0.02,larg*0.22),fy(-lung*0.02,larg*0.22),v.z+alt*0.44,a,lung*0.09,larg*0.22,alt*0.26,cm[0],cm[1],cm[2]);
+      disegna(M.box,fx(-lung*0.02,larg*0.22),fy(-lung*0.02,larg*0.22),v.z+alt*0.70,a,0.21,0.22,0.22,pel[0],pel[1],pel[2]);
+      disegna(M.box,fx(lung*0.10,larg*0.22),fy(lung*0.10,larg*0.22),v.z+alt*0.52,a,0.05,0.30,0.30,0.15,0.15,0.17); // volante
+    }
+  };
   const fx=(p,q)=>v.x+c*p-s*q, fy=(p,q)=>v.y+s*p+c*q;
   const roll=v.wroll||0, gomma=[0.10,0.11,0.13];
   if(v.type==='aereo'){
@@ -2277,7 +2413,7 @@ function disegnaVeicolo(v,d){
               t[0]*0.7,t[1]*0.7,t[2]*0.7);
     disegna(M.box,fx(-L*0.495,0),fy(-L*0.495,0),v.z+H*0.40,a,L*0.05,W*0.115,H*0.115,0.16,0.16,0.18);
     disegna(M.box,fx(-L*0.05,0),fy(-L*0.05,0),v.z+H*0.545,a,L*0.22,W*0.09,H*0.03,t[0]*0.85,t[1]*0.85,t[2]*0.85);
-    usaMesh(vetr(M.jetVetro)); disegna(M.jetVetro,v.x,v.y,v.z,a,L,W,H,1,1,1);
+    usaMesh(vetr(M.jetVetro)); vetriDentro(()=>disegna(M.jetVetro,v.x,v.y,v.z,a,L,W,H,1,1,1));
     usaMesh(M.ruota);
     disegnaRuota(fx(L*0.30,0),fy(L*0.30,0),v.z+0.30,a,roll,0.30,0.10,gomma[0],gomma[1],gomma[2]);
     disegnaRuota(fx(-L*0.05,W*0.10),fy(-L*0.05,W*0.10),v.z+0.32,a,roll,0.32,0.12,gomma[0],gomma[1],gomma[2]);
@@ -2320,7 +2456,8 @@ function disegnaVeicolo(v,d){
     disegna(M.box,fx(L*0.01,0),fy(L*0.01,0),v.z+H*0.70,a,0.34,0.34,H*0.16,0.30,0.32,0.36);
     disegna(M.box,fx(L*0.01,0),fy(L*0.01,0),v.z+H*0.86,a,0.62,0.62,H*0.07,0.26,0.28,0.32);
     /* vetri: muso e finestrini della cabina */
-    usaMesh(vetr(M.eliVetro)); disegna(M.eliVetro,v.x,v.y,v.z,a,L,W,H,1,1,1);
+    abitacolo(H,L*0.5,W,2);
+    usaMesh(vetr(M.eliVetro)); vetriDentro(()=>disegna(M.eliVetro,v.x,v.y,v.z,a,L,W,H,1,1,1));
     usaMesh({buf:M.box.buf,n:M.box.n,tex:texG,spec:0.85});
     for(const lato of [1,-1]){
       disegna(M.box,fx(L*0.10,lato*W*0.505),fy(L*0.10,lato*W*0.505),v.z+H*0.44,a,L*0.13,0.04,H*0.20,1,1,1);
@@ -2371,33 +2508,69 @@ function disegnaVeicolo(v,d){
     disegnaRuota(fx(L*0.36,0),fy(L*0.36,0),v.z+0.31,a,roll,0.31,0.10,gomma[0],gomma[1],gomma[2]);
     disegnaRuota(fx(-L*0.36,0),fy(-L*0.36,0),v.z+0.32,a,roll,0.32,0.12,gomma[0],gomma[1],gomma[2]);
   } else if(v.type==='camion'){
-    usaMesh(vern(M.cabCamion));
-    disegna(M.cabCamion,fx(L*0.30,0),fy(L*0.30,0),v.z,a,L*0.36,W,H,t[0],t[1],t[2]);
+    const cromo={buf:M.box.buf,n:M.box.n,tex:TEX.cromo,spec:0.95};
+    /* --- semirimorchio --- */
+    const R=def.rim, r0=v.rim||(v.rim={x:v.x-c*7,y:v.y-s*7,ang:a});
+    const rc=Math.cos(r0.ang), rs=Math.sin(r0.ang);
+    const rx=(p,q)=>r0.x+rc*p-rs*q, ry=(p,q)=>r0.y+rs*p+rc*q;
+    usaMesh({buf:M.rimorchio.buf,n:M.rimorchio.n,tex:TEX.telone,spec:0.3});
+    disegna(M.rimorchio,r0.x,r0.y,v.z+1.15,r0.ang,R.l,R.w,R.h-1.15,1,1,1);
     usaMesh(M.box);
-    disegna(M.box,fx(-L*0.16,0),fy(-L*0.16,0),v.z+0.85,a,L*0.62,W,H*0.72,t[0]*0.96,t[1]*0.96,t[2]*0.96);
-    disegna(M.box,fx(-L*0.16,0),fy(-L*0.16,0),v.z+0.85+H*0.72,a,L*0.63,W*1.01,0.09,scuro[0],scuro[1],scuro[2]);
-    disegna(M.box,fx(-L*0.16,0),fy(-L*0.16,0),v.z+0.55,a,L*0.66,W*0.86,0.3,0.22,0.23,0.26);        // telaio
-    disegna(M.box,fx(L*0.47,0),fy(L*0.47,0),v.z+0.42,a,0.2,W*0.96,0.5,0.3,0.31,0.34);              // paraurti
-    disegna(M.box,fx(L*0.46,0),fy(L*0.46,0),v.z+0.95,a,0.16,W*0.8,0.5,0.42,0.44,0.48);             // calandra
-    disegna(M.box,fx(L*0.12,W*0.52),fy(L*0.12,W*0.52),v.z+H*0.72,a,0.1,0.1,0.6,0.5,0.52,0.56);     // scarico
-    if(d<50){
-      disegna(M.box,fx(L*0.485,W*0.34),fy(L*0.485,W*0.34),v.z+0.72,a,0.14,0.36,0.26,1.9,1.8,1.4);
-      disegna(M.box,fx(L*0.485,-W*0.34),fy(L*0.485,-W*0.34),v.z+0.72,a,0.14,0.36,0.26,1.9,1.8,1.4);
-      disegna(M.box,fx(-L*0.48,W*0.36),fy(-L*0.48,W*0.36),v.z+0.75,a,0.12,0.3,0.24,1.2,0.16,0.12);
-      disegna(M.box,fx(-L*0.48,-W*0.36),fy(-L*0.48,-W*0.36),v.z+0.75,a,0.12,0.3,0.24,1.2,0.16,0.12);
+    disegna(M.box,rx(R.l*0.40,0),ry(R.l*0.40,0),v.z+R.h-0.05,r0.ang,R.l*0.16,R.w*0.86,0.55,0.9,0.92,0.95); // gruppo frigo
+    disegna(M.box,rx(R.l*0.455,0),ry(R.l*0.455,0),v.z+R.h-0.42,r0.ang,0.12,R.w*0.6,0.7,0.18,0.19,0.22);
+    disegna(M.box,rx(-R.l*0.495,0),ry(-R.l*0.495,0),v.z+1.9,r0.ang,0.1,R.w*0.98,1.5,0.85,0.87,0.9);       // portelloni
+    for(const lato of [1,-1]){
+      disegna(M.box,rx(-R.l*0.50,lato*R.w*0.36),ry(-R.l*0.50,lato*R.w*0.36),v.z+1.35,r0.ang,0.12,0.22,0.16,1.4,0.2,0.15);
+      disegna(M.box,rx(0,lato*R.w*0.50),ry(0,lato*R.w*0.50),v.z+1.02,r0.ang,R.l*0.86,0.06,0.34,0.75,0.77,0.8); // fascia laterale
     }
-    usaMesh({buf:M.box.buf,n:M.box.n,tex:texG,spec:0.9});
-    disegna(M.box,fx(L*0.44,0),fy(L*0.44,0),v.z+H*0.62,a,0.22,W*0.84,H*0.30,1,1,1);
+    disegna(M.box,rx(-R.l*0.30,0),ry(-R.l*0.30,0),v.z+0.62,r0.ang,R.l*0.34,R.w*0.72,0.5,0.28,0.30,0.34);      // carrello
+    disegna(M.box,rx(R.l*0.12,0),ry(R.l*0.12,0),v.z+0.62,r0.ang,0.5,R.w*0.5,0.55,0.3,0.32,0.36);              // gambe
     usaMesh(M.ruota);
-    const wq=[[L*0.30,W*0.47],[L*0.30,-W*0.47],[-L*0.16,W*0.47],[-L*0.16,-W*0.47],[-L*0.34,W*0.47],[-L*0.34,-W*0.47]];
-    for(const w of wq) disegnaRuota(fx(w[0],w[1]),fy(w[0],w[1]),v.z+0.46,a,roll,0.46,0.17,gomma[0],gomma[1],gomma[2]);
+    for(const dx2 of [-R.l*0.20,-R.l*0.30,-R.l*0.40])
+      for(const lato of [1,-1]){
+        disegnaRuota(rx(dx2,lato*R.w*0.40),ry(dx2,lato*R.w*0.40),v.z+0.50,r0.ang,roll,0.50,0.17,gomma[0],gomma[1],gomma[2]);
+        disegnaRuota(rx(dx2,lato*R.w*0.26),ry(dx2,lato*R.w*0.26),v.z+0.50,r0.ang,roll,0.50,0.17,gomma[0],gomma[1],gomma[2]);
+      }
+    /* --- motrice --- */
+    usaMesh(vern(M.cabina)); disegna(M.cabina,v.x,v.y,v.z,a,L,W,H,t[0],t[1],t[2]);
+    usaMesh(M.box);
+    disegna(M.box,fx(-L*0.12,0),fy(-L*0.12,0),v.z+0.55,a,L*0.62,W*0.74,0.42,0.24,0.26,0.30);      // telaio
+    disegna(M.box,fx(-L*0.34,0),fy(-L*0.34,0),v.z+0.95,a,L*0.16,W*0.66,0.3,0.30,0.32,0.36);       // ralla
+    disegna(M.box,fx(L*0.44,0),fy(L*0.44,0),v.z+0.62,a,0.22,W*0.98,0.5,0.16,0.17,0.2);            // paraurti basso
+    usaMesh(cromo);
+    disegna(M.box,fx(L*0.50,0),fy(L*0.50,0),v.z+0.72,a,0.12,W*0.86,1.0,1,1,1);                    // barra paracicloni
+    for(const lato of [1,-1])
+      disegna(M.box,fx(L*0.50,lato*W*0.34),fy(L*0.50,lato*W*0.34),v.z+0.55,a,0.14,0.14,1.35,1,1,1);
+    disegna(M.box,fx(L*0.02,W*0.46),fy(L*0.02,W*0.46),v.z+1.05,a,0.22,0.22,2.5,1,1,1);            // scarico verticale
+    for(const lato of [1,-1])                                                                      // specchi
+      disegna(M.box,fx(L*0.30,lato*W*0.60),fy(L*0.30,lato*W*0.60),v.z+H*0.62,a,0.1,0.12,0.55,1,1,1);
+    disegna(M.box,fx(L*0.20,0),fy(L*0.20,0),v.z+H*1.01,a,0.16,W*0.86,0.1,1,1,1);                  // barra dei fari sul tetto
+    usaMesh(M.box);
+    for(let k2=-2;k2<=2;k2++)
+      disegna(M.box,fx(L*0.20,k2*W*0.17),fy(L*0.20,k2*W*0.17),v.z+H*1.03,a,0.2,0.2,0.2,2.0,1.9,1.5);
+    if(d<55){
+      disegna(M.box,fx(L*0.49,W*0.32),fy(L*0.49,W*0.32),v.z+0.95,a,0.14,0.4,0.26,2.0,1.9,1.5);    // fari
+      disegna(M.box,fx(L*0.49,-W*0.32),fy(L*0.49,-W*0.32),v.z+0.95,a,0.14,0.4,0.26,2.0,1.9,1.5);
+      disegna(M.box,fx(L*0.49,0),fy(L*0.49,0),v.z+1.35,a,0.1,W*0.5,0.3,0.2,0.21,0.24);            // mascherina
+    }
+    abitacolo(H,L*0.55,W,2);
+    usaMesh(vetr(M.cabVetri)); vetriDentro(()=>disegna(M.cabVetri,v.x,v.y,v.z,a,L,W,H,1,1,1));
+    usaMesh(M.ruota);
+    disegnaRuota(fx(L*0.34,W*0.44),fy(L*0.34,W*0.44),v.z+0.52,a,roll,0.52,0.18,gomma[0],gomma[1],gomma[2]);
+    disegnaRuota(fx(L*0.34,-W*0.44),fy(L*0.34,-W*0.44),v.z+0.52,a,roll,0.52,0.18,gomma[0],gomma[1],gomma[2]);
+    for(const dx2 of [-L*0.20,-L*0.36])
+      for(const lato of [1,-1]){
+        disegnaRuota(fx(dx2,lato*W*0.44),fy(dx2,lato*W*0.44),v.z+0.52,a,roll,0.52,0.17,gomma[0],gomma[1],gomma[2]);
+        disegnaRuota(fx(dx2,lato*W*0.28),fy(dx2,lato*W*0.28),v.z+0.52,a,roll,0.52,0.17,gomma[0],gomma[1],gomma[2]);
+      }
   } else {
     const va=(v.type==='sport'||v.type==='super')?v.type
              :(v.variante||(v.variante=['berlina','berlina','suv','furgone'][Math.floor(hash2(Math.round(v.x*3),Math.round(v.y*3))*4)%4]));
     const mod=M.carr[va]||M.carr.berlina;
     const alt=va==='furgone'?H*1.45:(va==='suv'?H*1.16:H);
     usaMesh(vern(mod.corpo)); disegna(mod.corpo,v.x,v.y,v.z,a,L,W,alt,t[0],t[1],t[2]);
-    usaMesh(vetr(mod.vetri)); disegna(mod.vetri,v.x,v.y,v.z,a,L,W,alt,1,1,1);
+    abitacolo(alt,L,W,va==='sport'||va==='super'?2:4);
+    usaMesh(vetr(mod.vetri)); vetriDentro(()=>disegna(mod.vetri,v.x,v.y,v.z,a,L,W,alt,1,1,1));
     usaMesh(M.box);
     if(d<45&&dn<70){
       disegna(M.box,fx(L*0.425,W*0.30),fy(L*0.425,W*0.30),v.z+alt*0.34,a,0.1,0.30,0.14,2.0,1.9,1.5);
@@ -2494,13 +2667,15 @@ function disegnaScena(){
   /* --- veicoli --- */
   for(const v of vehicles){
     if(P.veh===v&&!tps) continue;
-    const d=dist2cam(v.x,v.y); if(d>FAR) continue;
+    const d=dist2cam(v.x,v.y); if(d>Math.max(340,FAR)) continue;   // i mezzi restano visibili
+    if(!isFinite(v.x)||!isFinite(v.y)){ v.x=P.x+4; v.y=P.y+4; v.sp=0; }
     disegnaVeicolo(v,d); lastObjs++;
   }
   for(const cc of traffic){
     const x=cc.vert?cc.line:cc.pos, y=cc.vert?cc.pos:cc.line;
-    const d=dist2cam(x,y); if(d>FAR*0.8) continue;
-    if(!cc._v) cc._v={x:0,y:0,z:0,ang:0,rot:0,col:cc.col,type:cc.type,d:VEHDEF[cc.type],sp:0,wroll:0};
+    const d=dist2cam(x,y); if(d>Math.max(220,FAR*0.9)) continue;
+    if(!cc._v) cc._v={x:0,y:0,z:0,ang:0,rot:0,col:cc.col,type:cc.type==='camion'?'furgo':cc.type,
+                      d:cc.type==='camion'?VEHDEF.auto:VEHDEF[cc.type],sp:0,wroll:0,variante:'furgone'};
     cc._v.x=x; cc._v.y=y; cc._v.wroll=cc.pos*cc.dir/0.32;
     cc._v.ang=cc.vert?(cc.dir>0?Math.PI*0.5:-Math.PI*0.5):(cc.dir>0?0:Math.PI);
     disegnaVeicolo(cc._v,d); lastObjs++;
@@ -2714,7 +2889,10 @@ function drawCompass(){
   ctx.fillStyle=Math.abs(rel)<0.25?'#ffd34d':'rgba(255,211,77,.75)';
   ctx.beginPath(); ctx.moveTo(px,cy+7); ctx.lineTo(px-7,cy-6); ctx.lineTo(px+7,cy-6); ctx.closePath(); ctx.fill();
   ctx.fillStyle='rgba(255,255,255,.92)'; ctx.font='700 11px system-ui'; ctx.textAlign='center'; ctx.textBaseline='middle';
-  ctx.fillText((job.stage===0?'\u{1F4E6} ritiro ':'\u{1F3C1} consegna ')+Math.round(d)+' m',cx,cy+24);
+  const em=(LAVORI[job.tipo]||LAVORI.consegna).e;
+  let scritta=(job.stage===0?em+' ritiro ':'\u{1F3C1} consegna ')+Math.round(d)+' m';
+  if(job.scad&&job.stage>0) scritta+=' · '+Math.max(0,Math.ceil(job.scad-tempo))+'s';
+  ctx.fillText(scritta,cx,cy+24);
 }
 
 /* ---------- il fotogramma ---------- */
@@ -2786,9 +2964,9 @@ function statoDaSalvare(){
   const cas=[]; for(const c of crates){cas.push(Math.round(c.x*10)/10,Math.round(c.y*10)/10);}
   return {v:2,
     x:P.x,y:P.y,z:P.z,yaw:P.yaw,pitch:P.pitch,
-    soldi:P.soldi,vita:P.vita,cibo:P.cibo,energia:P.energia,
+    soldi:P.soldi,vita:P.vita,cibo:P.cibo,energia:P.energia,nome:P.nome,
     inv:inv,eq:EQ,tps:tps,
-    job:job?{f:shops.indexOf(job.from),t:shops.indexOf(job.to),s:job.stage,r:job.reward}:null,
+    job:job?{f:shops.indexOf(job.from),t:shops.indexOf(job.to),s:job.stage,r:job.reward,k:job.tipo||'consegna'}:null,
     veh:vehicles.map(v=>[v.type,Math.round(v.x*10)/10,Math.round(v.y*10)/10,Math.round(v.z*10)/10,
                          Math.round(v.ang*100)/100,Math.round(v.danno||0),v.personale?1:0,v.variante||'']),
     mia:P.mia,
@@ -2804,6 +2982,7 @@ function applicaSalvataggio(d){
   try{
     P.x=d.x;P.y=d.y;P.z=d.z;P.yaw=d.yaw;P.pitch=d.pitch||0;
     P.soldi=d.soldi;P.vita=d.vita;P.cibo=d.cibo;P.energia=d.energia;P.veh=null;
+    if(d.nome) P.nome=d.nome;
     for(let i=0;i<10;i++) inv[i]=d.inv[i]||null;
     for(const k in EQ) EQ[k]=!!(d.eq&&d.eq[k]);
     tps=!!d.tps; document.getElementById('cross').style.display=tps?'none':'block';
@@ -2817,7 +2996,8 @@ function applicaSalvataggio(d){
     for(let i=0;i<d.mon.length;i+=3) coins.push({x:d.mon[i],y:d.mon[i+1],t:rnd()*TAU,v:d.mon[i+2]});
     crates.length=0;
     for(let i=0;i<d.cas.length;i+=2) crates.push({x:d.cas[i],y:d.cas[i+1]});
-    job=(d.job&&shops[d.job.f]&&shops[d.job.t])?{from:shops[d.job.f],to:shops[d.job.t],stage:d.job.s,reward:d.job.r}:null;
+    job=(d.job&&shops[d.job.f]&&shops[d.job.t])
+        ?{from:shops[d.job.f],to:shops[d.job.t],stage:d.job.s,reward:d.job.r,tipo:d.job.k||'consegna'}:null;
     if(!job) newJob();
     CAM.x=P.x;CAM.y=P.y;CAM.yaw=P.yaw;
     drawHotbar(); setLabels(); updHUD();
@@ -2897,6 +3077,10 @@ try{
    navigator.serviceWorker.register('sw.js').catch(()=>{});
 }catch(e){}
 
+try{
+  const nn=localStorage.getItem('cittaLiberaNome');
+  if(nn) document.getElementById('nome').value=nn;
+}catch(e){}
 const salvataggio=leggiSalvataggio();
 if(salvataggio){
   document.getElementById('play').textContent='CONTINUA';
@@ -2907,7 +3091,11 @@ if(salvataggio){
 }
 let partitaAvviata=false;
 function avvia(){
+  const campo=document.getElementById('nome');
+  const n=(campo&&campo.value||'').trim().slice(0,14);
+  if(n){ P.nome=n; try{localStorage.setItem('cittaLiberaNome',n);}catch(e){} }
   if(!partitaAvviata&&salvataggio) applicaSalvataggio(salvataggio);
+  if(n) P.nome=n;                                   // il nome scelto ora vince sul salvataggio
   partitaAvviata=true;
   document.getElementById('start').classList.remove('show'); paused=false; audioOn(); schermoAcceso();
   setTimeout(()=>{$hint.style.opacity=0;},6000);
@@ -2924,7 +3112,7 @@ if(!initGL()){
 drawHotbar();
 addItem('panino',2); addItem('bibita',2); addItem('caffe',1);
 setLabels(); updHUD(); newJob();
-toast('Benvenuto a Città Libera! 🏙️',2600);
+setTimeout(()=>toast('Benvenuto a Città Libera'+(P.nome&&P.nome!=='Giocatore'?', '+P.nome:'')+'! 🏙️',2800),300);
 requestAnimationFrame(frame);
 </script>
 </body>
