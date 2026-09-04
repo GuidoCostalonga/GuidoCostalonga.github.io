@@ -49,6 +49,10 @@ pagina: nessun altro dato può essere creato nel progetto.
 
 ## 4. Registra la pagina e copia la configurazione
 
+> **Già fatto.** La pagina è collegata al progetto `pc-roveredo-2026`: i sei
+> valori sono dentro `index.html`. Questo passaggio serve solo se un domani si
+> cambia progetto Firebase.
+
 1. Torna alla **panoramica del progetto** e premi l'icona **`</>`**, cioè «Web».
 2. Dai un nome all'app, per esempio `riunione`, e premi **Registra app**.
    Non attivare Firebase Hosting: la pagina sta su GitHub Pages.
