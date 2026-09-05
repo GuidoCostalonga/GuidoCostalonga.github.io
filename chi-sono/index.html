@@ -22,26 +22,26 @@
    Chi modifica una pagina cambia questi, non i singoli numeri.
    ============================================================ */
 :root{
-  /* colore: l'identita' resta il blu istituzionale con l'accento giallo */
-  --blu:#084270;         --blu-fondo:#063254;   --blu-chiaro:#0b568f;
-  --blu2:#0b568f;        --blu-tenue:#e9eff5;
-  --giallo:#f8f06d;      --giallo-scuro:#d8ca2a;
+  /* colore: blu profondo e accento oro, al posto del blu piatto e del giallo limone */
+  --blu:#0b3c63;         --blu-fondo:#07293f;   --blu-chiaro:#1a6098;
+  --blu2:#1a6098;        --blu-tenue:#e7eef4;
+  --giallo:#e6c168;      --giallo-scuro:#c39f47;
   --bianco:#fff;
 
-  /* superfici */
-  --fondo:#f4f6f8;       --grigio:#f4f6f8;
-  --superficie:#fff;     --superficie-2:#eef2f6;
+  /* superfici: neutri caldi, non grigi freddi. E' quello che fa la differenza. */
+  --fondo:#f7f6f2;       --grigio:#f7f6f2;
+  --superficie:#fff;     --superficie-2:#f1efe9;
 
-  /* testo: il corpo non e' piu' blu, si legge meglio in quasi nero */
-  --testo:#16212c;       --testo-2:#4a5a69;     --testo-3:#5f7181;
-  --su-blu:#eaf1f7;      --su-blu-2:#b9cede;
+  /* testo: nero caldo, per stare bene sui neutri caldi */
+  --testo:#1f1c17;       --testo-2:#57534a;     --testo-3:#6e6960;
+  --su-blu:#e8eef3;      --su-blu-2:#adc0d0;
 
   /* linee */
-  --bordo:#dde5ec;       --bordo-forte:#c4d0db;
+  --bordo:#e4e0d7;       --bordo-forte:#cec8bb;
 
   /* stati */
-  --ok:#136c43;          --attenzione:#8a5a12;
-  --pericolo:#b3261e;    --info:#0b568f;
+  --ok:#1b6b4a;          --attenzione:#8a5a12;
+  --pericolo:#9c2b22;    --info:#1a6098;
 
   /* spazio: scala unica, niente numeri a caso */
   --s1:4px;  --s2:8px;  --s3:12px; --s4:16px; --s5:20px; --s6:24px;
@@ -51,9 +51,9 @@
   --r-sm:8px; --r:12px; --r-lg:16px; --r-tondo:999px;
 
   /* ombre: appena percettibili, il rilievo lo fa il bordo */
-  --om-1:0 1px 2px rgba(16,36,54,.05), 0 1px 3px rgba(16,36,54,.05);
-  --om-2:0 1px 2px rgba(16,36,54,.05), 0 10px 24px -8px rgba(16,36,54,.16);
-  --om-testata:0 1px 0 rgba(255,255,255,.06), 0 6px 18px -10px rgba(6,32,58,.6);
+  --om-1:0 1px 2px rgba(40,34,24,.05), 0 1px 3px rgba(40,34,24,.05);
+  --om-2:0 1px 2px rgba(40,34,24,.05), 0 10px 24px -8px rgba(40,34,24,.16);
+  --om-testata:0 1px 0 rgba(255,255,255,.05), 0 6px 18px -10px rgba(7,41,63,.6);
 
   /* movimento: spiega un cambiamento, non intrattiene */
   --t:180ms cubic-bezier(.2,.6,.3,1);
@@ -63,7 +63,7 @@
   --z-nav:60; --z-testata:70; --z-galleggiante:90;
 
   /* anello del fuoco: blu sulle superfici chiare... */
-  --anello:#0b568f;
+  --anello:#1a6098;
 }
 /* ...giallo dove il fondo e' blu */
 header,footer,.hero,nav.show{--anello:var(--giallo)}
@@ -254,6 +254,8 @@ h2.tit::after{content:"";flex:1;height:1px;background:var(--bordo)}
   .griglia{grid-template-columns:1fr}
   .tile{padding:var(--s4)}
 }
+/* ---------- profondita': i campi grandi stanno su un blu piu' scuro ---------- */
+header,footer,.hero,.avviso,.finale,.evid{background:var(--blu-fondo)}
 </style>
 <style>
 /* ---------- pagina «Chi sono» ---------- */
