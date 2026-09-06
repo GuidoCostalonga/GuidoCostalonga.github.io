@@ -172,17 +172,17 @@ nav .solo.on .conta{background:rgba(255,255,255,.18);color:#fff}
 
 /* ---------- pie' di pagina ---------- */
 footer{background:var(--blu);color:var(--su-blu);margin-top:auto}
-.fwrap{max-width:1180px;margin:0 auto;display:flex;align-items:center;gap:var(--s4);flex-wrap:wrap;
+.fwrap{max-width:1180px;margin:0 auto;display:grid;grid-template-columns:auto 1fr;align-items:center;gap:var(--s3) var(--s4);
   padding:var(--s6) calc(var(--s6) + env(safe-area-inset-right))
           calc(var(--s6) + env(safe-area-inset-bottom)) calc(var(--s6) + env(safe-area-inset-left))}
 .fwrap .nm{font-weight:800;font-size:16px;color:#fff}
-.fwrap .st{margin-left:auto}
+.fwrap .st{justify-self:end}
 .fwrap a{color:var(--giallo);font-weight:700;font-size:15px;text-decoration:none;
   display:inline-flex;align-items:center;gap:var(--s2);min-height:44px}
 .fwrap a:hover{color:#fff;text-decoration:underline}
 .fwrap .st a.wa{display:inline-flex;align-items:center;gap:var(--s2)}
 .fwrap .st a.wa svg{flex:none}
-.fwrap .agg{width:100%;font-size:13px;line-height:1.6;color:var(--su-blu-2);
+.fwrap .agg{grid-column:1/-1;font-size:13px;line-height:1.6;color:var(--su-blu-2);
   border-top:1px solid rgba(255,255,255,.16);padding-top:var(--s4);max-width:90ch}
 
 /* ---------- presentazione in cima ---------- */
@@ -246,7 +246,8 @@ h2.tit::after{content:"";flex:1;height:1px;background:var(--bordo)}
   h2.tit{margin:var(--s7) 0 var(--s4)}
   .fwrap{padding:var(--s5) calc(var(--s4) + env(safe-area-inset-left))
          calc(var(--s5) + env(safe-area-inset-bottom)) calc(var(--s4) + env(safe-area-inset-right))}
-  .fwrap .st{margin-left:0;width:100%}
+  .fwrap{grid-template-columns:1fr}
+  .fwrap .st{justify-self:start}
 }
 @media(max-width:400px){
   .htit h1{font-size:16px}
