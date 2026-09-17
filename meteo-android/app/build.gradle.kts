@@ -69,6 +69,14 @@ android {
         compose = true
     }
 
+    lint {
+        abortOnError = true
+        // Questi controlli chiedono in rete qual e' l'ultima versione delle
+        // librerie: non dicono niente sul codice e fermano la compilazione
+        // quando la rete non risponde.
+        disable += setOf("GradleDependency", "AndroidGradlePluginVersion", "NewerVersionAvailable")
+    }
+
     packaging {
         resources.excludes += setOf("/META-INF/{AL2.0,LGPL2.1}")
     }
@@ -89,4 +97,6 @@ dependencies {
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.ui:ui-tooling-preview")
     debugImplementation("androidx.compose.ui:ui-tooling")
+
+    testImplementation("junit:junit:4.13.2")
 }

@@ -176,12 +176,16 @@ object Lettura {
      * modelli, ora per ora. Piu' i modelli concordano, piu' il punteggio sale.
      * Risultato fra 45 e 96; con meno di due modelli disponibili resta 70.
      */
-    fun attendibilita(modelli: List<JSONObject?>): Int {
-        val serie = modelli.filterNotNull().mapNotNull { m ->
+    fun attendibilita(modelli: List<JSONObject?>): Int = attendibilitaDaSerie(
+        modelli.filterNotNull().mapNotNull { m ->
             runCatching {
                 m.getJSONObject("hourly").getJSONArray("temperature_2m").numeri().take(24)
             }.getOrNull()
-        }
+        },
+    )
+
+    /** Il calcolo puro, separato dalla lettura della risposta perche' si possa provare. */
+    fun attendibilitaDaSerie(serie: List<List<Double?>>): Int {
         if (serie.size < 2) return 70
         var somma = 0.0
         for (h in 0 until 24) {

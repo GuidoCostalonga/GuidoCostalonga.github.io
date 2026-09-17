@@ -5,7 +5,11 @@
 name: App Android Meteo FVG
 
 on:
+  # Sul ramo principale a ogni modifica; sugli altri rami ci pensa la
+  # richiesta di modifica, cosi' il lavoro non viene fatto due volte.
   push:
+    branches:
+      - main
     paths:
       - "meteo-android/**"
       - ".github/workflows/app-meteo-android.yml"
@@ -42,9 +46,13 @@ jobs:
           key: gradle-${{ hashFiles('meteo-android/**/*.gradle.kts', 'meteo-android/gradle/wrapper/gradle-wrapper.properties') }}
           restore-keys: gradle-
 
-      - name: Compila l'APK
+      - name: Prove automatiche sulla logica
         working-directory: meteo-android
-        run: ./gradlew --no-daemon assemblePubblica
+        run: ./gradlew --no-daemon testPubblicaUnitTest
+
+      - name: Compila l'APK e controlla il codice
+        working-directory: meteo-android
+        run: ./gradlew --no-daemon assemblePubblica lintPubblica
 
       - name: Metti a disposizione l'APK
         uses: actions/upload-artifact@v4
@@ -53,3 +61,13 @@ jobs:
           if-no-files-found: error
           retention-days: 60
           path: meteo-android/app/build/outputs/apk/pubblica/*.apk
+
+      - name: Metti a disposizione i resoconti, se qualcosa non torna
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: resoconti
+          if-no-files-found: ignore
+          path: |
+            meteo-android/app/build/reports/**
+            meteo-android/app/build/outputs/lint-results-*.html

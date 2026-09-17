@@ -13,6 +13,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import org.costalonga.meteofvg.data.Comune
 import org.costalonga.meteofvg.data.Istantanea
+import org.costalonga.meteofvg.data.MeteoNonDisponibile
 import org.costalonga.meteofvg.data.MeteoRete
 import org.costalonga.meteofvg.data.Preferenze
 import org.costalonga.meteofvg.data.Previsione
@@ -88,6 +89,8 @@ class MeteoViewModel(applicazione: Application) : AndroidViewModel(applicazione)
                     previsione = esito
                     salvaPerIlWidget(esito)
                 }
+            } catch (e: MeteoNonDisponibile) {
+                errore = "Open-Meteo non sta fornendo le previsioni: ${e.motivo}."
             } catch (e: IOException) {
                 errore = "Non è stato possibile leggere le previsioni. " +
                     "Controlla il collegamento a internet e riprova."

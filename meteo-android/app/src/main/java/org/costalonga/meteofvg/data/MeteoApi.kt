@@ -6,6 +6,13 @@ import java.net.HttpURLConnection
 import java.net.URL
 
 /**
+ * Open-Meteo ha risposto, ma ha detto di no: limite di richieste raggiunto,
+ * parametri non accettati, servizio in manutenzione. Il motivo e' quello che
+ * scrive il servizio, non una supposizione.
+ */
+class MeteoNonDisponibile(val motivo: String) : IOException(motivo)
+
+/**
  * L'interfaccia pubblica di Open-Meteo, la stessa che alimenta la pagina
  * costalonga.org/meteo/ : nessuna chiave di accesso, fuso Europe/Rome.
  */
@@ -50,6 +57,12 @@ object MeteoApi {
         append("&models=").append(modello)
     }
 
+    /** Il motivo scritto da Open-Meteo, quando c'e'. */
+    private fun motivo(flusso: java.io.InputStream?): String? = flusso
+        ?.let { runCatching { it.bufferedReader().use { lettore -> lettore.readText() } }.getOrNull() }
+        ?.let { runCatching { JSONObject(it).optString("reason") }.getOrNull() }
+        ?.takeIf { it.isNotBlank() }
+
     /** Scarica e legge la risposta. Solleva [IOException] se non arriva. */
     @Throws(IOException::class)
     fun scarica(indirizzo: String, attesaMs: Int = 12_000): JSONObject {
@@ -62,9 +75,18 @@ object MeteoApi {
         }
         try {
             val codice = collegamento.responseCode
-            if (codice !in 200..299) throw IOException("Open-Meteo ha risposto $codice")
+            if (codice !in 200..299) {
+                throw MeteoNonDisponibile(motivo(collegamento.errorStream) ?: "risposta $codice")
+            }
             val testo = collegamento.inputStream.bufferedReader().use { it.readText() }
-            return JSONObject(testo)
+            val risposta = JSONObject(testo)
+            // Open-Meteo puo' rispondere bene e dire di no nel contenuto.
+            if (risposta.optBoolean("error", false)) {
+                throw MeteoNonDisponibile(
+                    risposta.optString("reason").ifBlank { "richiesta non accettata" },
+                )
+            }
+            return risposta
         } finally {
             collegamento.disconnect()
         }
