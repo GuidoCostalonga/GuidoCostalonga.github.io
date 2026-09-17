@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Nel salvataggio dei dati basta ricordare il Comune scelto. -->
+<data-extraction-rules>
+    <cloud-backup>
+        <include domain="sharedpref" path="meteo-fvg.xml" />
+    </cloud-backup>
+    <device-transfer>
+        <include domain="sharedpref" path="meteo-fvg.xml" />
+    </device-transfer>
+</data-extraction-rules>

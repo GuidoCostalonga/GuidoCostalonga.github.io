@@ -1,0 +1,55 @@
+# Compila l'app Android Meteo FVG e lascia l'APK fra i file dell'esecuzione.
+#
+# Si avvia a ogni modifica della cartella meteo-android e si puo' avviare a
+# mano da GitHub, nella scheda Actions, con il pulsante "Run workflow".
+name: App Android Meteo FVG
+
+on:
+  push:
+    paths:
+      - "meteo-android/**"
+      - ".github/workflows/app-meteo-android.yml"
+  pull_request:
+    paths:
+      - "meteo-android/**"
+      - ".github/workflows/app-meteo-android.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  apk:
+    name: Compila l'APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Scarica il codice
+        uses: actions/checkout@v4
+
+      - name: Prepara Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Ricorda le dipendenze fra un'esecuzione e l'altra
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ hashFiles('meteo-android/**/*.gradle.kts', 'meteo-android/gradle/wrapper/gradle-wrapper.properties') }}
+          restore-keys: gradle-
+
+      - name: Compila l'APK
+        working-directory: meteo-android
+        run: ./gradlew --no-daemon assemblePubblica
+
+      - name: Metti a disposizione l'APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: MeteoFVG-apk
+          if-no-files-found: error
+          retention-days: 60
+          path: meteo-android/app/build/outputs/apk/pubblica/*.apk

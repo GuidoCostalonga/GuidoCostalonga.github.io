@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <application
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/regole_copia"
+        android:fullBackupContent="@xml/regole_copia_vecchie"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_nome"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="false"
+        android:theme="@style/Tema.MeteoFVG">
+
+        <activity
+            android:name=".MainActivity"
+            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden|uiMode"
+            android:exported="true"
+            android:label="@string/app_nome"
+            android:windowSoftInputMode="adjustResize">
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+            <!--
+                Collegamenti della pagina: costalonga.org/meteo/#roveredo-in-piano.
+                Non sono verificati di proposito, cosi il sito continua ad aprirsi
+                nel browser: l'app compare solo se chi la usa la sceglie a mano
+                nelle impostazioni dei collegamenti.
+            -->
+            <intent-filter android:autoVerify="false">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:host="costalonga.org"
+                    android:pathPrefix="/meteo"
+                    android:scheme="https" />
+            </intent-filter>
+        </activity>
+
+        <receiver
+            android:name=".widget.MeteoWidgetProvider"
+            android:exported="true"
+            android:label="@string/widget_nome">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="org.costalonga.meteofvg.RICARICA_WIDGET" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_meteo_info" />
+        </receiver>
+    </application>
+</manifest>

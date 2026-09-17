@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- generato da meteo-android/strumenti/genera_icone.py: non si modifica a mano -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp" android:height="48dp"
+    android:viewportWidth="48" android:viewportHeight="48">
+  <path android:fillColor="#FFE6C168" android:fillType="nonZero"
+        android:pathData="M11.9,17.5A6.6,6.6 0 0 1 25.1,17.5A6.6,6.6 0 0 1 11.9,17.5Z"/>
+  <path android:strokeColor="#FFC39F47" android:strokeWidth="2.2"
+        android:strokeLineCap="round" android:fillColor="#00000000"
+        android:pathData="M27.739,21.327L31.989,23.087M22.327,26.739L24.087,30.989M14.673,26.739L12.913,30.989M9.261,21.327L5.011,23.087M9.261,13.673L5.011,11.913M14.673,8.261L12.913,4.011M22.327,8.261L24.087,4.011M27.739,13.673L31.989,11.913"/>
+  <path android:fillColor="#FF93A8BA" android:fillType="nonZero"
+        android:pathData="M21.04,29.44A5.46,5.46 0 0 1 31.96,29.44A5.46,5.46 0 0 1 21.04,29.44ZM15.97,31.78A4.29,4.29 0 0 1 24.55,31.78A4.29,4.29 0 0 1 15.97,31.78ZM28.06,31.39A4.68,4.68 0 0 1 37.42,31.39A4.68,4.68 0 0 1 28.06,31.39ZM16.36,31L37.42,31L37.42,35.68L16.36,35.68ZM14.02,33.34A2.34,2.34 0 0 1 18.7,33.34A2.34,2.34 0 0 1 14.02,33.34ZM35.08,33.34A2.34,2.34 0 0 1 39.76,33.34A2.34,2.34 0 0 1 35.08,33.34Z"/>
+</vector>

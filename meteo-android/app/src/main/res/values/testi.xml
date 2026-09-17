@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_nome">Meteo FVG</string>
+    <string name="widget_nome">Meteo FVG</string>
+    <string name="widget_descrizione">Temperatura e condizioni del Comune scelto, con l\'icona animata.</string>
+    <string name="widget_ricarica">Aggiorna</string>
+    <string name="widget_icona">Condizioni in corso</string>
+    <string name="widget_in_attesa">Apri l\'app per scegliere il Comune</string>
+</resources>

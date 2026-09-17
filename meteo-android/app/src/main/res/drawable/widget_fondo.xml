@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Scheda bianca con la barra gialla a sinistra: la stessa del sito. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <corners android:radius="20dp" />
+            <solid android:color="@color/giallo" />
+        </shape>
+    </item>
+    <item android:left="6dp">
+        <shape android:shape="rectangle">
+            <corners
+                android:bottomLeftRadius="0dp"
+                android:bottomRightRadius="20dp"
+                android:topLeftRadius="0dp"
+                android:topRightRadius="20dp" />
+            <solid android:color="@color/superficie" />
+        </shape>
+    </item>
+</layer-list>
