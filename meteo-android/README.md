@@ -99,14 +99,27 @@ Per aggiungerlo: tocco lungo su una zona vuota della schermata iniziale →
 
 ## Installazione sul telefono
 
-L'APK si compila da solo su GitHub a ogni modifica.
+Due strade. La prima è quella comoda.
 
-1. Apri la scheda **Actions** del deposito, il flusso **App Android Meteo FVG**;
+### Dal telefono, in un passaggio
+
+Apri questo indirizzo con il browser del telefono:
+
+```
+https://costalonga.org/meteo-android/apk/MeteoFVG.apk
+```
+
+Android chiede il permesso di installare da questa origine: concedilo al
+browser che stai usando. Il file è `apk/MeteoFVG.apk` qui nel deposito, ed è
+l'app compilata e firmata al momento dell'ultima modifica del codice.
+L'indirizzo funziona da quando questa cartella è sul ramo principale.
+
+### Dalla compilazione più recente
+
+1. apri la scheda **Actions** del deposito, il flusso **App Android Meteo FVG**;
 2. apri l'ultima esecuzione andata a buon fine;
-3. scarica il file **MeteoFVG-apk** in fondo alla pagina;
-4. estrai `app-pubblica.apk` e aprilo sul telefono;
-5. Android chiede il permesso di installare da questa origine: concedilo solo
-   per il gestore dei file o il browser che stai usando.
+3. scarica **MeteoFVG-apk** in fondo alla pagina ed estrai `app-pubblica.apk`;
+4. aprilo sul telefono.
 
 Serve Android 8.0 o successivo.
 
@@ -159,7 +172,9 @@ meteo-android/
 │       ├── font/                    Manrope, cinque pesi
 │       ├── layout/                  i due formati del widget
 │       └── values/                  colori, testi, tema
+├── app/src/test/                    le prove automatiche sulla logica
 ├── strumenti/genera_icone.py        genera i fotogrammi dell'animazione
+├── apk/MeteoFVG.apk                 l'app pronta da installare
 ├── chiavi/                          la firma di servizio dell'APK
 └── licenze/                         licenza del carattere Manrope
 ```
@@ -173,13 +188,29 @@ python3 strumenti/genera_icone.py
 Riscrive i sessanta disegni e l'icona dell'applicazione. I file in
 `app/src/main/res/drawable/ic_meteo_*.xml` non si modificano a mano.
 
-### Compilare a mano
+### Compilare e controllare a mano
 
 ```bash
 export ANDROID_HOME=/percorso/dell/android-sdk
-./gradlew assemblePubblica      # APK da installare
-./gradlew assembleDebug         # APK per lo sviluppo
+./gradlew testPubblicaUnitTest   # prove automatiche sulla logica
+./gradlew assemblePubblica       # APK da installare
+./gradlew lintPubblica           # controllo del codice
+./gradlew assembleDebug          # APK per lo sviluppo
 ```
+
+Il controllo del codice è un passo a sé, non parte della compilazione
+dell'APK: alcune sue verifiche interrogano in rete l'indice delle librerie di
+Google e farebbero cadere la compilazione quando la rete non risponde. Quelle
+verifiche sono disattivate in `app/build.gradle.kts`, perché dicono solo se
+esiste una versione più nuova di una libreria.
+
+### Che cosa provano le prove automatiche
+
+| File | Verifica |
+| --- | --- |
+| `ComuniTest` | 215 Comuni, conteggi per provincia, nomi e codici ISTAT e indirizzi tutti distinti, coordinate dentro la regione, ogni Comune raggiungibile dal proprio indirizzo |
+| `CondizioniTest` | Ogni codice meteo ha una descrizione propria, giorno e notte cambiano disegno, sei fotogrammi distinti per condizione, nessun disegno usato due volte |
+| `PrevisioneTest` | Calcolo dell'attendibilità, buchi nei dati, soglie dei tre consigli, soglie del giudizio |
 
 ---
 

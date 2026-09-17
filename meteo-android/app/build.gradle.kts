@@ -71,10 +71,23 @@ android {
 
     lint {
         abortOnError = true
-        // Questi controlli chiedono in rete qual e' l'ultima versione delle
-        // librerie: non dicono niente sul codice e fermano la compilazione
-        // quando la rete non risponde.
-        disable += setOf("GradleDependency", "AndroidGradlePluginVersion", "NewerVersionAvailable")
+        // Il controllo del codice e' un passo a se': dentro la compilazione
+        // dell'APK allunga i tempi e, con alcune verifiche che interrogano in
+        // rete l'indice delle librerie di Google, la fa cadere quando la rete
+        // non risponde. Si esegue con ./gradlew lintPubblica.
+        checkReleaseBuilds = false
+        // Queste non dicono niente sul codice: chiedono solo se esiste una
+        // versione piu' nuova delle librerie.
+        disable += setOf(
+            // esiste una versione piu' nuova della libreria
+            "GradleDependency",
+            "AndroidGradlePluginVersion",
+            "NewerVersionAvailable",
+            // la libreria e' segnalata nell'indice di Google Play, che qui non
+            // serve: l'app non passa da un negozio di applicazioni
+            "RiskyLibrary",
+            "OutdatedLibrary",
+        )
     }
 
     packaging {

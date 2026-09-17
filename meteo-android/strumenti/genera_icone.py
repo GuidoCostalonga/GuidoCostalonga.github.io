@@ -70,11 +70,15 @@ def fiocco(cx, cy, r, giro):
         d.append(f'M{n(cx-dx)},{n(cy-dy)}L{n(cx+dx)},{n(cy+dy)}')
     return ''.join(d)
 
-def falce(cx, cy, R, dx, dy, punti=72):
+def falce(cx, cy, R, dx, dy, punti=22):
     """
     Falce di luna: parte interna al cerchio grande ed esterna al cerchio
     spostato. Il contorno e' campionato punto per punto, cosi la forma e'
     esatta anche senza archi.
+
+    Ventidue segmenti per arco bastano: a questa dimensione lo scarto dal
+    cerchio vero sta sotto un decimo di unita', invisibile, e il tracciato
+    resta corto. Un tracciato lungo, in un widget, si paga a ogni disegno.
     """
     r = R
     c2 = (cx + dx, cy + dy)
@@ -97,7 +101,7 @@ def falce(cx, cy, R, dx, dy, punti=72):
     for i in range(1, punti + 1):
         b = b1 + (b2 - b1) * i / punti
         bordo.append((c2[0] + r*math.cos(b), c2[1] + r*math.sin(b)))
-    return 'M' + 'L'.join(f'{n(x)},{n(y)}' for x, y in bordo) + 'Z'
+    return 'M' + 'L'.join(f'{n(round(x, 2))},{n(round(y, 2))}' for x, y in bordo) + 'Z'
 
 def stella(cx, cy, r):
     """Stellina a quattro punte."""

@@ -1,5 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    previewLayout, targetCellWidth e targetCellHeight valgono da Android 12:
+    dicono al lanciatore quanto spazio chiedere e cosa mostrare nell'elenco
+    dei widget. Sulle versioni precedenti vengono ignorati, e restano
+    minWidth, minHeight e previewImage.
+-->
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:ignore="UnusedAttribute"
     android:description="@string/widget_descrizione"
     android:initialLayout="@layout/widget_meteo"
     android:minHeight="110dp"

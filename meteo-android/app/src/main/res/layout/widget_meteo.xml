@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Widget largo: icona animata, temperatura, condizione, minime e massime. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/radice"
+    android:baselineAligned="false"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/widget_fondo"
@@ -48,7 +50,7 @@
                 android:layout_height="wrap_content"
                 android:fontFamily="@font/manrope_extrabold"
                 android:includeFontPadding="false"
-                android:text="--"
+                android:text="@string/widget_temperatura_vuota"
                 android:textColor="@color/testo"
                 android:textSize="38sp" />
 
@@ -57,7 +59,7 @@
                 android:layout_height="wrap_content"
                 android:fontFamily="@font/manrope_bold"
                 android:includeFontPadding="false"
-                android:text="°"
+                android:text="@string/grado"
                 android:textColor="@color/giallo_scuro"
                 android:textSize="26sp" />
 
@@ -86,11 +88,16 @@
             android:textSize="12sp" />
     </LinearLayout>
 
+    <!--
+        La freccia e l'ora restano due viste distinte, non un testo con
+        disegno a fianco: solo la freccia deve rispondere al tocco.
+    -->
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:gravity="end|center_vertical"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        tools:ignore="UseCompoundDrawables">
 
         <ImageView
             android:id="@+id/ricarica"

@@ -24,8 +24,8 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun Scheda(
     titolo: String,
-    sottotitolo: String? = null,
     modifier: Modifier = Modifier,
+    sottotitolo: String? = null,
     contenuto: @Composable () -> Unit,
 ) {
     // La barra gialla e' il fondo della scheda che resta scoperto a sinistra:

@@ -6,4 +6,7 @@
     <string name="widget_ricarica">Aggiorna</string>
     <string name="widget_icona">Condizioni in corso</string>
     <string name="widget_in_attesa">Apri l\'app per scegliere il Comune</string>
+    <!-- Segnaposto della temperatura, finché il dato non è arrivato. -->
+    <string name="widget_temperatura_vuota">--</string>
+    <string name="grado">°</string>
 </resources>
