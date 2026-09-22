@@ -114,6 +114,8 @@ fun SchermataMeteo(
                     }
                 }
 
+                item { RiquadroAvvisi(comune) }
+
                 item { Piede() }
             }
         }
