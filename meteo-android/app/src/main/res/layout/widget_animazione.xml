@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    L'animazione del widget.
+
+    Il widget di Android non esegue codice proprio: puo' solo mostrare le viste
+    che il sistema gli concede. Fra queste c'e' il ViewFlipper, che scorre da
+    solo i propri figli. Qui i figli sono i sei fotogrammi della condizione in
+    corso: l'app decide quali disegni mettere, il lanciatore li fa scorrere.
+-->
+<ViewFlipper xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/animazione"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:autoStart="true"
+    android:contentDescription="@string/widget_icona"
+    android:flipInterval="150"
+    android:measureAllChildren="true">
+
+    <ImageView
+        android:id="@+id/fotogramma_0"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:contentDescription="@string/widget_icona"
+        android:src="@drawable/ic_meteo_nuvole_0" />
+
+    <ImageView
+        android:id="@+id/fotogramma_1"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:contentDescription="@string/widget_icona"
+        android:src="@drawable/ic_meteo_nuvole_1" />
+
+    <ImageView
+        android:id="@+id/fotogramma_2"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:contentDescription="@string/widget_icona"
+        android:src="@drawable/ic_meteo_nuvole_2" />
+
+    <ImageView
+        android:id="@+id/fotogramma_3"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:contentDescription="@string/widget_icona"
+        android:src="@drawable/ic_meteo_nuvole_3" />
+
+    <ImageView
+        android:id="@+id/fotogramma_4"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:contentDescription="@string/widget_icona"
+        android:src="@drawable/ic_meteo_nuvole_4" />
+
+    <ImageView
+        android:id="@+id/fotogramma_5"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:contentDescription="@string/widget_icona"
+        android:src="@drawable/ic_meteo_nuvole_5" />
+</ViewFlipper>

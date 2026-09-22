@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- generato da meteo-android/strumenti/genera_icone.py: non si modifica a mano -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp" android:height="48dp"
+    android:viewportWidth="48" android:viewportHeight="48">
+  <path android:fillColor="#FFE6C168" android:fillType="nonZero"
+        android:pathData="M15.4,24A8.6,8.6 0 0 1 32.6,24A8.6,8.6 0 0 1 15.4,24Z"/>
+  <path android:strokeColor="#FFC39F47" android:strokeWidth="2.6"
+        android:strokeLineCap="round" android:fillColor="#00000000"
+        android:pathData="M36.6,24L43,24M32.91,32.91L37.435,37.435M24,36.6L24,43M15.09,32.91L10.565,37.435M11.4,24L5,24M15.09,15.09L10.565,10.565M24,11.4L24,5M32.91,15.09L37.435,10.565"/>
+</vector>

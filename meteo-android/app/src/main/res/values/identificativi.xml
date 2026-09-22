@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Ricorda su quale codice ISTAT e' caricato il riquadro delle allerte. -->
+    <item name="istat_caricato" type="id" />
+</resources>

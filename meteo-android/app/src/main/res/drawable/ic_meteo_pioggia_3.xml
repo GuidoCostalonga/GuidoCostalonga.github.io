@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- generato da meteo-android/strumenti/genera_icone.py: non si modifica a mano -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp" android:height="48dp"
+    android:viewportWidth="48" android:viewportHeight="48">
+  <path android:fillColor="#FF6F869A" android:fillType="nonZero"
+        android:pathData="M18.4,14.4A5.6,5.6 0 0 1 29.6,14.4A5.6,5.6 0 0 1 18.4,14.4ZM13.2,16.8A4.4,4.4 0 0 1 22,16.8A4.4,4.4 0 0 1 13.2,16.8ZM25.6,16.4A4.8,4.8 0 0 1 35.2,16.4A4.8,4.8 0 0 1 25.6,16.4ZM13.6,16L35.2,16L35.2,20.8L13.6,20.8ZM11.2,18.4A2.4,2.4 0 0 1 16,18.4A2.4,2.4 0 0 1 11.2,18.4ZM32.8,18.4A2.4,2.4 0 0 1 37.6,18.4A2.4,2.4 0 0 1 32.8,18.4Z"/>
+  <path android:fillColor="#FF1A6098" android:fillType="nonZero"
+        android:pathData="M13.5,33.25c1.6,2.3 2.4,3.7 2.4,4.9a2.4,2.4 0 0 1 -4.8,0c0,-1.2 0.8,-2.6 2.4,-4.9ZM21,36.625c1.6,2.3 2.4,3.7 2.4,4.9a2.4,2.4 0 0 1 -4.8,0c0,-1.2 0.8,-2.6 2.4,-4.9ZM28.5,26.5c1.6,2.3 2.4,3.7 2.4,4.9a2.4,2.4 0 0 1 -4.8,0c0,-1.2 0.8,-2.6 2.4,-4.9ZM36,29.875c1.6,2.3 2.4,3.7 2.4,4.9a2.4,2.4 0 0 1 -4.8,0c0,-1.2 0.8,-2.6 2.4,-4.9Z"/>
+</vector>

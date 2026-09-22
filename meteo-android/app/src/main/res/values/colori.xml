@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    I colori usati dai file XML: tema, disegni e layout del widget.
+    Per le schermate dell'app la stessa tavola, completa, sta in
+    ui/Tema.kt: Compose legge da lì, non da qui.
+-->
+<resources>
+    <color name="blu">#FF0B3C63</color>
+    <color name="blu_chiaro">#FF1A6098</color>
+
+    <color name="giallo">#FFE6C168</color>
+    <color name="giallo_scuro">#FFC39F47</color>
+
+    <color name="fondo">#FFF7F6F2</color>
+    <color name="superficie">#FFFFFFFF</color>
+
+    <color name="testo">#FF1F1C17</color>
+    <color name="testo_2">#FF57534A</color>
+    <color name="testo_3">#FF6E6960</color>
+</resources>

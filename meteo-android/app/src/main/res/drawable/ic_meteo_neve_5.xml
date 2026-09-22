@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- generato da meteo-android/strumenti/genera_icone.py: non si modifica a mano -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp" android:height="48dp"
+    android:viewportWidth="48" android:viewportHeight="48">
+  <path android:fillColor="#FF6F869A" android:fillType="nonZero"
+        android:pathData="M18.4,14.9A5.6,5.6 0 0 1 29.6,14.9A5.6,5.6 0 0 1 18.4,14.9ZM13.2,17.3A4.4,4.4 0 0 1 22,17.3A4.4,4.4 0 0 1 13.2,17.3ZM25.6,16.9A4.8,4.8 0 0 1 35.2,16.9A4.8,4.8 0 0 1 25.6,16.9ZM13.6,16.5L35.2,16.5L35.2,21.3L13.6,21.3ZM11.2,18.9A2.4,2.4 0 0 1 16,18.9A2.4,2.4 0 0 1 11.2,18.9ZM32.8,18.9A2.4,2.4 0 0 1 37.6,18.9A2.4,2.4 0 0 1 32.8,18.9Z"/>
+  <path android:strokeColor="#FF4C8FBF" android:strokeWidth="1.8"
+        android:strokeLineCap="round" android:fillColor="#00000000"
+        android:pathData="M12.943,34.715L17.057,39.618M16.094,34.16L13.906,40.174M18.151,36.611L11.849,37.722"/>
+  <path android:strokeColor="#FF4C8FBF" android:strokeWidth="1.8"
+        android:strokeLineCap="round" android:fillColor="#00000000"
+        android:pathData="M20.849,29.278L27.151,30.389M22.906,26.826L25.094,32.84M26.057,27.382L21.943,32.285"/>
+  <path android:strokeColor="#FF4C8FBF" android:strokeWidth="1.8"
+        android:strokeLineCap="round" android:fillColor="#00000000"
+        android:pathData="M30.229,31.9L35.771,35.1M33,30.3L33,36.7M35.771,31.9L30.229,35.1"/>
+</vector>
