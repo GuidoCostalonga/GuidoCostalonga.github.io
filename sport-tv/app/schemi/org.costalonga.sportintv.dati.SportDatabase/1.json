@@ -1,0 +1,217 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 1,
+    "identityHash": "59d57e58575966aca8604b0260307600",
+    "entities": [
+      {
+        "tableName": "eventi",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `inizio` INTEGER NOT NULL, `sport` TEXT NOT NULL, `verificata` INTEGER NOT NULL, `json` TEXT NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "inizio",
+            "columnName": "inizio",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sport",
+            "columnName": "sport",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "verificata",
+            "columnName": "verificata",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "json",
+            "columnName": "json",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "fonti",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `ordine` INTEGER NOT NULL, `json` TEXT NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "ordine",
+            "columnName": "ordine",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "json",
+            "columnName": "json",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "seguiti",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`tipo` TEXT NOT NULL, `nome` TEXT NOT NULL, `aggiunto` INTEGER NOT NULL, PRIMARY KEY(`tipo`, `nome`))",
+        "fields": [
+          {
+            "fieldPath": "tipo",
+            "columnName": "tipo",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "nome",
+            "columnName": "nome",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "aggiunto",
+            "columnName": "aggiunto",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "tipo",
+            "nome"
+          ]
+        },
+        "indices": [],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "salvati",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`eventoId` TEXT NOT NULL, `impronta` TEXT NOT NULL, `titolo` TEXT NOT NULL, `inizio` INTEGER NOT NULL, PRIMARY KEY(`eventoId`))",
+        "fields": [
+          {
+            "fieldPath": "eventoId",
+            "columnName": "eventoId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "impronta",
+            "columnName": "impronta",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "titolo",
+            "columnName": "titolo",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "inizio",
+            "columnName": "inizio",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "eventoId"
+          ]
+        },
+        "indices": [],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "promemoria",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`eventoId` TEXT NOT NULL, `impronta` TEXT NOT NULL, `titolo` TEXT NOT NULL, `inizio` INTEGER NOT NULL, `allarme` INTEGER NOT NULL, `automatico` INTEGER NOT NULL, `notificato` INTEGER NOT NULL, PRIMARY KEY(`eventoId`))",
+        "fields": [
+          {
+            "fieldPath": "eventoId",
+            "columnName": "eventoId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "impronta",
+            "columnName": "impronta",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "titolo",
+            "columnName": "titolo",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "inizio",
+            "columnName": "inizio",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "allarme",
+            "columnName": "allarme",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "automatico",
+            "columnName": "automatico",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "notificato",
+            "columnName": "notificato",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "eventoId"
+          ]
+        },
+        "indices": [],
+        "foreignKeys": []
+      }
+    ],
+    "views": [],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '59d57e58575966aca8604b0260307600')"
+    ]
+  }
+}

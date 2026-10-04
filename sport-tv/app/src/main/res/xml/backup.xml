@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Si salvano preferiti e impostazioni; la cache degli eventi si riscarica. -->
+<full-backup-content>
+    <include domain="database" path="sportintv.db" />
+    <include domain="file" path="datastore/impostazioni.preferences_pb" />
+</full-backup-content>

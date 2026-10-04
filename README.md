@@ -13,6 +13,11 @@ la schermata iniziale del telefono: non è una pagina del sito, è codice che
 GitHub compila da solo e da cui esce l'APK da installare. Le istruzioni stanno
 in `meteo-android/README.md`.
 
+In `sport-tv/` c'è **Sport in TV Italia**, l'app Android che mostra gli eventi
+sportivi trasmessi legalmente in Italia oggi e nei 14 giorni successivi, con il
+suo servizio dati gratuito su GitHub Actions. Istruzioni, fonti e verifiche
+stanno in `sport-tv/README.md`, `sport-tv/FONTI.md` e `sport-tv/VERIFICHE.md`.
+
 Per collegare un dominio personalizzato basta aggiungere un file `CNAME` con
 dentro il dominio, e impostarlo in Settings → Pages.
 
