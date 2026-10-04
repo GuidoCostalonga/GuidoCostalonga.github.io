@@ -254,6 +254,30 @@ class LogicaTest {
     }
 
     @Test
+    fun integra_fonteMancanteDalServizioAggiuntaDalTelefono() = kotlinx.coroutines.test.runTest {
+        val rai = trasmesso("raiplay", "Rai 2", "2026-10-06T13:25:00Z", "Tre Valli Varesine", sport = Sport.CICLISMO, tipo = TipoTrasmissione.NON_INDICATO)
+        val dazn = trasmesso("dazn", "DAZN", "2026-10-06T13:25:00Z", "Tre Valli Varesine", sport = Sport.CICLISMO)
+        val servizio = Raccoglitore(
+            listOf(Finto("raiplay") { RisultatoFonte(listOf(rai), 1, 0) }, Finto("dazn") { throw java.io.IOException("rifiutato") }),
+        ).raccogli(finestra, null, adesso)
+        assertEquals(StatoFonte.ERRORE, servizio.fonti[1].stato)
+        assertEquals(1, servizio.eventi.single().trasmissioni.size)
+
+        val telefono = Raccoglitore(listOf(Finto("dazn") { RisultatoFonte(listOf(dazn), 1, 0) })).raccogli(finestra, servizio, adesso)
+        val unito = Raccoglitore.integra(servizio, telefono, finestra)
+        assertEquals(listOf(StatoFonte.OK, StatoFonte.OK), unito.fonti.map { it.stato })
+        // Stesso evento, due trasmissioni: Rai dal servizio, DAZN dal telefono.
+        assertEquals(setOf("Rai 2", "DAZN"), unito.eventi.single().trasmissioni.map { it.canale }.toSet())
+    }
+
+    @Test
+    fun raccoglitore_motivoDellErroreRiportato() = kotlinx.coroutines.test.runTest {
+        val p = Raccoglitore(listOf(Finto("x") { RisultatoFonte(emptyList(), 0, 3, "La fonte ha risposto con il codice 403") }))
+            .raccogli(finestra, null, adesso)
+        assertTrue(p.fonti.single().messaggio!!.contains("403"))
+    }
+
+    @Test
     fun pacchetto_andataERitornoInJson() {
         val e = Unione.unisci(listOf(calendario("2026-10-18T16:00:00Z", listOf("Milan", "Atalanta"))))
         val p = Pacchetto(generato = adesso, da = finestra.da, a = finestra.a, fonti = emptyList(), eventi = e)

@@ -149,18 +149,15 @@ class RaiPlay : Connettore {
         val esiti = CANALI.map { canale ->
             async { raccogliCanale(canale, finestra, http) }
         }.awaitAll()
-        RisultatoFonte(
-            elementi = esiti.flatMap { it.first },
-            riuscite = esiti.sumOf { it.second },
-            fallite = esiti.sumOf { it.third },
-        )
+        RisultatoFonte(esiti.flatMap { it.elementi }, esiti.sumOf { it.riuscite }, esiti.sumOf { it.fallite }, esiti.firstNotNullOfOrNull { it.messaggio })
     }
 
     /** Giorno dopo giorno finché Rai non risponde 404: oltre quel giorno il palinsesto non è ancora pubblicato. */
-    private suspend fun raccogliCanale(canale: Canale, finestra: Finestra, http: Http): Triple<List<Elemento>, Int, Int> {
+    private suspend fun raccogliCanale(canale: Canale, finestra: Finestra, http: Http): RisultatoFonte {
         val elementi = mutableListOf<Elemento>()
         var riuscite = 0
         var fallite = 0
+        var primoErrore: String? = null
         for (giorno in finestra.date) {
             val indirizzo = "https://www.raiplay.it/palinsesto/app/${canale.codice}/${giorno.format(formatoUrl)}.json"
             try {
@@ -170,12 +167,14 @@ class RaiPlay : Connettore {
             } catch (e: RispostaNonValida) {
                 if (e.codice == 404) break
                 fallite++
+                if (primoErrore == null) primoErrore = org.costalonga.sportintv.raccolta.Raccoglitore.descrivi(e)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
                 fallite++
+                if (primoErrore == null) primoErrore = org.costalonga.sportintv.raccolta.Raccoglitore.descrivi(e)
             }
         }
-        return Triple(elementi, riuscite, fallite)
+        return RisultatoFonte(elementi, riuscite, fallite, primoErrore)
     }
 }

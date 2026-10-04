@@ -140,6 +140,7 @@ class Dazn : Connettore {
             elementi = esiti.flatMap { it.getOrNull() ?: emptyList() },
             riuscite = esiti.count { it.isSuccess },
             fallite = esiti.count { it.isFailure },
+            messaggio = esiti.firstNotNullOfOrNull { it.exceptionOrNull() as? Exception }?.let { org.costalonga.sportintv.raccolta.Raccoglitore.descrivi(it) },
         )
     }
 }

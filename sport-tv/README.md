@@ -48,7 +48,9 @@ Il modulo `raccolta` è usato due volte:
    ogni 3 ore raccoglie i palinsesti e pubblica `eventi.json` sul ramo
    `dati-sport-tv` del deposito;
 2. dall'**app**, che legge `eventi.json` dal servizio e, se il servizio non
-   risponde o è fermo da oltre 12 ore, interroga direttamente le fonti.
+   risponde o è fermo da oltre 12 ore, interroga direttamente le fonti. Se il
+   servizio segnala una fonte non raggiungibile (succede con DAZN, che rifiuta i
+   server di GitHub), l'app legge solo quella fonte dal telefono e la unisce.
 
 ### Perché GitHub Actions per il servizio
 
