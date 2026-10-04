@@ -1,0 +1,73 @@
+# Compila l'app Android "Sport in TV Italia", esegue le prove e lascia gli APK
+# fra i file dell'esecuzione (scheda Actions, in fondo alla pagina).
+name: Sport in TV · app Android
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "sport-tv/**"
+      - ".github/workflows/sport-tv-android.yml"
+  pull_request:
+    paths:
+      - "sport-tv/**"
+      - ".github/workflows/sport-tv-android.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  apk:
+    name: Prove e APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Scarica il codice
+        uses: actions/checkout@v4
+
+      - name: Prepara Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Ricorda le dipendenze
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: sport-tv-${{ hashFiles('sport-tv/**/*.gradle.kts', 'sport-tv/gradle/wrapper/gradle-wrapper.properties') }}
+          restore-keys: sport-tv-
+
+      - name: Prove automatiche (raccolta e app)
+        working-directory: sport-tv
+        run: ./gradlew --no-daemon :raccolta:test :app:testDebugUnitTest
+
+      - name: Compila gli APK e controlla il codice
+        working-directory: sport-tv
+        run: ./gradlew --no-daemon :app:assembleDebug :app:assembleRelease :app:lintDebug
+
+      - name: Metti a disposizione gli APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: SportInTV-apk
+          if-no-files-found: error
+          retention-days: 60
+          path: |
+            sport-tv/app/build/outputs/apk/debug/*.apk
+            sport-tv/app/build/outputs/apk/release/*.apk
+
+      - name: Metti a disposizione schermate e resoconti
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: SportInTV-resoconti
+          if-no-files-found: ignore
+          path: |
+            sport-tv/app/build/schermate/**
+            sport-tv/app/build/reports/**
+            sport-tv/raccolta/build/reports/**

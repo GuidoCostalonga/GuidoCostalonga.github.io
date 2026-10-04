@@ -1,0 +1,78 @@
+# Servizio online di "Sport in TV Italia": raccoglie i palinsesti dalle fonti
+# ufficiali e pubblica eventi.json sul ramo dati-sport-tv di questo deposito.
+#
+# Gratuito: GitHub Actions su un deposito pubblico non ha costi; nessun
+# segreto, nessun servizio esterno. Il file pubblicato si legge da
+# https://raw.githubusercontent.com/GuidoCostalonga/GuidoCostalonga.github.io/dati-sport-tv/eventi.json
+name: Sport in TV · dati
+
+on:
+  schedule:
+    # Ogni 3 ore, al minuto 17 (si evita l'ora esatta, la più affollata).
+    - cron: "17 */3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+# Mai due raccolte insieme.
+concurrency:
+  group: sport-tv-dati
+  cancel-in-progress: false
+
+jobs:
+  raccolta:
+    name: Raccogli e pubblica
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Scarica il codice
+        uses: actions/checkout@v4
+
+      - name: Prepara Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Ricorda le dipendenze
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: sport-tv-raccolta-${{ hashFiles('sport-tv/**/*.gradle.kts', 'sport-tv/gradle/wrapper/gradle-wrapper.properties') }}
+          restore-keys: sport-tv-raccolta-
+
+      - name: Recupera il pacchetto precedente
+        # Serve a conservare i dati delle fonti che questa volta non rispondono.
+        run: |
+          curl -sSf --max-time 30 -o "$RUNNER_TEMP/precedente.json" \
+            "https://raw.githubusercontent.com/${{ github.repository }}/dati-sport-tv/eventi.json" \
+            || echo "Nessun pacchetto precedente: è la prima raccolta."
+
+      - name: Raccogli dalle fonti
+        working-directory: sport-tv
+        run: |
+          ARGOMENTI="--uscita $RUNNER_TEMP/uscita/eventi.json"
+          if [ -s "$RUNNER_TEMP/precedente.json" ]; then ARGOMENTI="$ARGOMENTI --precedente $RUNNER_TEMP/precedente.json"; fi
+          ./gradlew --no-daemon -q :raccolta:run --args="$ARGOMENTI"
+
+      - name: Pubblica sul ramo dati-sport-tv
+        # Un solo commit, sostituito ogni volta: il ramo non cresce.
+        run: |
+          cd "$RUNNER_TEMP/uscita"
+          cat > LEGGIMI.md <<'TESTO'
+          # Dati di Sport in TV Italia
+
+          File generato automaticamente da `.github/workflows/sport-tv-dati.yml`
+          sul ramo principale. Non modificare a mano: ogni raccolta lo sostituisce.
+          TESTO
+          git init -q -b dati-sport-tv
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add eventi.json LEGGIMI.md
+          git commit -q -m "Dati del $(date -u +%Y-%m-%dT%H:%MZ)"
+          git push -q --force "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" dati-sport-tv
+          echo "Pubblicato: $(du -h eventi.json | cut -f1)"

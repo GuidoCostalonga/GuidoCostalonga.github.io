@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Sport in TV Italia</string>
+    <string name="canale_promemoria">Promemoria degli eventi</string>
+    <string name="canale_promemoria_descrizione">Avvisi prima dell\'inizio degli eventi seguiti e dei cambi di orario</string>
+</resources>
