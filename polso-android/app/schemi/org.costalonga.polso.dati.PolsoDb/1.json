@@ -1,0 +1,593 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 1,
+    "identityHash": "0404a0b950762ae0c42335cc4a93f338",
+    "entities": [
+      {
+        "tableName": "misure",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `chiave` TEXT NOT NULL, `metrica` TEXT NOT NULL, `inizio` INTEGER NOT NULL, `fine` INTEGER NOT NULL, `valore` REAL NOT NULL, `unita` TEXT NOT NULL, `scartoSec` INTEGER, `fonte` TEXT NOT NULL, `origine` TEXT NOT NULL, `dispositivo` TEXT NOT NULL, `idEsterno` TEXT, `modificataIl` INTEGER, `lotto` INTEGER NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "chiave",
+            "columnName": "chiave",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "metrica",
+            "columnName": "metrica",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "inizio",
+            "columnName": "inizio",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fine",
+            "columnName": "fine",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "valore",
+            "columnName": "valore",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "unita",
+            "columnName": "unita",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "scartoSec",
+            "columnName": "scartoSec",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "fonte",
+            "columnName": "fonte",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "origine",
+            "columnName": "origine",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "dispositivo",
+            "columnName": "dispositivo",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "idEsterno",
+            "columnName": "idEsterno",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "modificataIl",
+            "columnName": "modificataIl",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "lotto",
+            "columnName": "lotto",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_misure_chiave",
+            "unique": true,
+            "columnNames": [
+              "chiave"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_misure_chiave` ON `${TABLE_NAME}` (`chiave`)"
+          },
+          {
+            "name": "index_misure_metrica_inizio",
+            "unique": false,
+            "columnNames": [
+              "metrica",
+              "inizio"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_misure_metrica_inizio` ON `${TABLE_NAME}` (`metrica`, `inizio`)"
+          },
+          {
+            "name": "index_misure_idEsterno",
+            "unique": false,
+            "columnNames": [
+              "idEsterno"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_misure_idEsterno` ON `${TABLE_NAME}` (`idEsterno`)"
+          }
+        ]
+      },
+      {
+        "tableName": "sonno",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `chiave` TEXT NOT NULL, `inizio` INTEGER NOT NULL, `fine` INTEGER NOT NULL, `scartoSec` INTEGER, `fonte` TEXT NOT NULL, `origine` TEXT NOT NULL, `idEsterno` TEXT, `fasi` TEXT NOT NULL, `lotto` INTEGER NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "chiave",
+            "columnName": "chiave",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "inizio",
+            "columnName": "inizio",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fine",
+            "columnName": "fine",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "scartoSec",
+            "columnName": "scartoSec",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "fonte",
+            "columnName": "fonte",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "origine",
+            "columnName": "origine",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "idEsterno",
+            "columnName": "idEsterno",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "fasi",
+            "columnName": "fasi",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lotto",
+            "columnName": "lotto",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_sonno_chiave",
+            "unique": true,
+            "columnNames": [
+              "chiave"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_sonno_chiave` ON `${TABLE_NAME}` (`chiave`)"
+          },
+          {
+            "name": "index_sonno_fine",
+            "unique": false,
+            "columnNames": [
+              "fine"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_sonno_fine` ON `${TABLE_NAME}` (`fine`)"
+          },
+          {
+            "name": "index_sonno_idEsterno",
+            "unique": false,
+            "columnNames": [
+              "idEsterno"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_sonno_idEsterno` ON `${TABLE_NAME}` (`idEsterno`)"
+          }
+        ]
+      },
+      {
+        "tableName": "allenamenti",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `chiave` TEXT NOT NULL, `json` TEXT NOT NULL, `inizio` INTEGER NOT NULL, `fonte` TEXT NOT NULL, `idEsterno` TEXT, `lotto` INTEGER NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "chiave",
+            "columnName": "chiave",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "json",
+            "columnName": "json",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "inizio",
+            "columnName": "inizio",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fonte",
+            "columnName": "fonte",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "idEsterno",
+            "columnName": "idEsterno",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "lotto",
+            "columnName": "lotto",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_allenamenti_chiave",
+            "unique": true,
+            "columnNames": [
+              "chiave"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_allenamenti_chiave` ON `${TABLE_NAME}` (`chiave`)"
+          },
+          {
+            "name": "index_allenamenti_inizio",
+            "unique": false,
+            "columnNames": [
+              "inizio"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_allenamenti_inizio` ON `${TABLE_NAME}` (`inizio`)"
+          },
+          {
+            "name": "index_allenamenti_idEsterno",
+            "unique": false,
+            "columnNames": [
+              "idEsterno"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_allenamenti_idEsterno` ON `${TABLE_NAME}` (`idEsterno`)"
+          }
+        ]
+      },
+      {
+        "tableName": "diario",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `tipo` TEXT NOT NULL, `istante` INTEGER NOT NULL, `valore` REAL, `valore2` REAL, `testo` TEXT NOT NULL, `creataIl` INTEGER NOT NULL, `modificataIl` INTEGER NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tipo",
+            "columnName": "tipo",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "istante",
+            "columnName": "istante",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "valore",
+            "columnName": "valore",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "valore2",
+            "columnName": "valore2",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "testo",
+            "columnName": "testo",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "creataIl",
+            "columnName": "creataIl",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "modificataIl",
+            "columnName": "modificataIl",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_diario_istante",
+            "unique": false,
+            "columnNames": [
+              "istante"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_diario_istante` ON `${TABLE_NAME}` (`istante`)"
+          }
+        ]
+      },
+      {
+        "tableName": "importazioni",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `fonte` TEXT NOT NULL, `descrizione` TEXT NOT NULL, `avviataIl` INTEGER NOT NULL, `conclusaIl` INTEGER, `da` INTEGER, `a` INTEGER, `nuovi` INTEGER NOT NULL, `aggiornati` INTEGER NOT NULL, `eliminati` INTEGER NOT NULL, `errori` TEXT NOT NULL, `esito` TEXT NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fonte",
+            "columnName": "fonte",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "descrizione",
+            "columnName": "descrizione",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "avviataIl",
+            "columnName": "avviataIl",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "conclusaIl",
+            "columnName": "conclusaIl",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "da",
+            "columnName": "da",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "a",
+            "columnName": "a",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "nuovi",
+            "columnName": "nuovi",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "aggiornati",
+            "columnName": "aggiornati",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "eliminati",
+            "columnName": "eliminati",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "errori",
+            "columnName": "errori",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "esito",
+            "columnName": "esito",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "riepiloghi",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `tipo` TEXT NOT NULL, `da` TEXT NOT NULL, `a` TEXT NOT NULL, `testo` TEXT NOT NULL, `motore` TEXT NOT NULL, `verificato` INTEGER NOT NULL, `fatti` TEXT NOT NULL, `creatoIl` INTEGER NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tipo",
+            "columnName": "tipo",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "da",
+            "columnName": "da",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "a",
+            "columnName": "a",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "testo",
+            "columnName": "testo",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "motore",
+            "columnName": "motore",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "verificato",
+            "columnName": "verificato",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fatti",
+            "columnName": "fatti",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "creatoIl",
+            "columnName": "creatoIl",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_riepiloghi_tipo_da",
+            "unique": false,
+            "columnNames": [
+              "tipo",
+              "da"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_riepiloghi_tipo_da` ON `${TABLE_NAME}` (`tipo`, `da`)"
+          }
+        ]
+      },
+      {
+        "tableName": "notifiche",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `regola` TEXT NOT NULL, `titolo` TEXT NOT NULL, `testo` TEXT NOT NULL, `motivo` TEXT NOT NULL, `inviataIl` INTEGER NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "regola",
+            "columnName": "regola",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "titolo",
+            "columnName": "titolo",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "testo",
+            "columnName": "testo",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "motivo",
+            "columnName": "motivo",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "inviataIl",
+            "columnName": "inviataIl",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        }
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '0404a0b950762ae0c42335cc4a93f338')"
+    ]
+  }
+}

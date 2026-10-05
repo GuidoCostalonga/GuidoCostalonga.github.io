@@ -18,6 +18,11 @@ sportivi trasmessi legalmente in Italia oggi e nei 14 giorni successivi, con il
 suo servizio dati gratuito su GitHub Actions. Istruzioni, fonti e verifiche
 stanno in `sport-tv/README.md`, `sport-tv/FONTI.md` e `sport-tv/VERIFICHE.md`.
 
+In `polso-android/` c'è **Polso**, l'app Android personale che raccoglie i dati dello
+smartwatch HONOR tramite HONOR Health e Health Connect e li trasforma in statistiche,
+grafici, riepiloghi e risposte, con IA locale facoltativa. Istruzioni, verifiche e
+fonti stanno in `polso-android/README.md`, `COMPATIBILITA.md` e `VERIFICHE.md`.
+
 Per collegare un dominio personalizzato basta aggiungere un file `CNAME` con
 dentro il dominio, e impostarlo in Settings → Pages.
 
