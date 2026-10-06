@@ -16,6 +16,7 @@ import org.costalonga.sportintv.raccolta.Pacchetto
 import org.costalonga.sportintv.raccolta.Raccoglitore
 import org.costalonga.sportintv.raccolta.StatoFonte
 import org.costalonga.sportintv.raccolta.Unione
+import org.costalonga.sportintv.raccolta.connettori.tuttiIConnettori
 import java.time.Duration
 import java.time.Instant
 
@@ -106,6 +107,26 @@ class Archivio(
                 throw e
             } catch (e: Exception) {
                 errori += "Lettura diretta delle fonti non riuscita (${e.javaClass.simpleName})"
+            }
+        }
+
+        // Il servizio ha dati, ma alcune fonti non gli rispondono (per esempio
+        // DAZN rifiuta i server di GitHub): il telefono le legge da sé e le unisce.
+        val dalServizio = pacchetto
+        if (dalServizio != null && pref.origine == Origine.AUTOMATICA) {
+            val mancanti = dalServizio.fonti.filter { it.stato == StatoFonte.ERRORE || it.stato == StatoFonte.DATI_PRECEDENTI }.map { it.id }.toSet()
+            if (mancanti.isNotEmpty()) {
+                try {
+                    val finestra = Finestra.standard(adesso)
+                    val aggiunta = Raccoglitore(tuttiIConnettori().filter { it.id in mancanti }, http)
+                        .raccogli(finestra, pacchettoLocale() ?: dalServizio, adesso)
+                    pacchetto = Raccoglitore.integra(dalServizio, aggiunta, finestra)
+                    provenienza = "servizio e fonti"
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (_: Exception) {
+                    // Si tiene il pacchetto del servizio così com'è.
+                }
             }
         }
 

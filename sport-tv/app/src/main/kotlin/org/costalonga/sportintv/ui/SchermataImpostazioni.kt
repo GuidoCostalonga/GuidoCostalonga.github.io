@@ -135,7 +135,7 @@ fun SchermataImpostazioni(modello: Modello, apriInformazioni: () -> Unit) {
             val generato = stato.generato?.let { Instant.ofEpochMilli(it) }
             Text(
                 if (ricevuto != null) "Ultimo aggiornamento riuscito: ${Formato.momento(ricevuto, adesso)}" +
-                    (generato?.let { "\nDati raccolti dalle fonti ${Formato.momento(it, adesso)} (${if (stato.provenienza == "servizio") "dal servizio online" else "direttamente dal telefono"})" } ?: "")
+                    (generato?.let { "\nDati raccolti dalle fonti ${Formato.momento(it, adesso)} (${when (stato.provenienza) { "servizio" -> "dal servizio online"; "servizio e fonti" -> "dal servizio online, completati dal telefono"; else -> "direttamente dal telefono" }})" } ?: "")
                 else "Nessun aggiornamento riuscito finora.",
                 style = MaterialTheme.typography.bodyMedium,
             )
