@@ -1,0 +1,1253 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Database Friuli Venezia Giulia</title>
+<meta name="description" content="Cruscotto interattivo del Database Friuli Venezia Giulia: 102 fogli e oltre 345.000 record pubblici su comuni, amministratori, turismo, rifiuti, commercio, salute, trasporti e annuario statistico 2026, con filtri per ogni colonna, schede comunali e mappa.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap">
+<style>
+/* Impianto: barra di stato, intestazione fissa con schede, filtro territoriale globale, pannelli a griglia con cornice oro */
+:root{
+  --primario-900:#07213A; --primario-800:#0B3359; --primario-700:#0E4273; --primario-600:#155E9E; --primario-500:#1B6FB5; --primario-100:#E1EDF7; --primario-50:#F0F6FB;
+  --accento-600:#B67524; --accento-500:#D8973C; --accento-200:#FCEBB9; --accento-100:#FEF8E3;
+  --enfasi-600:#A41D22; --enfasi-500:#C1292E; --enfasi-50:#FDF2F2;
+  --bg:#F8F7F4; --dot1:#155E9E0A; --dot2:#D8973C0C;
+  --surface:#FFFFFF; --surface-2:#FAF9F6; --surface-3:#F1EEE7;
+  --line:#E6E0D4; --line-strong:#D4CBBF; --cornice:rgba(216,151,60,.32);
+  --ink:#202226; --ink-2:#52565E; --ink-3:#7A7E86;
+  --link:#155E9E; --chip:#E1EDF7; --chip-ink:#0E4273;
+  --ok:#1F7A55; --ok-bg:#E5F4EC; --warn:#8A5313; --warn-bg:#FEF8E3; --bad:#A41D22; --bad-bg:#FDF2F2;
+  --c1:#1B6FB5; --c2:#C98520; --c3:#7A5BB0; --c4:#1F9A6E; --c5:#C1292E; --c6:#0E97C2;
+  --map-bg:#F3F1EB; --shadow:0 1px 3px rgba(11,51,89,.06);
+  --f-titolo:"Cinzel", "Trajan Pro", Georgia, serif;
+  --f-testo:"Plus Jakarta Sans", "Segoe UI", system-ui, sans-serif;
+  --f-dati:ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0C1520; --dot1:#3D8BD612; --dot2:#B97F2810;
+  --surface:#14202C; --surface-2:#182635; --surface-3:#1F3041;
+  --line:#26394C; --line-strong:#34495E; --cornice:rgba(201,138,46,.30);
+  --ink:#E8ECF1; --ink-2:#B3BDC9; --ink-3:#8593A3;
+  --link:#7FB6EA; --chip:#1E3A57; --chip-ink:#CFE3F6;
+  --primario-50:#122335; --primario-100:#1A3550; --accento-100:#2E2516; --accento-200:#4A3A1E; --enfasi-50:#3A1A1C;
+  --ok:#5CCB9A; --ok-bg:#163327; --warn:#E3B66A; --warn-bg:#33281A; --bad:#F08A8D; --bad-bg:#3A1A1C;
+  --c1:#3D8BD6; --c2:#B97F28; --c3:#9171CC; --c4:#30A479; --c5:#C73A40; --c6:#0E8FB8;
+  --map-bg:#101B26; --shadow:0 1px 3px rgba(0,0,0,.35); color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#0C1520; --dot1:#3D8BD612; --dot2:#B97F2810;
+  --surface:#14202C; --surface-2:#182635; --surface-3:#1F3041;
+  --line:#26394C; --line-strong:#34495E; --cornice:rgba(201,138,46,.30);
+  --ink:#E8ECF1; --ink-2:#B3BDC9; --ink-3:#8593A3;
+  --link:#7FB6EA; --chip:#1E3A57; --chip-ink:#CFE3F6;
+  --primario-50:#122335; --primario-100:#1A3550; --accento-100:#2E2516; --accento-200:#4A3A1E; --enfasi-50:#3A1A1C;
+  --ok:#5CCB9A; --ok-bg:#163327; --warn:#E3B66A; --warn-bg:#33281A; --bad:#F08A8D; --bad-bg:#3A1A1C;
+  --c1:#3D8BD6; --c2:#B97F28; --c3:#9171CC; --c4:#30A479; --c5:#C73A40; --c6:#0E8FB8;
+  --map-bg:#101B26; --shadow:0 1px 3px rgba(0,0,0,.35); color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;font-family:var(--f-testo);font-size:14px;line-height:1.5;color:var(--ink);background-color:var(--bg);
+  background-image:radial-gradient(var(--dot1) 1px,transparent 1px),radial-gradient(var(--dot2) 1px,transparent 1px);
+  background-size:32px 32px;background-position:0 0,16px 16px}
+a{color:var(--link)}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accento-500);outline-offset:2px}
+.num,td.n,.tab-num{font-variant-numeric:tabular-nums}
+h1,h2,h3{text-wrap:balance;margin:0}
+.wrap{max-width:1440px;margin:0 auto;padding-inline:16px}
+@media(min-width:900px){.wrap{padding-inline:24px}}
+
+/* barra di stato */
+.stato{background:var(--primario-900);color:#DDE7F1;font-size:12px}
+.stato .wrap{display:flex;justify-content:space-between;gap:12px;padding-block:6px;flex-wrap:wrap}
+.pallino{display:inline-block;width:7px;height:7px;border-radius:50%;background:#F2B94A;margin-right:7px;vertical-align:middle;animation:pulsa 2.4s ease-in-out infinite}
+@keyframes pulsa{50%{opacity:.35}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* intestazione */
+header.testa{position:sticky;top:env(safe-area-inset-top,0px);z-index:40;background:color-mix(in srgb,var(--surface) 92%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--cornice)}
+.testa .riga{display:flex;align-items:center;gap:16px;padding-block:10px;flex-wrap:wrap}
+.marchio{display:flex;align-items:center;gap:10px;min-width:0}
+.sigla{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:var(--primario-100);color:var(--primario-700);font-family:var(--f-titolo);font-weight:800;font-size:13px;border:1px solid var(--cornice);flex:none}
+:root[data-theme="dark"] .sigla{color:var(--chip-ink)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .sigla{color:var(--chip-ink)}}
+.marchio h1{font-family:var(--f-titolo);font-size:17px;letter-spacing:.04em;font-weight:800;line-height:1.15}
+.marchio small{display:block;font-size:11px;color:var(--ink-3);letter-spacing:.08em;text-transform:uppercase}
+.cerca-globale{flex:1;min-width:220px;position:relative;max-width:520px}
+.cerca-globale input{width:100%;padding:9px 12px 9px 34px;border:1px solid var(--line-strong);border-radius:999px;background:var(--surface-2)}
+.cerca-globale svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--ink-3)}
+.suggerimenti{position:absolute;left:0;right:0;top:calc(100% + 6px);background:var(--surface);border:1px solid var(--cornice);border-radius:var(--r);box-shadow:0 10px 30px rgba(7,33,58,.18);max-height:360px;overflow:auto;z-index:60}
+.suggerimenti button{display:flex;justify-content:space-between;gap:10px;width:100%;text-align:left;border:0;background:none;padding:8px 12px;cursor:pointer}
+.suggerimenti button:hover,.suggerimenti button.att{background:var(--primario-50)}
+.suggerimenti .tipo{font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.06em}
+.tema-btn{border:1px solid var(--line-strong);background:var(--surface);border-radius:999px;padding:7px 12px;cursor:pointer;font-size:12px}
+nav.schede{display:flex;gap:4px;overflow-x:auto;padding-bottom:8px;scrollbar-width:thin}
+nav.schede button{flex:none;border:1px solid transparent;background:none;padding:7px 13px;border-radius:999px;cursor:pointer;font-weight:600;color:var(--ink-2);font-size:13px}
+nav.schede button:hover{background:var(--surface-3)}
+nav.schede button[aria-selected="true"]{background:var(--primario-700);color:#fff;border-color:var(--primario-700)}
+
+/* filtro territoriale */
+.territorio{background:var(--surface-2);border-bottom:1px solid var(--line)}
+.territorio .wrap{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding-block:8px;font-size:13px}
+.territorio label{font-weight:600;color:var(--ink-2);font-size:12px;text-transform:uppercase;letter-spacing:.06em}
+select,input[type=text],input[type=number],input[type=search],input[type=date]{border:1px solid var(--line-strong);border-radius:8px;background:var(--surface);padding:6px 9px;min-width:0;max-width:100%}
+.btn{border:1px solid var(--line-strong);background:var(--surface);border-radius:8px;padding:6px 12px;cursor:pointer;font-weight:600;font-size:13px;display:inline-flex;align-items:center;gap:6px}
+.btn:hover{border-color:var(--accento-500)}
+.btn.pri{background:var(--primario-700);border-color:var(--primario-700);color:#fff}
+.btn.pri:hover{background:var(--primario-600)}
+.btn.oro{background:var(--accento-500);border-color:var(--accento-500);color:#20160A}
+.btn.mini{padding:3px 8px;font-size:12px}
+.chip{display:inline-flex;align-items:center;gap:6px;background:var(--chip);color:var(--chip-ink);border-radius:999px;padding:3px 10px;font-size:12px;font-weight:600}
+.chip button{border:0;background:none;cursor:pointer;color:inherit;padding:0;font-size:14px;line-height:1}
+
+/* banner */
+.banner{background:linear-gradient(120deg,var(--primario-900),var(--primario-700));color:#fff;border-radius:14px;padding:22px 24px;display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap;align-items:flex-end;margin-top:18px;border:1px solid var(--cornice)}
+.banner .sopra{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#F7D678;font-weight:700}
+.banner h2{font-family:var(--f-titolo);font-size:clamp(20px,3vw,28px);font-weight:800;margin-top:4px}
+.banner select{color:var(--ink)}
+.banner p{margin:6px 0 0;max-width:72ch;color:#D6E3F0}
+
+main{padding-block:0 40px}
+section.vista{display:none}
+section.vista.attiva{display:block}
+.griglia{display:grid;gap:16px;margin-top:16px}
+.g4{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+.g2{grid-template-columns:repeat(auto-fit,minmax(min(100%,460px),1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr))}
+.g21{grid-template-columns:minmax(0,2fr) minmax(0,1fr)}
+@media(max-width:980px){.g21{grid-template-columns:minmax(0,1fr)}}
+.card{background:var(--surface);border:1px solid var(--cornice);border-radius:var(--r);box-shadow:var(--shadow),inset 0 1px 0 rgba(255,255,255,.04);padding:16px;min-width:0}
+.card h3{font-family:var(--f-titolo);font-size:15px;font-weight:700;letter-spacing:.02em}
+.card .sotto{color:var(--ink-3);font-size:12px;margin:2px 0 10px}
+.card-testa{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap;margin-bottom:8px}
+.kpi{border-top:4px solid var(--c1)}
+.kpi.k2{border-top-color:var(--accento-500)} .kpi.k3{border-top-color:var(--enfasi-500)} .kpi.k4{border-top-color:var(--c4)}
+.kpi .eti{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-3);font-weight:700}
+.kpi .val{font-family:var(--f-titolo);font-size:clamp(22px,2.6vw,30px);font-weight:800;line-height:1.15;margin-top:6px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.kpi .desc{font-size:12px;color:var(--ink-2);margin-top:4px}
+.grafico{position:relative;height:300px}
+.grafico.alto{height:420px}
+.grafico.basso{height:220px}
+.vuoto{color:var(--ink-3);font-style:italic;padding:18px 0}
+.avviso{border-left:4px solid var(--accento-500);background:var(--warn-bg);color:var(--ink);padding:10px 14px;border-radius:0 8px 8px 0;font-size:13px}
+.avviso.rosso{border-left-color:var(--enfasi-500);background:var(--bad-bg)}
+.da-verificare{color:var(--bad);font-style:italic;font-weight:600}
+.pulsantiera{display:flex;gap:4px;flex-wrap:wrap}
+.pulsantiera button{border:1px solid var(--line-strong);background:var(--surface);border-radius:999px;padding:4px 11px;font-size:12px;cursor:pointer;font-weight:600}
+.pulsantiera button[aria-pressed="true"]{background:var(--primario-700);border-color:var(--primario-700);color:#fff}
+.legenda{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--ink-2);margin-top:6px}
+.legenda span::before{content:"";display:inline-block;width:10px;height:10px;border-radius:3px;background:var(--col);margin-right:6px;vertical-align:-1px}
+.barre .riga-b{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;font-size:13px;margin-bottom:9px}
+.barre .riga-b .tr{grid-column:1/-1;height:7px;background:var(--surface-3);border-radius:4px;overflow:hidden}
+.barre .riga-b .tr i{display:block;height:100%;background:var(--c1);border-radius:4px}
+.barre .riga-b b{font-family:var(--f-dati);font-weight:500;font-size:12px}
+.barre button{all:unset;cursor:pointer;color:var(--link)}
+
+/* tabelle */
+.tab-box{overflow:auto;border:1px solid var(--line);border-radius:8px;max-height:640px}
+table{border-collapse:collapse;width:100%;font-size:13px}
+thead th{position:sticky;top:0;background:var(--surface-3);font-family:var(--f-titolo);font-weight:700;font-size:11.5px;letter-spacing:.04em;text-transform:uppercase;text-align:left;padding:8px 10px;border-bottom:1px solid var(--line-strong);white-space:nowrap;cursor:pointer;user-select:none;z-index:1}
+thead th .fr{color:var(--accento-600);margin-left:4px}
+tbody td{padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:top;max-width:340px;overflow-wrap:anywhere}
+tbody tr:hover{background:var(--primario-50);cursor:pointer}
+td.n{text-align:right;white-space:nowrap}
+.piede{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-top:10px;font-size:13px;color:var(--ink-2)}
+.sigillo{font-family:var(--f-dati);font-size:11px;color:var(--ink-3);border:1px dashed var(--line-strong);padding:2px 8px;border-radius:6px}
+.stato-pill{display:inline-block;padding:1px 8px;border-radius:999px;font-size:11.5px;font-weight:700}
+.sp-ok{background:var(--ok-bg);color:var(--ok)} .sp-warn{background:var(--warn-bg);color:var(--warn)} .sp-bad{background:var(--bad-bg);color:var(--bad)} .sp-blu{background:var(--chip);color:var(--chip-ink)}
+
+/* esploratore */
+.esplora{display:grid;grid-template-columns:340px minmax(0,1fr);gap:16px;margin-top:16px;align-items:start}
+@media(max-width:1000px){.esplora{grid-template-columns:minmax(0,1fr)}}
+.pannello-filtri{position:sticky;top:120px;max-height:calc(100vh - 140px);overflow:auto}
+@media(max-width:1000px){.pannello-filtri{position:static;max-height:none}}
+.campo{border-top:1px solid var(--line)}
+.campo>summary{list-style:none;cursor:pointer;padding:8px 2px;display:flex;justify-content:space-between;gap:8px;align-items:center;font-weight:600;font-size:13px}
+.campo>summary::-webkit-details-marker{display:none}
+.campo>summary .t{font-size:10.5px;color:var(--ink-3);font-weight:600;text-transform:uppercase;letter-spacing:.05em;flex:none}
+.campo>summary .nome{min-width:0;overflow-wrap:anywhere}
+.campo[data-attivo="1"]>summary .nome{color:var(--accento-600)}
+.campo[data-attivo="1"]>summary .nome::before{content:"● ";}
+.campo .corpo{padding:2px 2px 12px;display:grid;gap:8px}
+.lista-val{max-height:230px;overflow:auto;border:1px solid var(--line);border-radius:8px;padding:4px 6px;background:var(--surface-2)}
+.lista-val label{display:flex;gap:7px;align-items:flex-start;font-size:12.5px;padding:2px 0;cursor:pointer}
+.lista-val label span.c{margin-left:auto;color:var(--ink-3);font-family:var(--f-dati);font-size:11px;padding-left:6px}
+.lista-val label.zero{opacity:.45}
+.riga-in{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.riga-in>*{flex:1 1 90px}
+.riga-in .btn{flex:none}
+.barra-strumenti{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.conteggio{font-family:var(--f-titolo);font-weight:800;font-size:20px}
+.colonne-pop{position:absolute;right:0;top:calc(100% + 6px);z-index:30;width:min(340px,86vw);max-height:360px;overflow:auto;background:var(--surface);border:1px solid var(--cornice);border-radius:var(--r);padding:10px;box-shadow:0 10px 30px rgba(7,33,58,.2)}
+.colonne-pop label{display:flex;gap:6px;font-size:12.5px;padding:2px 0}
+.rel{position:relative}
+
+/* modale */
+.velo{position:fixed;inset:0;background:rgba(7,33,58,.62);backdrop-filter:blur(2px);z-index:80;display:grid;place-items:center;padding:16px}
+.modale{background:var(--surface);border-radius:14px;width:min(860px,100%);max-height:88vh;display:flex;flex-direction:column;border:1px solid var(--cornice);overflow:hidden}
+.modale .mt{background:linear-gradient(120deg,var(--primario-900),var(--primario-700));color:#fff;padding:16px 20px}
+.modale .mt small{color:#F7D678;letter-spacing:.1em;text-transform:uppercase;font-size:11px;font-weight:700}
+.modale .mt h3{font-family:var(--f-titolo);font-size:18px;margin-top:2px;overflow-wrap:anywhere}
+.modale .mc{padding:14px 20px;overflow:auto}
+.modale .mf{padding:12px 20px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}
+dl.campi{display:grid;grid-template-columns:minmax(120px,240px) minmax(0,1fr);gap:0;margin:0}
+dl.campi dt{font-weight:700;font-size:12px;color:var(--ink-2);padding:6px 10px 6px 0;border-bottom:1px solid var(--line);overflow-wrap:anywhere}
+dl.campi dd{margin:0;padding:6px 0;border-bottom:1px solid var(--line);overflow-wrap:anywhere;font-size:13px}
+@media(max-width:560px){dl.campi{grid-template-columns:minmax(0,1fr)} dl.campi dt{border-bottom:0;padding-bottom:0}}
+
+/* mappa */
+.mappa-box{position:relative;height:min(72vh,720px);min-height:420px;background:var(--map-bg);border-radius:var(--r);border:1px solid var(--cornice);overflow:hidden;touch-action:none}
+.mappa-box canvas{display:block;width:100%;height:100%;cursor:grab}
+.mappa-comandi{position:absolute;right:10px;top:10px;display:grid;gap:4px}
+.mappa-comandi button{width:34px;height:34px;border-radius:8px;border:1px solid var(--line-strong);background:var(--surface);cursor:pointer;font-weight:700;font-size:16px}
+.mappa-info{position:absolute;left:10px;bottom:10px;background:color-mix(in srgb,var(--surface) 92%,transparent);border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-size:12px;max-width:min(420px,80%)}
+.tip{position:absolute;pointer-events:none;background:var(--primario-900);color:#fff;border:1px solid var(--accento-500);border-radius:8px;padding:6px 9px;font-size:12px;max-width:280px;z-index:5}
+.strati label{display:flex;gap:8px;align-items:center;font-size:13px;padding:3px 0}
+.strati .pt{width:11px;height:11px;border-radius:50%;flex:none;border:2px solid var(--surface)}
+.strati .ln{width:16px;height:3px;border-radius:2px;flex:none}
+.strati h4{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-3);margin:12px 0 4px}
+
+footer.piedipagina{background:#202226;color:#C9CDD3;margin-top:30px;font-size:13px}
+footer.piedipagina .wrap{display:flex;gap:18px;justify-content:space-between;flex-wrap:wrap;padding-block:22px}
+footer.piedipagina b{font-family:var(--f-titolo);color:#fff;letter-spacing:.04em}
+footer.piedipagina a{color:#F2B94A}
+.toast{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));background:var(--primario-900);color:#fff;border:1px solid var(--accento-500);padding:10px 16px;border-radius:10px;z-index:90;transform:translateY(20px);opacity:0;transition:.25s;pointer-events:none;max-width:calc(100vw - 32px)}
+.toast.on{transform:none;opacity:1}
+.caricamento{display:flex;align-items:center;gap:10px;color:var(--ink-2);padding:30px 0}
+.ruota{width:18px;height:18px;border:3px solid var(--line);border-top-color:var(--accento-500);border-radius:50%;animation:gira .8s linear infinite}
+@keyframes gira{to{transform:rotate(360deg)}}
+.dl-mini{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:13px}
+.dl-mini dt{color:var(--ink-3)} .dl-mini dd{margin:0;font-weight:600;overflow-wrap:anywhere}
+.etichetta-ambito{font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.06em}
+.mute{color:var(--ink-3)}
+.ellissi{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+</style>
+</head>
+<body>
+<div class="stato"><div class="wrap">
+  <span><span class="pallino"></span>Database Friuli Venezia Giulia · fotografia dei dati pubblici consultati il 5 ottobre 2026</span>
+  <span id="orologio" class="num"></span>
+</div></div>
+
+<header class="testa">
+  <div class="wrap riga">
+    <div class="marchio">
+      <div class="sigla" aria-hidden="true">FVG</div>
+      <div><h1>Database Friuli Venezia Giulia</h1><small>Cruscotto dei dati pubblici regionali</small></div>
+    </div>
+    <div class="cerca-globale">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input id="cercaGlobale" type="search" placeholder="Cerca un comune o un foglio di dati…" autocomplete="off" aria-label="Cerca un comune o un foglio di dati">
+      <div id="suggerimenti" class="suggerimenti" hidden></div>
+    </div>
+    <button class="tema-btn" id="temaBtn" type="button" title="Cambia tema">Tema: automatico</button>
+  </div>
+  <div class="wrap">
+    <nav class="schede" role="tablist" id="schede">
+      <button role="tab" data-v="panoramica" aria-selected="true">Panoramica</button>
+      <button role="tab" data-v="comune">Scheda comune</button>
+      <button role="tab" data-v="esplora">Esplora tutti i dati</button>
+      <button role="tab" data-v="turismo">Turismo</button>
+      <button role="tab" data-v="amministratori">Amministratori</button>
+      <button role="tab" data-v="rifiuti">Rifiuti</button>
+      <button role="tab" data-v="economia">Redditi e territorio</button>
+      <button role="tab" data-v="mappa">Mappa</button>
+      <button role="tab" data-v="fonti">Fonti e limiti</button>
+    </nav>
+  </div>
+  <div class="territorio"><div class="wrap">
+    <label for="gProv">Filtro territoriale</label>
+    <select id="gProv" aria-label="Provincia"><option value="">Tutte le province</option></select>
+    <select id="gCom" aria-label="Comune"><option value="">Tutti i comuni</option></select>
+    <button class="btn mini" id="gReset" type="button">Azzera</button>
+    <span id="gNota" class="mute" style="font-size:12px">Vale per tutte le schede e per ogni foglio collegato ai comuni.</span>
+  </div></div>
+</header>
+
+<main class="wrap">
+
+<!-- PANORAMICA -->
+<section class="vista attiva" id="v-panoramica">
+  <div class="banner">
+    <div><div class="sopra">Panoramica regionale</div><h2>Tutti i dati in un colpo d'occhio</h2>
+    <p>102 fogli di dati pubblici: anagrafe dei comuni e degli amministratori, Terzo settore, scuole, turismo, commercio, sanità, ambiente, trasporti, redditi e l'intero annuario statistico «Regione in cifre 2026».</p></div>
+    <button class="btn oro" type="button" data-vai="esplora">Apri l'esploratore</button>
+  </div>
+  <div class="griglia g4" id="kpiPan"></div>
+  <div class="griglia g21">
+    <div class="card">
+      <div class="card-testa"><div><h3>Comuni e popolazione</h3><div class="sotto" id="sotPop">Residenti al 31.12.2025, tavola 19.2 dell'annuario 2026</div></div>
+        <div class="pulsantiera" id="vistaPop"><button aria-pressed="true" data-t="prov">Per provincia</button><button aria-pressed="false" data-t="top">I 15 comuni più popolosi</button><button aria-pressed="false" data-t="classi">Per classe di ampiezza</button></div></div>
+      <div class="grafico" id="boxPop"><canvas id="gPop" aria-label="Grafico della popolazione"></canvas></div>
+      <div class="griglia g4" id="miniPop" style="margin-top:12px"></div>
+    </div>
+    <div class="card">
+      <h3>Record per ambito</h3><div class="sotto">Righe importate: sono record, non soggetti unici. Tocca un ambito per aprirlo.</div>
+      <div class="barre" id="barreAmbiti"></div>
+    </div>
+  </div>
+  <div class="griglia g2">
+    <div class="card"><h3>Avvertenze da leggere prima dell'uso</h3><div class="sotto">Dal foglio Qualita_limiti del database</div><div id="avvPan"></div></div>
+    <div class="card"><h3>Fogli più ricchi</h3><div class="sotto">I dieci fogli con più record</div><div class="barre" id="barreFogli"></div></div>
+  </div>
+</section>
+
+<!-- SCHEDA COMUNE -->
+<section class="vista" id="v-comune">
+  <div class="banner">
+    <div><div class="sopra">Scheda comune</div><h2 id="titComune">Scegli un comune</h2>
+    <p id="sotComune">Tutto quello che il database contiene su un singolo comune: anagrafica, amministratori, turismo, rifiuti, redditi, veicoli, elezioni e servizi.</p></div>
+    <div class="riga-in" style="min-width:260px"><select id="selComune" aria-label="Scegli il comune"></select></div>
+  </div>
+  <div id="corpoComune"></div>
+</section>
+
+<!-- ESPLORA -->
+<section class="vista" id="v-esplora">
+  <div class="banner">
+    <div><div class="sopra">Esploratore universale</div><h2>Ogni foglio, ogni colonna, ogni filtro</h2>
+    <p>Scegli uno dei 102 fogli: per ogni colonna compaiono i filtri adatti (valori da spuntare con i conteggi, intervalli numerici, date, ricerca testuale, celle vuote o compilate). Il grafico e la tabella si aggiornano subito.</p></div>
+  </div>
+  <div class="esplora">
+    <aside class="card pannello-filtri">
+      <label for="selDS" class="etichetta-ambito">Foglio di dati</label>
+      <select id="selDS" style="width:100%;margin:4px 0 10px"></select>
+      <div id="infoDS" style="font-size:12.5px"></div>
+      <div style="margin-top:12px" class="riga-in"><input id="qDS" type="search" placeholder="Cerca in tutte le colonne…" aria-label="Cerca nel foglio"></div>
+      <div class="riga-in" style="margin-top:8px"><input id="qCampi" type="search" placeholder="Trova una colonna…" aria-label="Trova una colonna"><button class="btn mini" id="azzeraDS" type="button">Azzera filtri</button></div>
+      <div id="filtriAttivi" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:10px"></div>
+      <div id="campiDS" style="margin-top:10px"></div>
+    </aside>
+    <div style="display:grid;gap:16px;min-width:0">
+      <div class="card">
+        <div class="barra-strumenti">
+          <div><span class="conteggio" id="contDS">0</span> <span class="mute" id="contTot"></span></div>
+          <span style="flex:1"></span>
+          <div class="rel"><button class="btn" id="btnColonne" type="button">Colonne visibili</button><div id="popColonne" class="colonne-pop" hidden></div></div>
+          <button class="btn" id="btnMappaDS" type="button" hidden>Mostra sulla mappa</button>
+          <button class="btn" id="btnCopiaCSV" type="button">Copia CSV</button>
+          <button class="btn pri" id="btnScaricaCSV" type="button">Scarica CSV</button>
+        </div>
+        <div id="avvGlob" style="margin-top:10px"></div>
+      </div>
+      <div class="card">
+        <div class="card-testa"><div><h3>Grafico costruito sui filtri</h3><div class="sotto">Raggruppa i record filtrati per una colonna e misura conteggio, somma, media, minimo o massimo.</div></div></div>
+        <div class="riga-in" style="margin-bottom:10px">
+          <label class="mute" style="flex:none;font-size:12px">Raggruppa per</label><select id="gbCol" aria-label="Colonna di raggruppamento"></select>
+          <label class="mute" style="flex:none;font-size:12px">Serie</label><select id="gbSerie" aria-label="Colonna delle serie"></select>
+          <select id="gbMis" aria-label="Misura"></select>
+          <select id="gbNum" aria-label="Colonna numerica"></select>
+          <select id="gbTop" aria-label="Quanti gruppi"><option value="15">Primi 15</option><option value="30">Primi 30</option><option value="60">Primi 60</option><option value="0">Tutti</option></select>
+          <select id="gbOrd" aria-label="Ordine"><option value="v">Ordina per valore</option><option value="e">Ordina per etichetta</option></select>
+          <select id="gbTipo" aria-label="Tipo di grafico"><option value="bar">Barre orizzontali</option><option value="col">Colonne</option><option value="line">Linea</option></select>
+        </div>
+        <div class="grafico alto"><canvas id="gDS" aria-label="Grafico dei dati filtrati"></canvas></div>
+        <div class="legenda" id="legDS"></div>
+      </div>
+      <div class="card">
+        <div class="tab-box"><table id="tabDS"><thead></thead><tbody></tbody></table></div>
+        <div class="piede">
+          <div class="riga-in" style="flex:none"><button class="btn mini" id="pgPrima" type="button">«</button><button class="btn mini" id="pgPrec" type="button">‹</button><span id="pgInfo" class="num"></span><button class="btn mini" id="pgSucc" type="button">›</button><button class="btn mini" id="pgUltima" type="button">»</button>
+          <select id="pgDim" aria-label="Righe per pagina"><option>25</option><option selected>50</option><option>100</option><option>250</option><option>500</option></select></div>
+          <span class="sigillo" id="sigDS">FVG·DB</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TURISMO -->
+<section class="vista" id="v-turismo">
+  <div class="banner"><div><div class="sopra">Movimento clienti nelle strutture ricettive</div><h2>Turismo nei comuni</h2>
+    <p>Arrivi e presenze mensili per comune dal 2022, distinti fra esercizi alberghieri e complementari e fra italiani e stranieri. Fonte: dataset regionale 7eps-cpgr, aggiornato al 31 luglio 2026.</p></div></div>
+  <div class="card" style="margin-top:16px"><div class="riga-in" id="filtriTur"></div></div>
+  <div class="griglia g4" id="kpiTur"></div>
+  <div class="griglia g2">
+    <div class="card"><div class="card-testa"><div><h3>Andamento mensile</h3><div class="sotto" id="sotTurM">Una linea per anno</div></div>
+      <div class="pulsantiera" id="misTur"><button aria-pressed="true" data-m="PRESENZE">Presenze</button><button aria-pressed="false" data-m="ARRIVI">Arrivi</button></div></div>
+      <div class="grafico"><canvas id="gTurM"></canvas></div><div class="legenda" id="legTurM"></div></div>
+    <div class="card"><h3>Comuni con più presenze</h3><div class="sotto">Primi 15 nel periodo filtrato</div><div class="grafico"><canvas id="gTurC"></canvas></div></div>
+  </div>
+  <div class="griglia g2">
+    <div class="card"><h3>Per ambito turistico</h3><div class="sotto">Presenze nel periodo filtrato</div><div class="barre" id="barreTurA"></div></div>
+    <div class="card"><h3>Italiani e stranieri, alberghiero e complementare</h3><div class="sotto">Presenze nel periodo filtrato</div><div class="barre" id="barreTurS"></div></div>
+  </div>
+  <div class="card" style="margin-top:16px"><div class="card-testa"><div><h3>Tabella per comune</h3><div class="sotto">Permanenza media = presenze ÷ arrivi (calcolo sul periodo filtrato)</div></div><button class="btn mini" id="turCSV" type="button">Scarica CSV</button></div>
+    <div class="tab-box"><table id="tabTur"><thead></thead><tbody></tbody></table></div></div>
+</section>
+
+<!-- AMMINISTRATORI -->
+<section class="vista" id="v-amministratori">
+  <div class="banner"><div><div class="sopra">Anagrafe pubblica regionale degli amministratori locali</div><h2>Amministratori dei comuni</h2>
+    <p>3.336 incarichi (non persone uniche) di sindaci, assessori e consiglieri. Le date di aggiornamento differiscono da comune a comune.</p></div></div>
+  <div class="card" style="margin-top:16px"><div class="riga-in" id="filtriAmm"></div></div>
+  <div class="griglia g4" id="kpiAmm"></div>
+  <div class="griglia g3">
+    <div class="card"><h3>Per carica</h3><div class="barre" id="barreAmmC"></div></div>
+    <div class="card"><h3>Titolo di studio pubblicato</h3><div class="barre" id="barreAmmT"></div></div>
+    <div class="card"><h3>Professione pubblicata</h3><div class="barre" id="barreAmmP"></div></div>
+  </div>
+  <div class="griglia g2">
+    <div class="card"><h3>Anno dell'elezione</h3><div class="sotto">Incarichi per data di elezione</div><div class="grafico basso"><canvas id="gAmmE"></canvas></div></div>
+    <div class="card"><h3>Liste con più eletti</h3><div class="sotto">Nome della lista come pubblicato</div><div class="barre" id="barreAmmL"></div></div>
+  </div>
+  <div class="card" style="margin-top:16px"><div class="card-testa"><div><h3>Elenco incarichi</h3><div class="sotto" id="sotAmm"></div></div><button class="btn mini" id="ammCSV" type="button">Scarica CSV</button></div>
+    <div class="tab-box"><table id="tabAmm"><thead></thead><tbody></tbody></table></div></div>
+</section>
+
+<!-- RIFIUTI -->
+<section class="vista" id="v-rifiuti">
+  <div class="banner"><div><div class="sopra">Rifiuti urbani 1998 · 2017</div><h2>Rifiuti e raccolta differenziata</h2>
+    <p>Indicatori annuali per comune (dataset regionale j5hn-9qge): totale dei rifiuti urbani, differenziata, quota percentuale e valori pro capite.</p></div></div>
+  <div class="card" style="margin-top:16px"><div class="riga-in" id="filtriRif"></div></div>
+  <div class="griglia g4" id="kpiRif"></div>
+  <div class="griglia g2">
+    <div class="card"><h3 id="titRifT">Andamento</h3><div class="sotto" id="sotRifT"></div><div class="grafico"><canvas id="gRifT"></canvas></div><div class="legenda" id="legRifT"></div></div>
+    <div class="card"><div class="card-testa"><div><h3 id="titRifC">Classifica dei comuni</h3><div class="sotto" id="sotRifC"></div></div>
+      <div class="pulsantiera" id="ordRif"><button aria-pressed="true" data-o="d">Valori più alti</button><button aria-pressed="false" data-o="a">Valori più bassi</button></div></div>
+      <div class="grafico alto"><canvas id="gRifC"></canvas></div></div>
+  </div>
+  <div class="card avviso rosso" style="margin-top:16px" id="avvRif"></div>
+</section>
+
+<!-- ECONOMIA -->
+<section class="vista" id="v-economia">
+  <div class="banner"><div><div class="sopra">Redditi, veicoli, lavoro e commercio estero</div><h2>Redditi e territorio</h2>
+    <p>Dichiarazioni IRPEF (Imposta sul reddito delle persone fisiche) 2018, anno d'imposta 2017; veicoli circolanti 2017; occupati, disoccupati, esportazioni e importazioni per provincia.</p></div></div>
+  <div class="card" style="margin-top:16px"><div class="riga-in" id="filtriEco"></div></div>
+  <div class="griglia g4" id="kpiEco"></div>
+  <div class="griglia g2">
+    <div class="card"><h3 id="titEcoC">Classifica dei comuni</h3><div class="sotto" id="sotEcoC"></div><div class="grafico alto"><canvas id="gEcoC"></canvas></div></div>
+    <div class="card"><h3>Contribuenti per classe di reddito complessivo</h3><div class="sotto" id="sotEcoD">Numero di contribuenti, somma sui comuni filtrati</div><div class="grafico"><canvas id="gEcoD"></canvas></div></div>
+  </div>
+  <div class="griglia g2">
+    <div class="card"><div class="card-testa"><div><h3>Lavoro per provincia</h3><div class="sotto">Migliaia di persone, ISTAT (Istituto nazionale di statistica), rilevazione forze di lavoro</div></div>
+      <div class="pulsantiera" id="misLav"><button aria-pressed="true" data-m="Occupati_2007_2018">Occupati</button><button aria-pressed="false" data-m="Disoccupati_2007_2018">In cerca di occupazione</button></div></div>
+      <div class="grafico"><canvas id="gLav"></canvas></div><div class="legenda" id="legLav"></div></div>
+    <div class="card"><div class="card-testa"><div><h3>Commercio estero per provincia</h3><div class="sotto">Euro correnti, totale delle aree geografiche</div></div>
+      <div class="pulsantiera" id="misEst"><button aria-pressed="true" data-m="Export_2014_2018">Esportazioni</button><button aria-pressed="false" data-m="Import_2014_2018">Importazioni</button></div></div>
+      <div class="grafico"><canvas id="gEst"></canvas></div><div class="legenda" id="legEst"></div></div>
+  </div>
+  <div class="card" style="margin-top:16px"><h3>Veicoli circolanti 2017</h3><div class="sotto" id="sotVei">Somma sui comuni filtrati, per classe</div><div class="barre" id="barreVei"></div></div>
+</section>
+
+<!-- MAPPA -->
+<section class="vista" id="v-mappa">
+  <div class="banner"><div><div class="sopra">Mappa dei dati georeferenziati</div><h2>Strade, ciclovie e servizi sul territorio</h2>
+    <p>Rete viaria regionale, ciclovie, piste ciclabili e tutti i punti con coordinate. Trascina per spostarti, usa la rotella o i pulsanti per ingrandire, tocca un punto per aprirne la scheda.</p></div></div>
+  <div class="griglia" style="grid-template-columns:minmax(0,1fr) 280px;align-items:start" id="gridMappa">
+    <div class="mappa-box" id="mappaBox"><canvas id="mappa"></canvas>
+      <div class="mappa-comandi"><button type="button" id="zPiu" aria-label="Ingrandisci">+</button><button type="button" id="zMeno" aria-label="Riduci">−</button><button type="button" id="zReset" aria-label="Vista iniziale" style="font-size:12px">⌂</button></div>
+      <div class="mappa-info" id="mappaInfo">Caricamento degli strati…</div>
+      <div class="tip" id="mappaTip" hidden></div>
+    </div>
+    <aside class="card strati" id="strati"></aside>
+  </div>
+</section>
+
+<!-- FONTI -->
+<section class="vista" id="v-fonti">
+  <div class="banner"><div><div class="sopra">Metodo, fonti e limiti</div><h2>Come leggere questi dati</h2>
+    <p>Note metodologiche del database, registro delle avvertenze e catalogo completo dei fogli con la fonte di ciascuno.</p></div></div>
+  <div class="griglia g2">
+    <div class="card"><h3>Note del foglio LEGGIMI</h3><dl class="campi" id="leggimi" style="margin-top:8px"></dl></div>
+    <div class="card"><h3>Registro qualità e limiti</h3><div class="sotto">Conflitti fra fonti, perimetro, accessi non riusciti</div><div id="qualita"></div></div>
+  </div>
+  <div class="card" style="margin-top:16px">
+    <div class="card-testa"><div><h3>Catalogo dei fogli</h3><div class="sotto">Tocca una riga per aprire il foglio nell'esploratore</div></div>
+      <div class="riga-in" style="max-width:520px"><select id="catAmb" aria-label="Ambito"><option value="">Tutti gli ambiti</option></select><input id="catQ" type="search" placeholder="Cerca nel catalogo…" aria-label="Cerca nel catalogo"></div></div>
+    <div class="tab-box"><table id="tabCat"><thead></thead><tbody></tbody></table></div>
+  </div>
+</section>
+</main>
+
+<footer class="piedipagina"><div class="wrap">
+  <div style="display:flex;gap:12px;align-items:center"><div class="sigla" aria-hidden="true">FVG</div><div><b>Database Friuli Venezia Giulia</b><br>Dati pubblici raccolti e ordinati per il lavoro amministrativo</div></div>
+  <div>Fonti principali: <a href="https://www.dati.friuliveneziagiulia.it/" target="_blank" rel="noopener">dati.friuliveneziagiulia.it</a> • <a href="https://www.regione.fvg.it/rafvg/cms/RAFVG/GEN/statistica/" target="_blank" rel="noopener">Regione in cifre</a> • <a href="https://elezioniamministratori.regione.fvg.it/" target="_blank" rel="noopener">Anagrafe amministratori</a> • <a href="https://www.istat.it/" target="_blank" rel="noopener">ISTAT</a></div>
+  <div>Fotografia al 5.10.2026 · <span class="sigillo" style="color:#C9CDD3">102 fogli</span></div>
+</div></footer>
+
+<div class="toast" id="toast" role="status"></div>
+<div id="modale" hidden></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+"use strict";
+const HAS_CHART=typeof Chart!=='undefined';
+/* ============ utilità ============ */
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const NF=new Intl.NumberFormat('it-IT',{maximumFractionDigits:2});
+const NF0=new Intl.NumberFormat('it-IT',{maximumFractionDigits:0});
+const NFC=new Intl.NumberFormat('it-IT',{notation:'compact',maximumFractionDigits:1});
+const NF1=new Intl.NumberFormat('it-IT',{maximumFractionDigits:1,minimumFractionDigits:1});
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const PAL=()=>['--c1','--c2','--c3','--c4','--c5','--c6'].map(css);
+const collator=new Intl.Collator('it',{numeric:true,sensitivity:'base'});
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('on'),3000)}
+function norm(s){return String(s??'').normalize('NFD').replace(/[̀-ͯ]/g,'').toUpperCase().replace(/'/g,' ').replace(/[^A-Z0-9]+/g,' ').trim()}
+function abbrevia(s,n=38){s=String(s??'');return s.length>n?s.slice(0,n-1)+'…':s}
+const PROV={UD:'Udine',PN:'Pordenone',GO:'Gorizia',TS:'Trieste'};
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+function copia(testo,msg){
+  const ok=()=>toast(msg||'Copiato negli appunti');
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(testo).then(ok).catch(()=>fallbackCopia(testo,ok))}else fallbackCopia(testo,ok);
+}
+function fallbackCopia(t,ok){const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy');ok()}catch(e){toast('Copia non consentita: seleziona il testo manualmente')}a.remove()}
+function scarica(nome,testo){
+  try{const b=new Blob(['﻿'+testo],{type:'text/csv;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=nome;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500);toast('Download avviato: '+nome+' (se non parte, usa «Copia CSV»)')}catch(e){toast('Download non consentito qui: usa «Copia CSV»')}
+}
+function csvDa(intest,righe){const q=v=>{if(v==null)return'';let s=typeof v==='number'?String(v).replace('.',','):String(v);return /[;"\n\r]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s};return [intest.map(q).join(';'),...righe.map(r=>r.map(q).join(';'))].join('\r\n')}
+
+/* ============ tema ============ */
+const TEMI=['automatico','chiaro','scuro'];let temaIdx=0;
+try{temaIdx=Math.max(0,TEMI.indexOf(localStorage.getItem('dbfvg-tema')||'automatico'))}catch(e){}
+function applicaTema(){const t=TEMI[temaIdx];if(t==='automatico')document.documentElement.removeAttribute('data-theme');else document.documentElement.setAttribute('data-theme',t==='scuro'?'dark':'light');$('#temaBtn').textContent='Tema: '+t;try{localStorage.setItem('dbfvg-tema',t)}catch(e){}ridisegna()}
+$('#temaBtn').onclick=()=>{temaIdx=(temaIdx+1)%3;applicaTema()};
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>ridisegna());
+function ridisegna(){if(!HAS_CHART)return MAPPA.disegna&&VISTA==='mappa'&&MAPPA.disegna();Chart.defaults.color=css('--ink-2');Chart.defaults.borderColor=css('--line');if(window.VISTA&&RENDER[VISTA])RENDER[VISTA](true);if(VISTA==='mappa')MAPPA.disegna()}
+
+/* orologio */
+function tick(){const d=new Date();$('#orologio').textContent=d.toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long',year:'numeric'})+' · '+d.toLocaleTimeString('it-IT')}
+setInterval(tick,1000);tick();
+
+/* ============ grafici ============ */
+if(HAS_CHART){Chart.defaults.font.family=getComputedStyle(document.body).fontFamily;Chart.defaults.font.size=12;
+Chart.defaults.color=css('--ink-2');Chart.defaults.borderColor=css('--line');}
+const GRAF={};
+function tooltipStile(){return{backgroundColor:'#07213A',borderColor:css('--accento-500')||'#D8973C',borderWidth:1,titleFont:{family:'Cinzel',weight:'700'},padding:10,titleColor:'#fff',bodyColor:'#E8ECF1'}}
+function grafico(id,cfg){
+  if(GRAF[id]){GRAF[id].destroy()}
+  const el=document.getElementById(id);if(!el)return;
+  if(!HAS_CHART){el.parentElement.innerHTML='<div class="vuoto">Grafico non disponibile: la libreria dei grafici non si è caricata. I dati restano nelle tabelle.</div>';return}
+  cfg.options=cfg.options||{};
+  const o=cfg.options;o.responsive=true;o.maintainAspectRatio=false;o.animation={duration:250};
+  o.plugins=Object.assign({legend:{display:false},tooltip:Object.assign(tooltipStile(),{callbacks:{label:c=>' '+(c.dataset.label?c.dataset.label+': ':'')+NF.format(c.parsed[o.indexAxis==='y'?'x':'y'])}})},o.plugins||{});
+  o.interaction=o.interaction||{mode:'nearest',intersect:false,axis:o.indexAxis==='y'?'y':'x'};
+  const grid={color:css('--line')};
+  o.scales=o.scales||{};
+  for(const ax of ['x','y']){o.scales[ax]=Object.assign({grid:Object.assign({},grid),ticks:{color:css('--ink-2')},border:{color:css('--line-strong')}},o.scales[ax]||{})}
+  const val=o.indexAxis==='y'?'x':'y', cat=o.indexAxis==='y'?'y':'x';
+  o.scales[cat].grid.display=false;
+  if(o.indexAxis==='y'){o.scales[cat].ticks.autoSkip=false}
+  if(!o.scales[val].ticks.callback)o.scales[val].ticks.callback=v=>Math.abs(v)>=1e6?NFC.format(v):NF.format(v);
+  if(cfg.type==='bar'&&!cfg.keepBar)cfg.data.datasets.forEach(d=>{d.borderRadius=d.borderRadius??4;d.borderSkipped=d.borderSkipped??'start';d.maxBarThickness=d.maxBarThickness??38;d.borderColor=css('--surface');d.borderWidth=d.borderWidth??0});
+  if(cfg.type==='line')cfg.data.datasets.forEach(d=>{d.borderWidth=2;d.pointRadius=d.pointRadius??3;d.pointHoverRadius=5;d.tension=.25;d.fill=d.fill??false});
+  GRAF[id]=new Chart(el,cfg);return GRAF[id];
+}
+function legenda(id,serie){const el=document.getElementById(id);if(!el)return;el.innerHTML=serie.length>1?serie.map(s=>`<span style="--col:${s.c}">${esc(s.l)}</span>`).join(''):''}
+function barre(id,voci,opz={}){
+  const el=document.getElementById(id);if(!el)return;
+  if(!voci.length){el.innerHTML='<div class="vuoto">Nessun dato con i filtri scelti.</div>';return}
+  const max=Math.max(...voci.map(v=>v.v),1),tot=opz.tot??voci.reduce((a,v)=>a+v.v,0);
+  el.innerHTML=voci.map((v,i)=>`<div class="riga-b"><span class="ellissi" title="${esc(v.l)}">${v.click?`<button data-i="${i}">${esc(v.l)}</button>`:esc(v.l)}</span><b>${NF.format(v.v)}${opz.pct!==false&&tot?' · '+NF1.format(v.v/tot*100)+'%':''}</b><span class="tr"><i style="width:${Math.max(.5,v.v/max*100)}%;background:${v.col||'var(--c1)'}"></i></span></div>`).join('');
+  el.querySelectorAll('button[data-i]').forEach(b=>b.onclick=()=>voci[+b.dataset.i].click());
+}
+function kpi(id,lista){document.getElementById(id).innerHTML=lista.map((k,i)=>`<div class="card kpi k${(i%4)+1}"><div class="eti">${esc(k.e)}</div><div class="val">${k.v}</div>${k.d?`<div class="desc">${k.d}</div>`:''}</div>`).join('')}
+
+/* ============ dati ============ */
+let CAT=null,COMUNI=[],META={},DS={};
+const G={prov:'',com:-1};
+async function caricaJSON(u){const r=await fetch(u);if(!r.ok)throw new Error(u+' '+r.status);return r.json()}
+const PLAIN=/(^|[^a-z])(anno|codice|cod\.|cod |id|cap|partita|iva|progressivo|scheda|riga|posizione|gid|repertorio|mese|numero record|segmento|prossime|telefono|fax|rea|^\d{4}$)/i;
+async function ds(n){
+  if(DS[n])return DS[n];
+  if(DS['_p_'+n])return DS['_p_'+n];
+  const p=(async()=>{
+    const j=await caricaJSON('dati/'+n+'.json');const m=META[n];const N=m.righe;
+    const cols=j.cols.map((c,ix)=>{
+      const col={h:c.h,ix,t:c.t||'e',der:!!c.der};
+      if(c.k==='e'||(!c.v&&!c.d)){col.kind='vuota';col.get=()=>null;return col}
+      if(c.d){col.dict=c.d;col.codes=Int32Array.from(c.i);col.get=i=>{const k=col.codes[i];return k<0?null:col.dict[k]}}
+      else{col.vals=c.v;col.get=i=>col.vals[i]}
+      // tipo
+      let nn=0,numeri=0,date=0,bool=0;const dist=new Map();
+      for(let i=0;i<N;i++){const v=col.get(i);if(v==null||v==='')continue;nn++;if(typeof v==='number')numeri++;else if(typeof v==='boolean')bool++;else if(/^\d{2}\/\d{2}\/\d{4}$/.test(v)||/^\d{4}-\d{2}-\d{2}(T|$)/.test(v))date++;if(dist.size<=400)dist.set(v,(dist.get(v)||0)+1)}
+      col.nn=nn;col.distinti=dist.size>400?'400+':dist.size;
+      col.kind=numeri===nn?'num':bool===nn?'bool':date===nn?'data':'testo';
+      col.plain=PLAIN.test(c.h)||(col.kind==='num'&&[...dist.keys()].every(v=>Number.isInteger(v)&&v>=1800&&v<=2100));
+      if(/lat|lon|coord|altitudine|quota/i.test(c.h))col.plain=true;
+      // categorie
+      const maxCat=col.kind==='num'?60:300;
+      if(!col.dict&&dist.size<=maxCat&&dist.size>0){
+        const d=[...dist.keys()].sort((a,b)=>typeof a==='number'?a-b:collator.compare(String(a),String(b)));
+        const mm=new Map(d.map((v,k)=>[v,k]));col.dict=d;col.codes=new Int32Array(N);
+        for(let i=0;i<N;i++){const v=col.vals[i];col.codes[i]=(v==null||v==='')?-1:mm.get(v)}
+        col.get=i=>{const k=col.codes[i];return k<0?null:col.dict[k]};
+      }
+      if(col.dict&&col.dict.length>maxCat&&col.kind!=='num'){col.troppi=true}
+      if(col.kind==='data'){col.dk=new Float64Array(N);for(let i=0;i<N;i++){const v=col.get(i);col.dk[i]=v?chiaveData(v):NaN}}
+      return col;
+    });
+    const d={n,meta:m,N,cols,ci:j.ci?Int16Array.from(j.ci):null,lat:j.lat||null,lon:j.lon||null};
+    d.byH=Object.fromEntries(cols.map(c=>[c.h,c]));
+    DS[n]=d;return d;
+  })();
+  DS['_p_'+n]=p;try{return await p}finally{delete DS['_p_'+n]}
+}
+function chiaveData(v){let m=/^(\d{2})\/(\d{2})\/(\d{4})$/.exec(v);if(m)return +(m[3]+m[2]+m[1]);m=/^(\d{4})-(\d{2})-(\d{2})/.exec(v);return m?+(m[1]+m[2]+m[3]):NaN}
+function fmtCella(col,v){
+  if(v==null||v==='')return'';
+  if(typeof v==='boolean')return v?'Sì':'No';
+  if(typeof v==='number')return col&&col.plain?String(v).replace('.',','):NF.format(v);
+  return String(v);
+}
+function okGlob(d,i){
+  if(G.com<0&&!G.prov)return true;
+  if(!d.ci)return true;
+  const c=d.ci[i];if(c<0)return false;
+  if(G.com>=0)return c===G.com;
+  return COMUNI[c].prov===G.prov;
+}
+function globAttivo(){return G.com>=0||!!G.prov}
+function nomeGlob(){return G.com>=0?COMUNI[G.com].nome:(G.prov?'provincia di '+PROV[G.prov]:'')}
+
+/* ============ navigazione ============ */
+let VISTA='panoramica';const RENDER={};
+function vai(v,opz){
+  VISTA=v;$$('#schede button').forEach(b=>b.setAttribute('aria-selected',b.dataset.v===v));
+  $$('section.vista').forEach(s=>s.classList.toggle('attiva',s.id==='v-'+v));
+  try{localStorage.setItem('dbfvg-vista',v)}catch(e){}
+  if(RENDER[v])RENDER[v](false,opz);
+  window.scrollTo({top:0,behavior:'instant'});
+}
+$('#schede').addEventListener('click',e=>{const b=e.target.closest('button[data-v]');if(b)vai(b.dataset.v)});
+document.addEventListener('click',e=>{const b=e.target.closest('[data-vai]');if(b)vai(b.dataset.vai)});
+
+/* filtro globale */
+function popolaGlobali(){
+  const sp=$('#gProv');Object.entries(PROV).forEach(([k,v])=>sp.insertAdjacentHTML('beforeend',`<option value="${k}">${v} (${k})</option>`));
+  aggiornaSelComuni();
+}
+function aggiornaSelComuni(){
+  const sc=$('#gCom');const lista=COMUNI.map((c,i)=>({...c,i})).filter(c=>!G.prov||c.prov===G.prov).sort((a,b)=>collator.compare(a.nome,b.nome));
+  sc.innerHTML='<option value="">Tutti i comuni</option>'+lista.map(c=>`<option value="${c.i}">${esc(c.nome)} (${c.prov})</option>`).join('');
+  sc.value=G.com>=0?G.com:'';
+}
+function impostaGlob(prov,com,silenzioso){
+  G.prov=prov;G.com=com;
+  if(com>=0&&COMUNI[com].prov!==prov&&prov)G.prov=COMUNI[com].prov;
+  $('#gProv').value=G.prov;aggiornaSelComuni();
+  $('#gNota').innerHTML=globAttivo()?`Attivo: <b>${esc(nomeGlob())}</b>. Vale per tutte le schede e per ogni foglio collegato ai comuni.`:'Vale per tutte le schede e per ogni foglio collegato ai comuni.';
+  try{localStorage.setItem('dbfvg-glob',JSON.stringify(G))}catch(e){}
+  if(!silenzioso&&RENDER[VISTA])RENDER[VISTA](false);
+}
+$('#gProv').onchange=e=>impostaGlob(e.target.value,-1);
+$('#gCom').onchange=e=>{const v=e.target.value===''?-1:+e.target.value;impostaGlob(v>=0?COMUNI[v].prov:G.prov,v)};
+$('#gReset').onclick=()=>impostaGlob('',-1);
+
+/* ricerca globale */
+(function(){
+  const inp=$('#cercaGlobale'),box=$('#suggerimenti');let sel=0,voci=[];
+  function mostra(){
+    const q=norm(inp.value);if(q.length<2){box.hidden=true;return}
+    voci=[];
+    COMUNI.forEach((c,i)=>{if(norm(c.nome).includes(q))voci.push({t:'Comune',l:c.nome+' ('+c.prov+')',f:()=>{impostaGlob(c.prov,i,true);vai('comune')}})});
+    CAT.catalogo.forEach(m=>{if(norm(m.n+' '+m.titolo+' '+m.descr+' '+m.ambito).includes(q))voci.push({t:'Foglio · '+m.ambito,l:m.n.replace(/_/g,' ')+' · '+NF0.format(m.righe)+' righe',f:()=>apriFoglio(m.n)})});
+    voci=voci.slice(0,30);sel=0;
+    box.innerHTML=voci.length?voci.map((v,i)=>`<button type="button" data-i="${i}" class="${i===0?'att':''}"><span>${esc(v.l)}</span><span class="tipo">${esc(v.t)}</span></button>`).join(''):'<div class="vuoto" style="padding:10px 12px">Nessun risultato</div>';
+    box.hidden=false;
+  }
+  inp.addEventListener('input',mostra);
+  inp.addEventListener('keydown',e=>{if(box.hidden)return;if(e.key==='ArrowDown'||e.key==='ArrowUp'){sel=(sel+(e.key==='ArrowDown'?1:-1)+voci.length)%voci.length;box.querySelectorAll('button').forEach((b,i)=>b.classList.toggle('att',i===sel));e.preventDefault()}else if(e.key==='Enter'&&voci[sel]){voci[sel].f();box.hidden=true;inp.value=''}else if(e.key==='Escape')box.hidden=true});
+  box.addEventListener('click',e=>{const b=e.target.closest('button[data-i]');if(b){voci[+b.dataset.i].f();box.hidden=true;inp.value=''}});
+  document.addEventListener('click',e=>{if(!e.target.closest('.cerca-globale'))box.hidden=true});
+})();
+
+/* modale */
+function apriModale(sopra,titolo,html,azioni=[]){
+  const m=$('#modale');
+  m.innerHTML=`<div class="velo" id="velo"><div class="modale" role="dialog" aria-modal="true" aria-label="${esc(titolo)}"><div class="mt"><small>${esc(sopra)}</small><h3>${esc(titolo)}</h3></div><div class="mc">${html}</div><div class="mf">${azioni.map((a,i)=>`<button class="btn" type="button" data-a="${i}">${esc(a.l)}</button>`).join('')}<button class="btn pri" type="button" id="chiudiM">Chiudi</button></div></div></div>`;
+  m.hidden=false;
+  $('#chiudiM').onclick=chiudiModale;$('#velo').onclick=e=>{if(e.target.id==='velo')chiudiModale()};
+  m.querySelectorAll('[data-a]').forEach(b=>b.onclick=()=>azioni[+b.dataset.a].f());
+  $('#chiudiM').focus();
+}
+function chiudiModale(){const m=$('#modale');m.hidden=true;m.innerHTML=''}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('#modale').hidden)chiudiModale()});
+function dettaglioRecord(d,i){
+  const righe=d.cols.filter(c=>c.kind!=='vuota').map(c=>[c.h+(c.der?' (derivato)':''),fmtCella(c,c.get(i))]);
+  d.meta.consts.forEach(k=>righe.push([k.h+' (uguale per tutto il foglio)',fmtCella(null,k.v)]));
+  if(d.ci&&d.ci[i]>=0)righe.push(['Comune collegato (ISTAT)',COMUNI[d.ci[i]].nome+' · '+COMUNI[d.ci[i]].cod]);
+  if(d.lat&&d.lat[i])righe.push(['Coordinate (lat, lon)',d.lat[i]+', '+d.lon[i]]);
+  const html=`<dl class="campi">${righe.map(([k,v])=>`<dt>${esc(k)}</dt><dd>${/^https?:\/\//.test(v)?`<a href="${esc(v)}" target="_blank" rel="noopener">${esc(v)}</a>`:esc(v)||'<span class="mute">vuoto</span>'}</dd>`).join('')}</dl>`;
+  const tit=titoloRecord(d,i);
+  apriModale(d.n.replace(/_/g,' ')+' · record '+(i+1)+' di '+NF0.format(d.N),tit,html,[{l:'Copia la scheda',f:()=>copia(righe.map(r=>r[0]+': '+r[1]).join('\n'))}]);
+}
+function titoloRecord(d,i){
+  const pref=/denominazione|ragione sociale|^nome|insegna|associazione|azienda|società|titolo|indicatore|comune|stop_name|route_long_name|nome del sito|sito_logistico/i;
+  const c=d.cols.find(c=>pref.test(c.h)&&c.get(i));return c?String(c.get(i)):'Record '+(i+1);
+}
+
+/* ============ PANORAMICA ============ */
+let vistaPop='prov';
+RENDER.panoramica=async function(){
+  const C=await ds('Comuni');const pop=C.byH['Popolazione 31.12.2025'],sup=C.byH['Superficie (km²)'],prov=C.byH['Sigla provincia'];
+  const idx=[...Array(C.N).keys()].filter(i=>okGlob(C,i));
+  const totPop=idx.reduce((a,i)=>a+(pop.get(i)||0),0),totSup=idx.reduce((a,i)=>a+(sup.get(i)||0),0);
+  const totRec=CAT.catalogo.reduce((a,m)=>a+m.righe,0);
+  kpi('kpiPan',[
+    {e:'Fogli di dati',v:NF0.format(CAT.catalogo.length),d:'Annuario 2026, dati aperti regionali, anagrafi pubbliche, cataloghi'},
+    {e:'Record importati',v:NF0.format(totRec),d:'Righe di dati, non soggetti unici'},
+    {e:globAttivo()?'Comuni filtrati':'Comuni',v:NF0.format(idx.length),d:globAttivo()?esc(nomeGlob()):'UD 134 · PN 50 · GO 25 · TS 6'},
+    {e:'Residenti al 31.12.2025',v:NF0.format(totPop),d:globAttivo()?'Superficie '+NF.format(totSup)+' km²':'Somma della Tav.19.2. La sintesi 2026 riporta 1.194.496: <span class="da-verificare">conflitto fra fonti, DA VERIFICARE</span>'}
+  ]);
+  const P=PAL();
+  if(vistaPop==='prov'){
+    const agg={};idx.forEach(i=>{const p=prov.get(i);agg[p]=(agg[p]||0)+(pop.get(i)||0)});
+    const k=Object.keys(agg).sort((a,b)=>agg[b]-agg[a]);
+    grafico('gPop',{type:'bar',data:{labels:k.map(x=>PROV[x]),datasets:[{label:'Residenti',data:k.map(x=>agg[x]),backgroundColor:P[0]}]},options:{}});
+  }else if(vistaPop==='top'){
+    const s=[...idx].sort((a,b)=>pop.get(b)-pop.get(a)).slice(0,15);
+    grafico('gPop',{type:'bar',data:{labels:s.map(i=>C.byH['Comune'].get(i)),datasets:[{label:'Residenti',data:s.map(i=>pop.get(i)),backgroundColor:P[0]}]},options:{indexAxis:'y',onClick:(e,el)=>{if(el[0]){const i=s[el[0].index];impostaGlob(prov.get(i),i,true);vai('comune')}}}});
+  }else{
+    const classi=[[0,1000,'fino a 1.000'],[1000,3000,'1.001 · 3.000'],[3000,5000,'3.001 · 5.000'],[5000,10000,'5.001 · 10.000'],[10000,20000,'10.001 · 20.000'],[20000,50000,'20.001 · 50.000'],[50000,1e9,'oltre 50.000']];
+    const n=classi.map(c=>idx.filter(i=>pop.get(i)>c[0]&&pop.get(i)<=c[1]).length);
+    grafico('gPop',{type:'bar',data:{labels:classi.map(c=>c[2]),datasets:[{label:'Comuni',data:n,backgroundColor:P[0]}]},options:{}});
+  }
+  $('#sotPop').textContent=vistaPop==='classi'?'Numero di comuni per classe di residenti al 31.12.2025':"Residenti al 31.12.2025, tavola 19.2 dell'annuario 2026";
+  // mini per provincia
+  const pp={};idx.forEach(i=>{const p=prov.get(i);pp[p]=pp[p]||{n:0,p:0,s:0};pp[p].n++;pp[p].p+=pop.get(i)||0;pp[p].s+=sup.get(i)||0});
+  $('#miniPop').innerHTML=Object.keys(PROV).filter(p=>pp[p]).map(p=>`<div><div class="etichetta-ambito">${PROV[p]}</div><div style="font-family:var(--f-titolo);font-weight:800;font-size:18px" class="num">${NF0.format(pp[p].p)}</div><div class="mute" style="font-size:12px">${pp[p].n} comuni · ${NF0.format(pp[p].p/pp[p].s)} ab/km² (calcolo)</div></div>`).join('');
+  // ambiti
+  const amb={};CAT.catalogo.forEach(m=>{amb[m.ambito]=(amb[m.ambito]||0)+m.righe});
+  barre('barreAmbiti',Object.entries(amb).sort((a,b)=>b[1]-a[1]).map(([l,v])=>({l,v,click:()=>{vai('fonti');$('#catAmb').value=l;RENDER.fonti()}})));
+  barre('barreFogli',[...CAT.catalogo].sort((a,b)=>b.righe-a.righe).slice(0,10).map(m=>({l:m.n.replace(/_/g,' '),v:m.righe,col:'var(--c2)',click:()=>apriFoglio(m.n)})),{pct:false});
+  const Q=await ds('Qualita_limiti');
+  $('#avvPan').innerHTML=[...Array(Q.N).keys()].filter(i=>Q.byH['Tipo controllo'].get(i)!=='CONTENUTO_ESTESO').map(i=>`<div class="avviso ${/CONFLITTO|ACCESSO/.test(Q.byH['Tipo controllo'].get(i))?'rosso':''}" style="margin-bottom:8px"><b>${esc(Q.byH['Foglio / ambito'].get(i))}</b> · ${esc(Q.byH['Descrizione'].get(i))}</div>`).join('')+`<div class="avviso rosso"><b>Rifiuti_comunali</b> · Anno e valori in chilogrammi risultano importati con il punto delle migliaia letto come virgola decimale (anno «2,013» = 2013). I valori sono <span class="da-verificare">DA VERIFICARE</span> sulla fonte; per i totali usare Indicatori_rifiuti.</div>`;
+};
+$('#vistaPop').onclick=e=>{const b=e.target.closest('button');if(!b)return;vistaPop=b.dataset.t;$$('#vistaPop button').forEach(x=>x.setAttribute('aria-pressed',x===b));RENDER.panoramica()};
+
+/* ============ SCHEDA COMUNE ============ */
+RENDER.comune=async function(){
+  const sel=$('#selComune');
+  if(!sel.options.length){sel.innerHTML='<option value="">Scegli un comune…</option>'+COMUNI.map((c,i)=>({...c,i})).sort((a,b)=>collator.compare(a.nome,b.nome)).map(c=>`<option value="${c.i}">${esc(c.nome)} (${c.prov})</option>`).join('');sel.onchange=()=>{const v=+sel.value;if(sel.value!=='')impostaGlob(COMUNI[v].prov,v)}}
+  const ci=G.com;sel.value=ci>=0?ci:'';
+  const box=$('#corpoComune');
+  if(ci<0){$('#titComune').textContent='Scegli un comune';box.innerHTML=`<div class="card" style="margin-top:16px"><p>Seleziona un comune dal menu qui sopra, dal filtro territoriale o dalla ricerca in alto. Per esempio:</p><div style="display:flex;gap:8px;flex-wrap:wrap">${['Roveredo in Piano','Pordenone','Udine','Trieste','Gorizia','Cordenons'].map(n=>{const i=COMUNI.findIndex(c=>c.nome===n);return i<0?'':`<button class="btn" type="button" data-c="${i}">${n}</button>`}).join('')}</div></div>`;box.querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>impostaGlob(COMUNI[+b.dataset.c].prov,+b.dataset.c));return}
+  const c=COMUNI[ci];$('#titComune').textContent=c.nome;$('#sotComune').textContent='Provincia di '+PROV[c.prov]+' · codice ISTAT '+c.cod+'. Tutto quello che il database contiene su questo comune.';
+  box.innerHTML='<div class="caricamento"><div class="ruota"></div>Carico i dati del comune…</div>';
+  const [C,E,T,R,I,V,A,E24,E25,E26]=await Promise.all(['Comuni','Enti_locali_anagrafe','Turismo_comunale','Indicatori_rifiuti','Redditi_IRPEF_2018','Veicoli_2017','Amministratori_locali','Elezioni_comunali_2024','Elezioni_comunali_2025','Elezioni_comunali_2026'].map(ds));
+  if(G.com!==ci)return;
+  const rc=[...Array(C.N).keys()].find(i=>C.ci[i]===ci);
+  const g=h=>C.byH[h]?C.byH[h].get(rc):(C.meta.consts.find(k=>k.h===h)||{}).v;
+  const re=[...Array(E.N).keys()].find(i=>E.ci&&E.ci[i]===ci);
+  const ge=h=>re==null?null:E.byH[h].get(re);
+  // ranking popolazione
+  const pops=[...Array(C.N).keys()].map(i=>C.byH['Popolazione 31.12.2025'].get(i)).sort((a,b)=>b-a);
+  const rank=pops.indexOf(g('Popolazione 31.12.2025'))+1;
+  const varPop=g('Popolazione 31.12.2025')-g('Popolazione 31.12.2024');
+  let h=`<div class="griglia g4">
+    <div class="card kpi"><div class="eti">Residenti al 31.12.2025</div><div class="val">${NF0.format(g('Popolazione 31.12.2025'))}</div><div class="desc">${varPop>=0?'+':''}${NF0.format(varPop)} sul 31.12.2024 · ${rank}° comune su 215</div></div>
+    <div class="card kpi k2"><div class="eti">Superficie e densità</div><div class="val">${NF.format(g('Superficie (km²)'))} km²</div><div class="desc">${NF1.format(g('Densità fonte (ab/km²)'))} abitanti per km² (dato della fonte)</div></div>
+    <div class="card kpi k3"><div class="eti">Sindaco in anagrafe</div><div class="val" style="font-size:20px">${esc(g('Sindaco pubblicato in anagrafe')||'')}</div><div class="desc">Anagrafe aggiornata al ${esc(g('Aggiornamento anagrafe')||'')}</div></div>
+    <div class="card kpi k4"><div class="eti">Prossime elezioni</div><div class="val">${esc(g('Prossime elezioni fonte')||'')}</div><div class="desc">${re!=null?ge('num_consiglieri')+' consiglieri · '+ge('num_assessori')+' assessori (anagrafe)':''}</div></div>
+  </div>`;
+  h+=`<div class="griglia g21"><div class="card"><h3>Turismo: presenze per anno</h3><div class="sotto" id="sotCT"></div><div class="grafico"><canvas id="gCT"></canvas></div><div class="legenda" id="legCT"></div></div>
+     <div class="card"><h3>Anagrafica</h3><dl class="dl-mini" style="margin-top:10px">
+      <dt>Denominazione ufficiale</dt><dd>${esc(g('Denominazione ufficiale multilingue'))}</dd>
+      <dt>Codice ISTAT</dt><dd>${esc(g('Codice ISTAT'))}</dd><dt>Codice catastale</dt><dd>${esc(g('Codice catastale'))}</dd>
+      <dt>Unità territoriale</dt><dd>${esc(g('Unità territoriale statistica'))}</dd><dt>NUTS3</dt><dd>${esc(g('NUTS3 2024'))}</dd>
+      <dt>Maschi / Femmine 2025</dt><dd>${NF0.format(g('Maschi 31.12.2025'))} / ${NF0.format(g('Femmine 31.12.2025'))}</dd>
+      <dt>Abitanti in anagrafe amministratori</dt><dd>${re!=null?NF0.format(ge('numero_abitanti'))+' <span class="mute">(non è la statistica aggiornata)</span>':'n.d.'}</dd>
+     </dl></div></div>`;
+  h+=`<div class="griglia g2"><div class="card"><div class="card-testa"><div><h3>Rifiuti urbani 1998 · 2017</h3><div class="sotto">Indicatori_rifiuti, valori della fonte</div></div><div class="pulsantiera" id="misCR"><button aria-pressed="true" data-m="RD (%)">Differenziata %</button><button aria-pressed="false" data-m="ProCapite RU (Kg)">Kg pro capite</button><button aria-pressed="false" data-m="Totale RU (t)">Tonnellate</button></div></div><div class="grafico basso"><canvas id="gCR"></canvas></div></div>
+     <div class="card"><h3>Redditi IRPEF, anno d'imposta 2017</h3><div class="sotto">Dichiarazioni 2018 · le medie sono calcoli su ammontare ÷ frequenza</div><div id="redC"></div></div></div>`;
+  h+=`<div class="griglia g2"><div class="card"><h3>Elezioni comunali 2024 · 2026</h3><div class="sotto">Voti ai candidati sindaco, se il comune ha votato in quegli anni</div><div id="eleC"></div></div>
+     <div class="card"><h3>Veicoli circolanti 2017</h3><div class="sotto">Per classe</div><div class="barre" id="veiC"></div></div></div>`;
+  h+=`<div class="card" style="margin-top:16px"><div class="card-testa"><div><h3>Amministratori in carica secondo l'anagrafe</h3><div class="sotto" id="sotAC"></div></div><button class="btn mini" type="button" data-vai="amministratori">Apri la scheda Amministratori</button></div><div class="tab-box" style="max-height:420px"><table id="tabAC"><thead></thead><tbody></tbody></table></div></div>`;
+  h+=`<div class="card" style="margin-top:16px"><h3>Tutti i record del database su ${esc(c.nome)}</h3><div class="sotto">Fogli collegati al comune tramite codice ISTAT o nome. Tocca per aprire il foglio già filtrato.</div><div class="barre" id="recC"></div></div>`;
+  box.innerHTML=h;
+  const P=PAL();
+  // turismo
+  const anni={},mesi={};for(let i=0;i<T.N;i++){if(T.ci[i]!==ci)continue;const a=T.byH.ANNO.get(i),is=T.byH.ITALIANI_STRANIERI.get(i);anni[a]=anni[a]||{Italiani:0,Stranieri:0};anni[a][is]+=T.byH.PRESENZE.get(i)||0;mesi[a]=Math.max(mesi[a]||0,T.byH.MESE.get(i))}
+  const ka=Object.keys(anni).sort();
+  if(ka.length){grafico('gCT',{type:'bar',data:{labels:ka.map(a=>a+(mesi[a]<12?' (fino a mese '+mesi[a]+')':'')),datasets:[{label:'Italiani',data:ka.map(a=>anni[a].Italiani),backgroundColor:P[0]},{label:'Stranieri',data:ka.map(a=>anni[a].Stranieri),backgroundColor:P[1]}]},options:{scales:{x:{stacked:true},y:{stacked:true}}}});legenda('legCT',[{l:'Italiani',c:P[0]},{l:'Stranieri',c:P[1]}]);$('#sotCT').textContent='Presenze in strutture ricettive, italiani e stranieri impilati'}
+  else{$('#gCT').parentElement.innerHTML='<div class="vuoto">Nessun dato turistico per questo comune.</div>'}
+  // rifiuti
+  const disegnaCR=m=>{const pts=[];for(let i=0;i<R.N;i++){if(R.ci[i]===ci&&R.byH.INDICATORE.get(i)===m)pts.push([R.byH.ANNO.get(i),R.byH.VALORE.get(i)])}pts.sort((a,b)=>a[0]-b[0]);
+    if(!pts.length){$('#gCR').parentElement.innerHTML='<div class="vuoto">Nessun dato.</div>';return}
+    grafico('gCR',{type:'line',data:{labels:pts.map(p=>p[0]),datasets:[{label:m,data:pts.map(p=>p[1]),borderColor:P[3],backgroundColor:P[3]}]},options:{}})};
+  disegnaCR('RD (%)');$('#misCR').onclick=e=>{const b=e.target.closest('button');if(!b)return;$$('#misCR button').forEach(x=>x.setAttribute('aria-pressed',x===b));disegnaCR(b.dataset.m)};
+  // redditi
+  const ri=[...Array(I.N).keys()].find(i=>I.ci[i]===ci);
+  if(ri!=null){const gi=h=>I.byH[h]?I.byH[h].get(ri):null;const nC=gi('Numero contribuenti'),imp=gi('Reddito imponibile - Ammontare in euro'),fimp=gi('Reddito imponibile - Frequenza');
+    const md=k=>{const a=gi(k+' - Ammontare in euro'),f=gi(k+' - Frequenza');return a&&f?NF0.format(a/f)+' €':'n.d.'};
+    $('#redC').innerHTML=`<dl class="dl-mini"><dt>Contribuenti</dt><dd>${NF0.format(nC)}</dd><dt>Reddito imponibile totale</dt><dd>${NF0.format(imp)} €</dd><dt>Imponibile medio (calcolo)</dt><dd>${NF0.format(imp/fimp)} €</dd><dt>Lavoro dipendente medio (calcolo)</dt><dd>${md('Reddito da lavoro dipendente e assimilati')}</dd><dt>Pensione media (calcolo)</dt><dd>${md('Reddito da pensione')}</dd><dt>Lavoro autonomo medio (calcolo)</dt><dd>${md('Reddito da lavoro autonomo (comprensivo dei valori nulli)')}</dd><dt>Addizionale comunale</dt><dd>${gi('Addizionale comunale dovuta - Ammontare in euro')!=null?NF0.format(gi('Addizionale comunale dovuta - Ammontare in euro'))+' €':'n.d.'}</dd><dt>Imposta netta totale</dt><dd>${NF0.format(gi('Imposta netta - Ammontare in euro'))} €</dd></dl>`}
+  else $('#redC').innerHTML='<div class="vuoto">Comune non presente nel dataset IRPEF 2018 (possibile fusione o istituzione successiva).</div>';
+  // elezioni
+  const ele=[];[[E24,2024],[E25,2025],[E26,2026]].forEach(([D,a])=>{for(let i=0;i<D.N;i++)if(D.ci[i]===ci)ele.push({a,n:D.byH['Nominativo elettorale candidato'].get(i),v:D.byH['Voti candidato'].get(i),b:D.byH['Schede bianche'].get(i),nu:D.byH['Schede nulle'].get(i)})});
+  if(ele.length){const tot={};ele.forEach(e=>tot[e.a]=(tot[e.a]||0)+e.v);$('#eleC').innerHTML=Object.keys(tot).map(a=>`<h4 style="margin:6px 0">${a}</h4><div class="barre">${ele.filter(e=>e.a==a).sort((x,y)=>y.v-x.v).map((e,k)=>`<div class="riga-b"><span>${esc(e.n)}</span><b>${NF0.format(e.v)} · ${NF1.format(e.v/tot[a]*100)}%</b><span class="tr"><i style="width:${e.v/tot[a]*100}%;background:${k?P[1]:P[0]}"></i></span></div>`).join('')}<div class="mute" style="font-size:12px">Schede bianche ${ele.find(e=>e.a==a).b} · nulle ${ele.find(e=>e.a==a).nu}. Percentuali calcolate sui voti validi ai candidati.</div></div>`).join('')}
+  else $('#eleC').innerHTML='<div class="vuoto">Il comune non ha votato nel 2024, 2025 o 2026 secondo i dataset importati.</div>';
+  // veicoli
+  const rv=[...Array(V.N).keys()].find(i=>V.ci[i]===ci);
+  if(rv!=null)barre('veiC',V.cols.filter(k=>k.kind==='num'&&k.h!=='Somma:').map(k=>({l:k.h.toLowerCase(),v:k.get(rv)||0})).sort((a,b)=>b.v-a.v),{tot:V.byH['Somma:'].get(rv)});else $('#veiC').innerHTML='<div class="vuoto">Nessun dato.</div>';
+  // amministratori
+  const ai=[...Array(A.N).keys()].filter(i=>A.ci[i]===ci);const ord={sindaco:0,vicesindaco:1,assessore:2};
+  ai.sort((x,y)=>(ord[A.byH.Carica.get(x)]??5)-(ord[A.byH.Carica.get(y)]??5)||collator.compare(A.byH.Cognome.get(x),A.byH.Cognome.get(y)));
+  const hA=['Cognome','Nome','Carica','Giunta comunale','Lista pubblicata','Data elezione','Titolo di studio pubblicato','Professione pubblicata'];
+  tabellaSemplice('tabAC',hA,ai.map(i=>hA.map(h=>fmtCella(A.byH[h],A.byH[h].get(i)))),r=>dettaglioRecord(A,ai[r]));
+  $('#sotAC').textContent=ai.length+' incarichi · aggiornamento del comune: '+(ai.length?A.byH['Aggiornamento comune'].get(ai[0]):'n.d.');
+  // record per foglio
+  barre('recC',CAT.catalogo.filter(m=>m.cc&&m.cc[ci]).map(m=>({l:m.n.replace(/_/g,' '),v:m.cc[ci],col:'var(--c4)',click:()=>apriFoglio(m.n)})).sort((a,b)=>b.v-a.v),{pct:false});
+};
+function tabellaSemplice(id,intest,righe,onclick,numCols=[]){
+  const t=document.getElementById(id);
+  t.tHead.innerHTML='<tr>'+intest.map(h=>`<th>${esc(h)}</th>`).join('')+'</tr>';
+  t.tBodies[0].innerHTML=righe.length?righe.map((r,k)=>`<tr data-r="${k}">${r.map((v,j)=>`<td class="${numCols.includes(j)?'n':''}">${esc(v)}</td>`).join('')}</tr>`).join(''):`<tr><td colspan="${intest.length}" class="vuoto">Nessun record con i filtri scelti.</td></tr>`;
+  if(onclick)t.tBodies[0].onclick=e=>{const tr=e.target.closest('tr[data-r]');if(tr)onclick(+tr.dataset.r)};
+}
+
+/* ============ ESPLORATORE ============ */
+const EX={n:null,F:{},q:'',sort:null,pag:0,dim:50,nascoste:{},idx:[],fails:null,failCol:null,aperti:new Set()};
+const FILTRI_SALVATI={};
+function apriFoglio(n){EX.n=n;vai('esplora',{n})}
+RENDER.esplora=async function(ridis,opz){
+  const sel=$('#selDS');
+  if(!sel.options.length){
+    const gr={};CAT.catalogo.forEach(m=>{(gr[m.ambito]=gr[m.ambito]||[]).push(m)});
+    sel.innerHTML=Object.keys(gr).sort(collator.compare).map(a=>`<optgroup label="${esc(a)}">${gr[a].map(m=>`<option value="${m.n}">${esc(m.n.replace(/_/g,' '))} · ${NF0.format(m.righe)}</option>`).join('')}</optgroup>`).join('');
+    sel.onchange=()=>{EX.n=sel.value;caricaFoglio()};
+  }
+  if(!EX.n){try{EX.n=localStorage.getItem('dbfvg-foglio')}catch(e){}if(!EX.n||!META[EX.n])EX.n='Comuni'}
+  sel.value=EX.n;
+  if(ridis&&EX.d){disegnaGraficoDS();return}
+  await caricaFoglio();
+};
+async function caricaFoglio(){
+  const n=EX.n;try{localStorage.setItem('dbfvg-foglio',n)}catch(e){}
+  $('#selDS').value=n;
+  if(EX.d&&EX.d.n!==n){FILTRI_SALVATI[EX.d.n]={F:EX.F,q:EX.q,sort:EX.sort,nascoste:EX.nascoste}}
+  $('#campiDS').innerHTML='<div class="caricamento"><div class="ruota"></div>Carico il foglio…</div>';
+  const d=await ds(n);if(EX.n!==n)return;
+  EX.d=d;const s=FILTRI_SALVATI[n]||{F:{},q:'',sort:null,nascoste:{}};
+  EX.F=s.F;EX.q=s.q;EX.sort=s.sort;EX.nascoste=s.nascoste;EX.pag=0;EX.aperti=new Set();
+  if(!FILTRI_SALVATI[n]){d.cols.forEach(c=>{if(c.kind==='vuota')EX.nascoste[c.ix]=true})}
+  $('#qDS').value=EX.q;$('#qCampi').value='';
+  const m=d.meta;
+  $('#infoDS').innerHTML=`<div class="etichetta-ambito">${esc(m.ambito)}</div><div style="margin:4px 0 6px">${esc(m.descr)}</div>
+   ${m.fonte?`<div class="ellissi"><a href="${esc(String(m.fonte).replace(/^Fonte:\s*/,''))}" target="_blank" rel="noopener">${esc(String(m.fonte).replace(/^Fonte:\s*/,''))}</a></div>`:''}
+   <div class="mute">${esc(m.consultazione||'')}</div>
+   ${m.mcol?`<div style="margin-top:6px"><span class="stato-pill sp-ok">Collegato ai comuni</span> <span class="mute">tramite «${esc(m.mcol)}»: ${NF0.format(m.match)} record su ${NF0.format(m.righe)}</span></div>`:`<div style="margin-top:6px"><span class="stato-pill sp-blu">Non collegato ai comuni</span></div>`}
+   ${m.consts.length?`<details style="margin-top:6px"><summary class="mute" style="cursor:pointer">${m.consts.length} campi con valore unico per tutto il foglio</summary><dl class="dl-mini" style="margin-top:6px">${m.consts.map(k=>`<dt>${esc(k.h)}</dt><dd>${esc(fmtCella(null,k.v))}</dd>`).join('')}</dl></details>`:''}
+   ${m.note.map(t=>`<div class="avviso ${/VERIFICARE/.test(t)?'rosso':''}" style="margin-top:6px">${esc(t).replace('DA VERIFICARE','<span class="da-verificare">DA VERIFICARE</span>')}</div>`).join('')}`;
+  $('#btnMappaDS').hidden=!m.geo;
+  disegnaCampi();preparaGraficoDS();applicaFiltri();
+}
+function filtroAttivo(f){return f&&((f.sel&&f.sel.size)||f.min!==''&&f.min!=null||f.max!==''&&f.max!=null||f.txt||f.da||f.a||(f.vuoti&&f.vuoti!=='tutti'))}
+function testaCol(c,f,i){
+  const v=c.get(i);const vuoto=v==null||v==='';
+  if(f.vuoti==='vuoti'&&!vuoto)return false;if(f.vuoti==='pieni'&&vuoto)return false;
+  if(f.sel&&f.sel.size){if(!c.codes)return false;if(!f.sel.has(c.codes[i]))return false}
+  if(f.min!==''&&f.min!=null){if(vuoto||!(v>=+f.min))return false}
+  if(f.max!==''&&f.max!=null){if(vuoto||!(v<=+f.max))return false}
+  if(f.da||f.a){const k=c.dk[i];if(isNaN(k))return false;if(f.da&&k<+f.da.replace(/-/g,''))return false;if(f.a&&k>+f.a.replace(/-/g,''))return false}
+  if(f.txt){const s=norm(fmtCella(c,v)),q=norm(f.txt);const ha=s.includes(q);if(f.neg?ha:!ha)return false}
+  return true;
+}
+function applicaFiltri(){
+  const d=EX.d;if(!d)return;const N=d.N;
+  const att=Object.entries(EX.F).filter(([k,f])=>filtroAttivo(f)).map(([k,f])=>[d.cols[+k],f,+k]);
+  const fails=new Uint8Array(N),fc=new Int16Array(N).fill(-1);
+  const q=norm(EX.q);let testi=null;
+  if(q){if(!d.testi){d.testi=new Array(N);const cs=d.cols.filter(c=>c.kind!=='vuota');for(let i=0;i<N;i++){let s='';for(const c of cs){const v=c.get(i);if(v!=null&&v!=='')s+=' '+v}d.testi[i]=norm(s)}}testi=d.testi}
+  const gl=globAttivo()&&d.ci;
+  for(let i=0;i<N;i++){
+    let f=0;
+    if(gl&&!okGlob(d,i)){f=2}
+    if(testi&&!testi[i].includes(q))f=2;
+    if(f<2)for(const [c,flt,k] of att){if(!testaCol(c,flt,i)){f++;fc[i]=k;if(f>1)break}}
+    fails[i]=f;
+  }
+  EX.fails=fails;EX.failCol=fc;
+  let idx=[];for(let i=0;i<N;i++)if(!fails[i])idx.push(i);
+  if(EX.sort){const c=d.cols[EX.sort.c],dir=EX.sort.dir;idx.sort((a,b)=>{const x=c.get(a),y=c.get(b);if(x==null||x==='')return 1;if(y==null||y==='')return -1;if(c.dk)return (c.dk[a]-c.dk[b])*dir;return (typeof x==='number'&&typeof y==='number'?x-y:collator.compare(String(x),String(y)))*dir})}
+  EX.idx=idx;if(EX.pag*EX.dim>=idx.length)EX.pag=0;
+  $('#contDS').textContent=NF0.format(idx.length);$('#contTot').textContent='record su '+NF0.format(N)+' del foglio '+d.n.replace(/_/g,' ');
+  $('#sigDS').textContent=d.n.toUpperCase().slice(0,22)+' · '+NF0.format(idx.length);
+  $('#avvGlob').innerHTML=globAttivo()?(d.ci?`<div class="avviso">Filtro territoriale attivo: <b>${esc(nomeGlob())}</b>. ${d.meta.righe-d.meta.match>0?NF0.format(d.meta.righe-d.meta.match)+' record del foglio non sono collegati a un comune e restano esclusi.':''}</div>`:`<div class="avviso">Filtro territoriale <b>${esc(nomeGlob())}</b> non applicato: questo foglio non contiene un riferimento ai comuni.</div>`):'';
+  // chip filtri attivi
+  $('#filtriAttivi').innerHTML=att.map(([c,f,k])=>`<span class="chip">${esc(abbrevia(c.h,26))}<button type="button" data-k="${k}" aria-label="Rimuovi filtro">×</button></span>`).join('')+(EX.q?`<span class="chip">Testo: ${esc(abbrevia(EX.q,18))}<button type="button" data-q="1" aria-label="Rimuovi ricerca">×</button></span>`:'');
+  $$('#campiDS details.campo').forEach(el=>{el.dataset.attivo=filtroAttivo(EX.F[el.dataset.k])?'1':'0'});
+  EX.aperti.forEach(k=>aggiornaFaccette(k));
+  disegnaTabella();disegnaGraficoDS();
+}
+$('#filtriAttivi').onclick=e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.q){EX.q='';$('#qDS').value=''}else{delete EX.F[b.dataset.k];disegnaCampi()}applicaFiltri()};
+let tQ;$('#qDS').oninput=e=>{clearTimeout(tQ);tQ=setTimeout(()=>{EX.q=e.target.value;applicaFiltri()},250)};
+$('#qCampi').oninput=e=>{const q=norm(e.target.value);$$('#campiDS details.campo').forEach(el=>el.hidden=q&&!norm(el.dataset.h).includes(q))};
+$('#azzeraDS').onclick=()=>{EX.F={};EX.q='';$('#qDS').value='';disegnaCampi();applicaFiltri()};
+function disegnaCampi(){
+  const d=EX.d;const box=$('#campiDS');
+  box.innerHTML=`<div class="etichetta-ambito" style="margin-bottom:4px">Filtri per colonna (${d.cols.filter(c=>c.kind!=='vuota').length})</div>`+d.cols.filter(c=>c.kind!=='vuota').map(c=>{
+    const tipo={num:'numero',data:'data',testo:c.codes?'elenco':'testo',bool:'sì/no'}[c.kind];
+    return `<details class="campo" data-k="${c.ix}" data-h="${esc(c.h)}" data-attivo="${filtroAttivo(EX.F[c.ix])?1:0}"><summary><span class="nome">${esc(c.h)}${c.der?' <span class="mute">(derivato)</span>':''}</span><span class="t">${tipo} · ${c.distinti}</span></summary><div class="corpo"></div></details>`}).join('')
+    +(d.cols.some(c=>c.kind==='vuota')?`<div class="mute" style="font-size:12px;margin-top:8px">Colonne sempre vuote nella fonte: ${d.cols.filter(c=>c.kind==='vuota').map(c=>esc(c.h)).join(', ')}</div>`:'');
+  box.querySelectorAll('details.campo').forEach(el=>el.addEventListener('toggle',()=>{const k=+el.dataset.k;if(el.open){EX.aperti.add(k);costruisciCampo(el,k)}else EX.aperti.delete(k)}));
+}
+function costruisciCampo(el,k){
+  const c=EX.d.cols[k];const f=EX.F[k]=EX.F[k]||{vuoti:'tutti'};const corpo=el.querySelector('.corpo');
+  let h='';
+  if(c.codes&&!c.troppi){h+=`<div class="riga-in"><input type="search" class="cv" placeholder="Filtra i valori…" aria-label="Filtra i valori"><button class="btn mini tutti" type="button">Tutti</button><button class="btn mini nessuno" type="button">Nessuno</button></div><div class="lista-val"></div>`}
+  if(c.kind==='num'){const vals=[];for(let i=0;i<EX.d.N;i++){const v=c.get(i);if(typeof v==='number')vals.push(v)}const mn=Math.min(...vals),mx=Math.max(...vals);
+    h+=`<div class="riga-in"><input type="number" class="mn" step="any" placeholder="min ${fmtCella(c,mn)}" value="${f.min??''}" aria-label="Minimo"><input type="number" class="mx" step="any" placeholder="max ${fmtCella(c,mx)}" value="${f.max??''}" aria-label="Massimo"></div>`}
+  if(c.kind==='data')h+=`<div class="riga-in"><input type="date" class="da" value="${f.da||''}" aria-label="Dal"><input type="date" class="a" value="${f.a||''}" aria-label="Al"></div>`;
+  if(c.kind==='testo'||c.troppi||c.kind==='num')h+=`<div class="riga-in"><input type="text" class="tx" placeholder="Contiene…" value="${esc(f.txt||'')}" aria-label="Contiene"><label style="flex:none;font-size:12px;display:flex;gap:4px;align-items:center"><input type="checkbox" class="neg" ${f.neg?'checked':''}>escludi</label></div>`;
+  h+=`<div class="riga-in"><select class="vu" aria-label="Celle vuote"><option value="tutti">Celle vuote e compilate</option><option value="pieni">Solo compilate</option><option value="vuoti">Solo vuote</option></select><button class="btn mini az" type="button">Azzera</button></div>`;
+  corpo.innerHTML=h;corpo.querySelector('.vu').value=f.vuoti||'tutti';
+  const upd=()=>applicaFiltri();let t;
+  const deb=fn=>(e)=>{clearTimeout(t);t=setTimeout(()=>{fn(e);upd()},300)};
+  corpo.querySelector('.vu').onchange=e=>{f.vuoti=e.target.value;upd()};
+  corpo.querySelector('.az').onclick=()=>{EX.F[k]={vuoti:'tutti'};costruisciCampo(el,k);upd()};
+  const mn=corpo.querySelector('.mn');if(mn){mn.oninput=deb(e=>f.min=e.target.value);corpo.querySelector('.mx').oninput=deb(e=>f.max=e.target.value)}
+  const da=corpo.querySelector('.da');if(da){da.onchange=e=>{f.da=e.target.value;upd()};corpo.querySelector('.a').onchange=e=>{f.a=e.target.value;upd()}}
+  const tx=corpo.querySelector('.tx');if(tx){tx.oninput=deb(e=>f.txt=e.target.value);corpo.querySelector('.neg').onchange=e=>{f.neg=e.target.checked;upd()}}
+  const lv=corpo.querySelector('.lista-val');
+  if(lv){f.sel=f.sel||new Set();
+    corpo.querySelector('.cv').oninput=e=>{const q=norm(e.target.value);lv.querySelectorAll('label').forEach(l=>l.hidden=q&&!norm(l.dataset.v).includes(q))};
+    corpo.querySelector('.tutti').onclick=()=>{lv.querySelectorAll('label:not([hidden]) input').forEach(x=>{f.sel.add(+x.value)});upd()};
+    corpo.querySelector('.nessuno').onclick=()=>{f.sel.clear();upd()};
+    lv.onchange=e=>{const x=e.target;if(x.checked)f.sel.add(+x.value);else f.sel.delete(+x.value);upd()};
+    aggiornaFaccette(k);
+  }
+}
+function aggiornaFaccette(k){
+  const el=document.querySelector(`#campiDS details.campo[data-k="${k}"]`);if(!el)return;const lv=el.querySelector('.lista-val');if(!lv)return;
+  const c=EX.d.cols[k],f=EX.F[k]||{};const cnt=new Int32Array(c.dict.length);const fails=EX.fails,fc=EX.failCol;
+  for(let i=0;i<EX.d.N;i++){if(fails[i]===0||(fails[i]===1&&fc[i]===k)){const x=c.codes[i];if(x>=0)cnt[x]++}}
+  const q=norm(el.querySelector('.cv').value);
+  const ordine=[...c.dict.keys()];if(c.kind!=='num'&&c.kind!=='data'&&!c.plain)ordine.sort((a,b)=>cnt[b]-cnt[a]||collator.compare(String(c.dict[a]),String(c.dict[b])));
+  lv.innerHTML=ordine.map(x=>{const v=fmtCella(c,c.dict[x]);return `<label data-v="${esc(v)}" class="${cnt[x]?'':'zero'}" ${q&&!norm(v).includes(q)?'hidden':''}><input type="checkbox" value="${x}" ${f.sel&&f.sel.has(x)?'checked':''}><span>${esc(v)}</span><span class="c">${NF0.format(cnt[x])}</span></label>`}).join('');
+}
+function colVisibili(){return EX.d.cols.filter(c=>!EX.nascoste[c.ix])}
+function disegnaTabella(){
+  const d=EX.d,cols=colVisibili(),t=$('#tabDS');
+  t.tHead.innerHTML='<tr>'+cols.map(c=>`<th data-k="${c.ix}" title="Ordina">${esc(c.h)}${EX.sort&&EX.sort.c===c.ix?`<span class="fr">${EX.sort.dir>0?'▲':'▼'}</span>`:''}</th>`).join('')+'</tr>';
+  const da=EX.pag*EX.dim,pagina=EX.idx.slice(da,da+EX.dim);
+  t.tBodies[0].innerHTML=pagina.length?pagina.map(i=>`<tr data-i="${i}">`+cols.map(c=>{const v=c.get(i);const s=fmtCella(c,v);return `<td class="${c.kind==='num'?'n':''}">${/^https?:\/\//.test(s)?`<a href="${esc(s)}" target="_blank" rel="noopener">${esc(abbrevia(s,40))}</a>`:esc(abbrevia(s,160))}</td>`}).join('')+'</tr>').join(''):`<tr><td class="vuoto" colspan="${cols.length}">Nessun record con i filtri scelti.</td></tr>`;
+  const np=Math.max(1,Math.ceil(EX.idx.length/EX.dim));$('#pgInfo').textContent=' Pagina '+(EX.pag+1)+' di '+NF0.format(np)+' ';
+}
+$('#tabDS').tHead.onclick=e=>{const th=e.target.closest('th');if(!th)return;const k=+th.dataset.k;EX.sort=EX.sort&&EX.sort.c===k?(EX.sort.dir>0?{c:k,dir:-1}:null):{c:k,dir:1};applicaFiltri()};
+$('#tabDS').tBodies[0].onclick=e=>{if(e.target.closest('a'))return;const tr=e.target.closest('tr[data-i]');if(tr)dettaglioRecord(EX.d,+tr.dataset.i)};
+$('#pgPrima').onclick=()=>{EX.pag=0;disegnaTabella()};$('#pgPrec').onclick=()=>{EX.pag=Math.max(0,EX.pag-1);disegnaTabella()};
+$('#pgSucc').onclick=()=>{EX.pag=Math.min(Math.ceil(EX.idx.length/EX.dim)-1,EX.pag+1);disegnaTabella()};$('#pgUltima').onclick=()=>{EX.pag=Math.max(0,Math.ceil(EX.idx.length/EX.dim)-1);disegnaTabella()};
+$('#pgDim').onchange=e=>{EX.dim=+e.target.value;EX.pag=0;disegnaTabella()};
+$('#btnColonne').onclick=()=>{const p=$('#popColonne');if(!p.hidden){p.hidden=true;return}
+  p.innerHTML=`<div class="riga-in" style="margin-bottom:6px"><button class="btn mini" type="button" data-t="1">Mostra tutte</button><button class="btn mini" type="button" data-t="0">Nascondi tutte</button></div>`+EX.d.cols.map(c=>`<label><input type="checkbox" value="${c.ix}" ${EX.nascoste[c.ix]?'':'checked'}>${esc(c.h)}</label>`).join('');p.hidden=false;
+  p.onchange=e=>{EX.nascoste[e.target.value]=!e.target.checked;disegnaTabella()};
+  p.querySelectorAll('[data-t]').forEach(b=>b.onclick=()=>{EX.d.cols.forEach(c=>EX.nascoste[c.ix]=b.dataset.t==='0');p.hidden=true;disegnaTabella()})};
+document.addEventListener('click',e=>{if(!e.target.closest('.rel'))$('#popColonne').hidden=true});
+function csvFiltrato(){const d=EX.d,cols=d.cols.filter(c=>c.kind!=='vuota');const intest=[...cols.map(c=>c.h),...d.meta.consts.map(k=>k.h)];
+  return csvDa(intest,EX.idx.map(i=>[...cols.map(c=>{const v=c.get(i);return typeof v==='boolean'?(v?'Sì':'No'):v}),...d.meta.consts.map(k=>k.v)]))}
+$('#btnCopiaCSV').onclick=()=>{if(EX.idx.length>20000){toast('Troppi record da copiare: restringi i filtri o usa «Scarica CSV»');return}copia(csvFiltrato(),NF0.format(EX.idx.length)+' record copiati in formato CSV (valori separati da punto e virgola)')};
+$('#btnScaricaCSV').onclick=()=>scarica(EX.d.n+(globAttivo()?'_'+norm(nomeGlob()).replace(/ /g,'_'):'')+'.csv',csvFiltrato());
+$('#btnMappaDS').onclick=()=>{MAPPA.selezione={d:EX.d,idx:EX.idx.slice()};vai('mappa')};
+
+/* grafico esploratore */
+function preparaGraficoDS(){
+  const d=EX.d;const cat=d.cols.filter(c=>c.codes&&!c.troppi);const num=d.cols.filter(c=>c.kind==='num');
+  const pref=cat.find(c=>/provinc|comune|carica|tipolog|categoria|sezione|stato|settore|classe|anno|indicatore|ambito|tema/i.test(c.h)&&c.dict.length>1)||cat.find(c=>c.dict.length>1&&c.dict.length<=60)||cat[0];
+  $('#gbCol').innerHTML=(d.ci?'<option value="_c">Comune collegato</option><option value="_p">Provincia del comune</option>':'')+cat.map(c=>`<option value="${c.ix}">${esc(c.h)}</option>`).join('')||'<option value="">(nessuna colonna adatta)</option>';
+  $('#gbCol').value=pref?pref.ix:(d.ci?'_p':'');
+  $('#gbSerie').innerHTML='<option value="">Nessuna</option>'+cat.filter(c=>c.dict.length<=12).map(c=>`<option value="${c.ix}">${esc(c.h)}</option>`).join('');
+  $('#gbMis').innerHTML='<option value="cnt">Conteggio record</option>'+(num.length?'<option value="sum">Somma di</option><option value="avg">Media di</option><option value="min">Minimo di</option><option value="max">Massimo di</option>':'');
+  $('#gbNum').innerHTML=num.map(c=>`<option value="${c.ix}">${esc(c.h)}</option>`).join('');
+  const prefNum=num.find(c=>/presenze|valore|voti|popolazione|sup totale|ammontare|pl_tot/i.test(c.h));if(prefNum){$('#gbNum').value=prefNum.ix}
+  $('#gbNum').hidden=true;
+}
+['gbCol','gbSerie','gbMis','gbNum','gbTop','gbOrd','gbTipo'].forEach(id=>$('#'+id).onchange=()=>disegnaGraficoDS());
+function disegnaGraficoDS(){
+  const d=EX.d;if(!d)return;const P=PAL();
+  const gk=$('#gbCol').value,mis=$('#gbMis').value,sk=$('#gbSerie').value,top=+$('#gbTop').value,tipo=$('#gbTipo').value;
+  $('#gbNum').hidden=mis==='cnt';
+  if(gk===''){if(GRAF.gDS)GRAF.gDS.destroy();return}
+  const lab=gk==='_c'?(i=>{const c=d.ci[i];return c>=0?COMUNI[c].nome:'(non collegato)'}):gk==='_p'?(i=>{const c=d.ci[i];return c>=0?PROV[COMUNI[c].prov]:'(non collegato)'}):(()=>{const c=d.cols[+gk];return i=>{const v=c.get(i);return v==null||v===''?'(vuoto)':fmtCella(c,v)}})();
+  const nc=mis==='cnt'?null:d.cols[+$('#gbNum').value];
+  const sc=sk===''?null:d.cols[+sk];
+  const agg=new Map();const serieSet=new Map();
+  for(const i of EX.idx){const g=lab(i);const s=sc?fmtCella(sc,sc.get(i))||'(vuoto)':'_';serieSet.set(s,(serieSet.get(s)||0)+1);
+    let o=agg.get(g);if(!o){o={};agg.set(g,o)}let a=o[s];if(!a)a=o[s]={n:0,s:0,mn:Infinity,mx:-Infinity,k:0};
+    a.n++;if(nc){const v=nc.get(i);if(typeof v==='number'){a.s+=v;a.k++;if(v<a.mn)a.mn=v;if(v>a.mx)a.mx=v}}}
+  const valore=a=>!a?0:mis==='cnt'?a.n:mis==='sum'?a.s:mis==='avg'?(a.k?a.s/a.k:0):mis==='min'?(a.k?a.mn:0):(a.k?a.mx:0);
+  let serie=[...serieSet.entries()].sort((a,b)=>b[1]-a[1]).map(x=>x[0]);
+  if(serie.length>6){const tieni=new Set(serie.slice(0,5));for(const o of agg.values()){for(const s of Object.keys(o))if(!tieni.has(s)){const a=o[s];const b=o['Altro']=o['Altro']||{n:0,s:0,mn:Infinity,mx:-Infinity,k:0};b.n+=a.n;b.s+=a.s;b.k+=a.k;b.mn=Math.min(b.mn,a.mn);b.mx=Math.max(b.mx,a.mx);delete o[s]}}serie=[...serie.slice(0,5),'Altro']}
+  let gruppi=[...agg.keys()];const tot=g=>serie.reduce((t,s)=>t+valore(agg.get(g)[s]),0);
+  const ordLab=$('#gbOrd').value==='e'||tipo==='line';
+  if(ordLab){const c=gk.startsWith('_')?null:d.cols[+gk];gruppi.sort((a,b)=>c&&c.dict&&c.kind==='num'?parseFloat(a.replace(/\./g,'').replace(',','.'))-parseFloat(b.replace(/\./g,'').replace(',','.')):collator.compare(a,b))}else gruppi.sort((a,b)=>tot(b)-tot(a));
+  const tagliati=top&&gruppi.length>top?gruppi.length-top:0;if(top&&!ordLab)gruppi=gruppi.slice(0,top);else if(top&&ordLab&&gruppi.length>top&&tipo!=='line'){gruppi=[...gruppi].sort((a,b)=>tot(b)-tot(a)).slice(0,top).sort(collator.compare)}
+  const ds_=serie.map((s,k)=>({label:s==='_'?(mis==='cnt'?'Record':($('#gbMis').selectedOptions[0].text+' '+nc.h)):s,data:gruppi.map(g=>valore(agg.get(g)[s])),backgroundColor:P[k%6],borderColor:P[k%6]}));
+  const orizz=tipo==='bar';
+  grafico('gDS',{type:tipo==='line'?'line':'bar',data:{labels:gruppi.map(g=>abbrevia(g,40)),datasets:ds_},options:{indexAxis:orizz?'y':'x',scales:sc&&tipo!=='line'?{x:{stacked:true},y:{stacked:true}}:{},
+    onClick:(e,el)=>{if(!el[0]||gk.startsWith('_'))return;const c=d.cols[+gk];const g=gruppi[el[0].index];const x=c.dict.findIndex(v=>(fmtCella(c,v)||'(vuoto)')===g);if(x<0)return;EX.F[c.ix]=EX.F[c.ix]||{vuoti:'tutti'};EX.F[c.ix].sel=new Set([x]);disegnaCampi();applicaFiltri();toast('Filtro applicato: '+c.h+' = '+g)}}});
+  legenda('legDS',serie.length>1?ds_.map((x,k)=>({l:x.label,c:P[k%6]})):[]);
+  if(tagliati&&tipo!=='line')$('#legDS').insertAdjacentHTML('beforeend',`<span class="mute" style="--col:transparent">${NF0.format(tagliati)} gruppi minori non mostrati</span>`);
+  if(!sc&&!tagliati)$('#legDS').innerHTML=`<span class="mute" style="--col:transparent">Tocca una barra per filtrare su quel valore</span>`;
+}
+
+/* ============ filtri tematici riutilizzabili ============ */
+function selettoreMulti(contenitore,etichetta,valori,stato,chiave,onChange,fmt=v=>v){
+  const id='m_'+norm(chiave).replace(/ /g,'_');const box=document.createElement('div');box.className='rel';box.style.flex='0 1 auto';
+  const sel=stato[chiave];const lab=()=>sel.size?etichetta+': '+(sel.size===1?fmt([...sel][0]):sel.size+' scelti'):etichetta+': tutti';
+  box.innerHTML=`<button class="btn" type="button" id="${id}">${esc(lab())}</button><div class="colonne-pop" hidden style="left:0;right:auto"><div class="riga-in" style="margin-bottom:6px"><button class="btn mini" type="button" data-t="0">Tutti</button></div>${valori.map(v=>`<label><input type="checkbox" value="${esc(v)}" ${sel.has(v)?'checked':''}>${esc(fmt(v))}</label>`).join('')}</div>`;
+  contenitore.appendChild(box);const pop=box.querySelector('.colonne-pop');
+  box.querySelector('#'+id).onclick=()=>{$$('.colonne-pop').forEach(p=>{if(p!==pop)p.hidden=true});pop.hidden=!pop.hidden};
+  pop.onchange=e=>{const v=valori.find(x=>String(x)===e.target.value);if(e.target.checked)sel.add(v);else sel.delete(v);box.querySelector('#'+id).textContent=lab();onChange()};
+  pop.querySelector('[data-t]').onclick=()=>{sel.clear();pop.querySelectorAll('input').forEach(x=>x.checked=false);box.querySelector('#'+id).textContent=lab();onChange()};
+}
+document.addEventListener('click',e=>{if(!e.target.closest('.rel'))$$('.colonne-pop').forEach(p=>p.hidden=true)});
+const MESI=['','gen','feb','mar','apr','mag','giu','lug','ago','set','ott','nov','dic'];
+
+/* ============ TURISMO ============ */
+const TS={ANNO:new Set(),MESE:new Set(),TERRITORIO:new Set(),TIPO_ESERCIZIO:new Set(),ITALIANI_STRANIERI:new Set(),mis:'PRESENZE'};
+RENDER.turismo=async function(ridis){
+  const T=await ds('Turismo_comunale');const H=T.byH;
+  if(!$('#filtriTur').children.length){
+    const f=$('#filtriTur');const r=()=>RENDER.turismo();
+    selettoreMulti(f,'Anno',H.ANNO.dict,TS,'ANNO',r);selettoreMulti(f,'Mese',H.MESE.dict,TS,'MESE',r,v=>MESI[v]);
+    selettoreMulti(f,'Ambito turistico',H.TERRITORIO.dict,TS,'TERRITORIO',r);selettoreMulti(f,'Tipo di esercizio',H.TIPO_ESERCIZIO.dict,TS,'TIPO_ESERCIZIO',r);
+    selettoreMulti(f,'Provenienza',H.ITALIANI_STRANIERI.dict,TS,'ITALIANI_STRANIERI',r);
+    f.insertAdjacentHTML('beforeend','<span class="mute" style="font-size:12px">Comune e provincia: usa il filtro territoriale in alto.</span>');
+  }
+  const ok=i=>okGlob(T,i)&&['ANNO','MESE','TERRITORIO','TIPO_ESERCIZIO','ITALIANI_STRANIERI'].every(k=>!TS[k].size||TS[k].has(H[k].get(i)));
+  let arr=0,pre=0,str=0;const perM={},perC={},perA={},perS={};
+  for(let i=0;i<T.N;i++){if(!ok(i))continue;const a=H.ARRIVI.get(i)||0,p=H.PRESENZE.get(i)||0;arr+=a;pre+=p;if(H.ITALIANI_STRANIERI.get(i)==='Stranieri')str+=p;
+    const an=H.ANNO.get(i),m=H.MESE.get(i);perM[an]=perM[an]||{};perM[an][m]=perM[an][m]||{ARRIVI:0,PRESENZE:0};perM[an][m].ARRIVI+=a;perM[an][m].PRESENZE+=p;
+    const c=H.COMUNE.get(i);perC[c]=perC[c]||{a:0,p:0,s:0,pr:H.PROVINCIA_SIGLA.get(i),ci:T.ci[i]};perC[c].a+=a;perC[c].p+=p;if(H.ITALIANI_STRANIERI.get(i)==='Stranieri')perC[c].s+=p;
+    const t=H.TERRITORIO.get(i);perA[t]=(perA[t]||0)+p;const s=H.ITALIANI_STRANIERI.get(i)+' · '+H.TIPO_ESERCIZIO.get(i).replace('Esercizi ','').toLowerCase();perS[s]=(perS[s]||0)+p}
+  const mx=Object.keys(perM).map(a=>Math.max(...Object.keys(perM[a]).map(Number)));
+  kpi('kpiTur',[{e:'Arrivi',v:NF0.format(arr),d:'Clienti arrivati nelle strutture'},{e:'Presenze',v:NF0.format(pre),d:'Notti trascorse'},{e:'Permanenza media',v:arr?NF.format(pre/arr)+' notti':'n.d.',d:'Calcolo: presenze ÷ arrivi'},{e:'Quota stranieri',v:pre?NF1.format(str/pre*100)+'%':'n.d.',d:'Sul totale delle presenze · '+(globAttivo()?esc(nomeGlob()):'tutta la regione')}]);
+  const P=PAL();const anni=Object.keys(perM).sort();
+  const ds_=anni.map((a,k)=>({label:a,data:[1,2,3,4,5,6,7,8,9,10,11,12].map(m=>perM[a][m]?perM[a][m][TS.mis]:null),borderColor:P[k%6],backgroundColor:P[k%6]}));
+  grafico('gTurM',{type:'line',data:{labels:MESI.slice(1),datasets:ds_},options:{}});legenda('legTurM',anni.map((a,k)=>({l:a+(Math.max(...Object.keys(perM[a]).map(Number))<12?' (dati fino a '+MESI[Math.max(...Object.keys(perM[a]).map(Number))]+')':''),c:P[k%6]})));
+  $('#sotTurM').textContent=(TS.mis==='PRESENZE'?'Presenze':'Arrivi')+' mensili, una linea per anno';
+  const topC=Object.entries(perC).sort((a,b)=>b[1].p-a[1].p).slice(0,15);
+  grafico('gTurC',{type:'bar',data:{labels:topC.map(x=>x[0]),datasets:[{label:'Presenze',data:topC.map(x=>x[1].p),backgroundColor:P[0]}]},options:{indexAxis:'y',onClick:(e,el)=>{if(el[0]){const c=topC[el[0].index][1].ci;if(c>=0)impostaGlob(COMUNI[c].prov,c)}}}});
+  barre('barreTurA',Object.entries(perA).sort((a,b)=>b[1]-a[1]).map(([l,v])=>({l,v})));
+  barre('barreTurS',Object.entries(perS).sort((a,b)=>b[1]-a[1]).map(([l,v],k)=>({l,v,col:l.startsWith('Italiani')?'var(--c1)':'var(--c2)'})));
+  const righe=Object.entries(perC).sort((a,b)=>b[1].p-a[1].p);
+  TS.righe=righe;
+  tabellaSemplice('tabTur',['Comune','Prov.','Arrivi','Presenze','Permanenza media','Presenze straniere','Quota stranieri'],righe.map(([c,o])=>[c,o.pr,NF0.format(o.a),NF0.format(o.p),o.a?NF.format(o.p/o.a):'',NF0.format(o.s),o.p?NF1.format(o.s/o.p*100)+'%':'']),r=>{const c=righe[r][1].ci;if(c>=0){impostaGlob(COMUNI[c].prov,c,true);vai('comune')}},[2,3,4,5,6]);
+};
+$('#misTur').onclick=e=>{const b=e.target.closest('button');if(!b)return;TS.mis=b.dataset.m;$$('#misTur button').forEach(x=>x.setAttribute('aria-pressed',x===b));RENDER.turismo()};
+$('#turCSV').onclick=()=>scarica('turismo_per_comune.csv',csvDa(['Comune','Provincia','Arrivi','Presenze','Presenze straniere'],TS.righe.map(([c,o])=>[c,o.pr,o.a,o.p,o.s])));
+
+/* ============ AMMINISTRATORI ============ */
+const AS={Carica:new Set(),'Giunta comunale':new Set(),'Titolo di studio pubblicato':new Set(),'Professione pubblicata':new Set(),'Data elezione':new Set(),q:''};
+RENDER.amministratori=async function(){
+  const A=await ds('Amministratori_locali');const H=A.byH;
+  if(!$('#filtriAmm').children.length){const f=$('#filtriAmm');const r=()=>RENDER.amministratori();
+    ['Carica','Giunta comunale','Titolo di studio pubblicato','Professione pubblicata','Data elezione'].forEach(k=>selettoreMulti(f,k.replace(' pubblicato','').replace(' pubblicata',''),H[k].dict,AS,k,r,v=>v===true?'Sì':v===false?'No':v));
+    f.insertAdjacentHTML('beforeend','<input type="search" id="ammQ" placeholder="Cerca cognome, nome o lista…" aria-label="Cerca negli amministratori" style="flex:1 1 220px">');
+    let t;$('#ammQ').oninput=e=>{clearTimeout(t);t=setTimeout(()=>{AS.q=norm(e.target.value);r()},250)};
+  }
+  const keys=['Carica','Giunta comunale','Titolo di studio pubblicato','Professione pubblicata','Data elezione'];
+  const idx=[];for(let i=0;i<A.N;i++){if(!okGlob(A,i))continue;if(!keys.every(k=>!AS[k].size||AS[k].has(H[k].get(i))))continue;if(AS.q&&!norm(H.Cognome.get(i)+' '+H.Nome.get(i)+' '+H['Lista pubblicata'].get(i)+' '+H.Comune.get(i)).includes(AS.q))continue;idx.push(i)}
+  const conta=k=>{const m={};idx.forEach(i=>{let v=H[k].get(i);v=v==null?'(non pubblicato)':v===true?'Sì':v===false?'No':v;m[v]=(m[v]||0)+1});return Object.entries(m).sort((a,b)=>b[1]-a[1])};
+  const nCom=new Set(idx.map(i=>H.Comune.get(i))).size;const giunta=idx.filter(i=>H['Giunta comunale'].get(i)===true).length;
+  const lau=idx.filter(i=>/laurea|post/i.test(H['Titolo di studio pubblicato'].get(i)||'')).length;const conT=idx.filter(i=>H['Titolo di studio pubblicato'].get(i)).length;
+  kpi('kpiAmm',[{e:'Incarichi',v:NF0.format(idx.length),d:'Righe dell\'anagrafe, non persone uniche'},{e:'Comuni',v:NF0.format(nCom),d:globAttivo()?esc(nomeGlob()):'con almeno un incarico filtrato'},{e:'In giunta',v:NF0.format(giunta),d:'Sindaci, vicesindaci e assessori in giunta'},{e:'Laureati o oltre',v:conT?NF1.format(lau/conT*100)+'%':'n.d.',d:'Sugli incarichi con titolo pubblicato ('+NF0.format(conT)+')'}]);
+  const fil=(k,v)=>()=>{AS[k].clear();AS[k].add(v);$('#filtriAmm').innerHTML='';RENDER.amministratori();toast('Filtro: '+v)};
+  barre('barreAmmC',conta('Carica').map(([l,v])=>({l,v,click:fil('Carica',l)})));
+  barre('barreAmmT',conta('Titolo di studio pubblicato').map(([l,v])=>({l,v,col:'var(--c3)'})));
+  barre('barreAmmP',conta('Professione pubblicata').map(([l,v])=>({l,v,col:'var(--c4)'})));
+  const pa={};idx.forEach(i=>{const a=(H['Data elezione'].get(i)||'').slice(-4);pa[a]=(pa[a]||0)+1});const ka=Object.keys(pa).sort();
+  grafico('gAmmE',{type:'bar',data:{labels:ka,datasets:[{label:'Incarichi',data:ka.map(a=>pa[a]),backgroundColor:PAL()[1]}]},options:{}});
+  barre('barreAmmL',conta('Lista pubblicata').slice(0,15).map(([l,v])=>({l,v,col:'var(--c2)'})),{pct:false});
+  const hA=['Comune','Cognome','Nome','Carica','Giunta comunale','Lista pubblicata','Data elezione','Data inizio carica','Titolo di studio pubblicato','Professione pubblicata','Aggiornamento comune'];
+  const ord={sindaco:0,vicesindaco:1,assessore:2};idx.sort((x,y)=>collator.compare(H.Comune.get(x),H.Comune.get(y))||(ord[H.Carica.get(x)]??5)-(ord[H.Carica.get(y)]??5)||collator.compare(H.Cognome.get(x),H.Cognome.get(y)));
+  const mostra=idx.slice(0,1500);AS.idx=idx;
+  tabellaSemplice('tabAmm',hA,mostra.map(i=>hA.map(h=>fmtCella(H[h],H[h].get(i)))),r=>dettaglioRecord(A,mostra[r]));
+  $('#sotAmm').textContent=NF0.format(idx.length)+' incarichi'+(idx.length>1500?' · in tabella i primi 1.500, il CSV li contiene tutti':'');
+};
+$('#ammCSV').onclick=async()=>{const A=await ds('Amministratori_locali');const hA=A.cols.filter(c=>c.kind!=='vuota').map(c=>c.h);scarica('amministratori.csv',csvDa(hA,AS.idx.map(i=>hA.map(h=>{const v=A.byH[h].get(i);return typeof v==='boolean'?(v?'Sì':'No'):v}))))};
+
+/* ============ RIFIUTI ============ */
+const RS={ind:'RD (%)',anno:2017,ord:'d'};
+RENDER.rifiuti=async function(){
+  const R=await ds('Indicatori_rifiuti');const H=R.byH;
+  if(!$('#filtriRif').children.length){const f=$('#filtriRif');
+    f.innerHTML=`<label class="mute" style="flex:none;font-size:12px">Indicatore</label><select id="rifInd">${H.INDICATORE.dict.map(v=>`<option>${esc(v)}</option>`).join('')}</select><label class="mute" style="flex:none;font-size:12px">Anno della classifica</label><select id="rifAnno">${H.ANNO.dict.map(v=>`<option>${v}</option>`).join('')}</select><span class="mute" style="font-size:12px">Comune e provincia: filtro territoriale in alto.</span>`;
+    $('#rifInd').value=RS.ind;$('#rifAnno').value=RS.anno;$('#rifInd').onchange=e=>{RS.ind=e.target.value;RENDER.rifiuti()};$('#rifAnno').onchange=e=>{RS.anno=+e.target.value;RENDER.rifiuti()};
+  }
+  const P=PAL();const perc=/%/.test(RS.ind),proc=/ProCapite/.test(RS.ind);
+  // serie: somma per anno di Totale, Differenziati e residenti per i comuni filtrati
+  const S={};for(let i=0;i<R.N;i++){if(!okGlob(R,i))continue;const ind=H.INDICATORE.get(i),a=H.ANNO.get(i),v=H.VALORE.get(i);S[a]=S[a]||{};if(v!=null){S[a][ind]=(S[a][ind]||0)+v;S[a]['_n_'+ind]=(S[a]['_n_'+ind]||0)+1;if(ind==='Totale RU (t)')S[a]._res=(S[a]._res||0)+(H['NUMERO RESIDENTI'].get(i)||0)}}
+  const anni=Object.keys(S).sort();
+  const valAnno=a=>{const s=S[a];if(RS.ind==='RD (%)')return s['Totale RU (t)']?s['Differenziati (t)']/s['Totale RU (t)']*100:null;if(RS.ind==='ProCapite RU (Kg)')return s._res?s['Totale RU (t)']*1000/s._res:null;if(perc||proc)return s['_n_'+RS.ind]?s[RS.ind]/s['_n_'+RS.ind]:null;return s[RS.ind]??null};
+  const nomeSerie=G.com>=0?COMUNI[G.com].nome:(G.prov?'Provincia di '+PROV[G.prov]:'Regione');
+  grafico('gRifT',{type:'line',data:{labels:anni,datasets:[{label:RS.ind,data:anni.map(valAnno),borderColor:P[3],backgroundColor:P[3]}]},options:{}});
+  $('#titRifT').textContent='Andamento · '+nomeSerie;
+  $('#sotRifT').textContent=G.com>=0?'Valori della fonte per il comune':(RS.ind==='RD (%)'?'Calcolo: differenziati ÷ totale, sommati sui comuni':RS.ind==='ProCapite RU (Kg)'?'Calcolo: totale ÷ residenti, sommati sui comuni':(perc||proc)?'Media semplice dei valori comunali (non ponderata)':'Somma dei valori comunali');
+  const ultimo=valAnno(String(RS.anno)),primo=valAnno(anni[0]);
+  const s=S[RS.anno]||{};
+  kpi('kpiRif',[{e:RS.ind+' · '+RS.anno,v:ultimo!=null?NF.format(ultimo):'n.d.',d:nomeSerie},{e:'Totale rifiuti urbani '+RS.anno,v:s['Totale RU (t)']?NF0.format(s['Totale RU (t)'])+' t':'n.d.',d:'Somma dei comuni filtrati'},{e:'Differenziata '+RS.anno,v:s['Totale RU (t)']?NF1.format(s['Differenziati (t)']/s['Totale RU (t)']*100)+'%':'n.d.',d:'Calcolo ponderato sulle tonnellate'},{e:'Variazione dal '+anni[0],v:ultimo!=null&&primo!=null?(ultimo-primo>=0?'+':'')+NF.format(ultimo-primo):'n.d.',d:RS.ind+(perc?' (punti percentuali)':'')}]);
+  // classifica
+  const cl=[];for(let i=0;i<R.N;i++){if(H.INDICATORE.get(i)!==RS.ind||H.ANNO.get(i)!==RS.anno)continue;if(G.prov&&(R.ci[i]<0||COMUNI[R.ci[i]].prov!==G.prov))continue;const v=H.VALORE.get(i);if(v!=null)cl.push([H.COMUNE.get(i),v,R.ci[i]])}
+  cl.sort((a,b)=>RS.ord==='d'?b[1]-a[1]:a[1]-b[1]);const t=cl.slice(0,25);
+  const evid=G.com>=0?COMUNI[G.com].nome.toUpperCase():null;
+  grafico('gRifC',{type:'bar',data:{labels:t.map(x=>x[0]),datasets:[{label:RS.ind,data:t.map(x=>x[1]),backgroundColor:t.map(x=>x[2]===G.com?P[1]:P[3])}]},options:{indexAxis:'y',onClick:(e,el)=>{if(el[0]){const c=t[el[0].index][2];if(c>=0)impostaGlob(COMUNI[c].prov,c)}}}});
+  const pos=G.com>=0?cl.findIndex(x=>x[2]===G.com):-1;
+  $('#titRifC').textContent='Classifica dei comuni · '+RS.anno;
+  $('#sotRifC').textContent=`${RS.ind}, primi 25 su ${cl.length}${G.prov?' della provincia di '+PROV[G.prov]:''}${pos>=0?' · '+COMUNI[G.com].nome+' è al '+(pos+1)+'° posto':''}`;
+  $('#avvRif').innerHTML='<b>Nota sul foglio Rifiuti_comunali</b> (dettaglio per frazione merceologica e codice CER, catalogo europeo dei rifiuti): anno e valori risultano importati con il punto delle migliaia interpretato come separatore decimale. I valori sono <span class="da-verificare">DA VERIFICARE</span> sulla fonte originale; questa scheda usa solo il foglio Indicatori_rifiuti, che non presenta l\'anomalia. Il foglio resta comunque consultabile nell\'esploratore, con una colonna «ANNO (normalizzato)» derivata.';
+};
+$('#ordRif').onclick=e=>{const b=e.target.closest('button');if(!b)return;RS.ord=b.dataset.o;$$('#ordRif button').forEach(x=>x.setAttribute('aria-pressed',x===b));RENDER.rifiuti()};
+
+/* ============ ECONOMIA ============ */
+const ES={mis:'imp'};
+const MIS_ECO={imp:['Reddito imponibile medio per dichiarante','Reddito imponibile'],dip:['Reddito medio da lavoro dipendente','Reddito da lavoro dipendente e assimilati'],pen:['Reddito medio da pensione','Reddito da pensione'],aut:['Reddito medio da lavoro autonomo','Reddito da lavoro autonomo (comprensivo dei valori nulli)'],cont:['Numero di contribuenti',null],add:['Addizionale comunale media','Addizionale comunale dovuta'],ver:['Veicoli circolanti ogni 1.000 residenti 2025',null]};
+RENDER.economia=async function(){
+  const [I,V,O,D,X,M,C]=await Promise.all(['Redditi_IRPEF_2018','Veicoli_2017','Occupati_2007_2018','Disoccupati_2007_2018','Export_2014_2018','Import_2014_2018','Comuni'].map(ds));
+  if(!$('#filtriEco').children.length){$('#filtriEco').innerHTML=`<label class="mute" style="flex:none;font-size:12px">Misura della classifica</label><select id="ecoMis">${Object.entries(MIS_ECO).filter(([k])=>k!=='ver').map(([k,v])=>`<option value="${k}">${v[0]}</option>`).join('')}</select><span class="mute" style="font-size:12px">Le medie sono calcoli: ammontare ÷ numero di dichiaranti con quel reddito.</span>`;$('#ecoMis').onchange=e=>{ES.mis=e.target.value;RENDER.economia()}}
+  const P=PAL();const H=I.byH;
+  const idx=[...Array(I.N).keys()].filter(i=>okGlob(I,i)&&(G.com<0||true));
+  const idxClass=[...Array(I.N).keys()].filter(i=>!G.prov||(I.ci[i]>=0&&COMUNI[I.ci[i]].prov===G.prov));
+  const val=i=>{const [,k]=MIS_ECO[ES.mis];if(!k)return H['Numero contribuenti'].get(i);const a=H[k+' - Ammontare in euro'].get(i),f=H[k+' - Frequenza'].get(i);return a!=null&&f?a/f:null};
+  const sum=(k)=>idx.reduce((t,i)=>t+(H[k].get(i)||0),0);
+  const imp=sum('Reddito imponibile - Ammontare in euro'),fimp=sum('Reddito imponibile - Frequenza'),nc=sum('Numero contribuenti');
+  kpi('kpiEco',[{e:'Contribuenti 2017',v:NF0.format(nc),d:globAttivo()?esc(nomeGlob()):'Tutta la regione'},{e:'Reddito imponibile totale',v:NF0.format(imp/1e6)+' mln €',d:'Anno d\'imposta 2017'},{e:'Imponibile medio',v:fimp?NF0.format(imp/fimp)+' €':'n.d.',d:'Calcolo: ammontare ÷ frequenza'},{e:'Addizionale comunale',v:NF0.format(sum('Addizionale comunale dovuta - Ammontare in euro')/1e3)+' mila €',d:'Somma dovuta dai contribuenti'}]);
+  const cl=idxClass.map(i=>[H['Denominazione Comune'].get(i),val(i),I.ci[i]]).filter(x=>x[1]!=null).sort((a,b)=>b[1]-a[1]);
+  const pos=G.com>=0?cl.findIndex(x=>x[2]===G.com):-1;let t=cl.slice(0,25);if(pos>=25)t=[...t,cl[pos]];
+  grafico('gEcoC',{type:'bar',data:{labels:t.map(x=>(cl.indexOf(x)+1)+'. '+x[0]),datasets:[{label:MIS_ECO[ES.mis][0],data:t.map(x=>x[1]),backgroundColor:t.map(x=>x[2]===G.com?P[1]:P[0])}]},options:{indexAxis:'y',onClick:(e,el)=>{if(el[0]){const c=t[el[0].index][2];if(c>=0)impostaGlob(COMUNI[c].prov,c)}}}});
+  $('#titEcoC').textContent=MIS_ECO[ES.mis][0];
+  $('#sotEcoC').textContent=`Primi 25 su ${cl.length} comuni${G.prov?' della provincia di '+PROV[G.prov]:''}${pos>=0?' · '+COMUNI[G.com].nome+' è al '+(pos+1)+'° posto (evidenziato)':''}`;
+  const classi=['minore o uguale a zero euro','da 0 a 10000 euro','da 10000 a 15000 euro','da 15000 a 26000 euro','da 26000 a 55000 euro','da 55000 a 75000 euro','da 75000 a 120000 euro','oltre 120000 euro'];
+  const fr=classi.map(c=>sum('Reddito complessivo '+c+' - Frequenza'));
+  grafico('gEcoD',{type:'bar',data:{labels:['≤ 0','0 · 10 mila','10 · 15 mila','15 · 26 mila','26 · 55 mila','55 · 75 mila','75 · 120 mila','oltre 120 mila'],datasets:[{label:'Contribuenti',data:fr,backgroundColor:P[2]}]},options:{}});
+  $('#sotEcoD').textContent='Numero di contribuenti per classe in euro · '+(globAttivo()?nomeGlob():'tutta la regione');
+  const serieProv=(D_,id,leg)=>{const anni=D_.cols.filter(c=>/^\d{4}$/.test(c.h));const righe=[...Array(D_.N).keys()].filter(i=>{const g=(D_.byH.GENERE||{}).get;const tot=g?/totale/i.test(D_.byH.GENERE.get(i)):/totale|mondo/i.test((D_.byH['Area geografica']||{get:()=>'Totale'}).get(i));return tot});
+    const nomeP=i=>(D_.byH.PROVINCIA||D_.byH.Territorio).get(i);
+    const sel=righe.filter(i=>!G.prov||norm(nomeP(i))===norm(PROV[G.prov])||/^FVG$/i.test(nomeP(i)));
+    const CP={FVG:P[0],Udine:P[1],Pordenone:P[2],Gorizia:P[3],Trieste:P[4]};grafico(id,{type:'line',data:{labels:anni.map(c=>c.h),datasets:sel.map(i=>({label:nomeP(i),data:anni.map(c=>c.get(i)),borderColor:CP[nomeP(i)]||P[5],backgroundColor:CP[nomeP(i)]||P[5]}))},options:{}});legenda(leg,sel.map(i=>({l:nomeP(i)==='FVG'?'FVG (Friuli Venezia Giulia)':nomeP(i),c:CP[nomeP(i)]||P[5]})));};
+  serieProv(DS[$('#misLav [aria-pressed="true"]').dataset.m],'gLav','legLav');
+  serieProv(DS[$('#misEst [aria-pressed="true"]').dataset.m],'gEst','legEst');
+  const vi=[...Array(V.N).keys()].filter(i=>okGlob(V,i)&&V.ci[i]>=0);
+  const vt=V.cols.filter(c=>c.kind==='num'&&c.h!=='Somma:').map(c=>({l:c.h.toLowerCase(),v:vi.reduce((t,i)=>t+(c.get(i)||0),0)})).sort((a,b)=>b.v-a.v);
+  barre('barreVei',vt);$('#sotVei').textContent='Somma su '+vi.length+' comuni collegati'+(globAttivo()?' · '+nomeGlob():'')+', per classe di veicolo';
+};
+['misLav','misEst'].forEach(id=>$('#'+id).onclick=e=>{const b=e.target.closest('button');if(!b)return;$$('#'+id+' button').forEach(x=>x.setAttribute('aria-pressed',x===b));RENDER.economia()});
+
+/* ============ MAPPA ============ */
+const STRATI_LINEE=[
+  {n:'Rete_viaria',l:'Rete viaria',campo:'CLASSE',col:'--ink-3',valori:{AS:'Autostrade',RA:'Raccordi autostradali',SS:'Strade statali',SR:'Strade regionali',SP:'Strade provinciali',SC:'Strade comunali',NSA:'Altre (NSA)'},attivi:new Set(['AS','RA','SS','SR','SP'])},
+  {n:'Ciclovie_2020',l:'Ciclovie di interesse regionale',campo:'stato',col:'--c4',attivo:true},
+  {n:'Piste_ciclabili',l:'Piste ciclabili locali',campo:'livello',col:'--c6',attivo:false},
+];
+const STRATI_PUNTI=[
+  {n:'Farmacie',l:'Farmacie',col:'--c5',attivo:true},{n:'Parafarmacie_2024',l:'Parafarmacie',col:'--c3'},{n:'Guardie_mediche',l:'Guardie mediche',col:'--c5',attivo:true},
+  {n:'Residenze_anziani',l:'Residenze per anziani',col:'--c2'},{n:'Punti_WiFi',l:'Punti WiFi pubblici',col:'--c1'},{n:'Impianti_rifiuti_2020',l:'Impianti rifiuti',col:'--c2'},
+  {n:'Stazioni_idrometeo_2019',l:'Stazioni idrometeo protezione civile',col:'--c6'},{n:'Fattorie_didattiche_2017',l:'Fattorie didattiche',col:'--c4'},{n:'GTFS_fermate',l:'Fermate autobus (feed BusOne)',col:'--c3'}
+];
+const MAPPA={vista:null,geo:{},selezione:null,punti:[],pronto:false};
+RENDER.mappa=async function(){
+  const box=$('#strati');
+  if(!box.dataset.ok){box.dataset.ok=1;
+    box.innerHTML='<h3>Strati</h3><div class="sotto">Il filtro territoriale si applica ai punti collegati ai comuni.</div>'+
+      '<h4>Linee</h4>'+STRATI_LINEE.map((s,k)=>`<label><input type="checkbox" data-l="${k}" ${s.attivo!==false?'checked':''}><span class="ln" style="background:var(${s.col})"></span>${s.l}</label>`+(s.valori?`<div style="padding-left:24px">${Object.entries(s.valori).map(([v,t])=>`<label style="font-size:12px"><input type="checkbox" data-c="${v}" ${s.attivi.has(v)?'checked':''}>${t}</label>`).join('')}</div>`:'')).join('')+
+      '<h4>Punti</h4>'+STRATI_PUNTI.map((s,k)=>`<label><input type="checkbox" data-p="${k}" ${s.attivo?'checked':''}><span class="pt" style="background:var(${s.col})"></span>${s.l}</label>`).join('')+
+      '<h4>Dall\'esploratore</h4><div id="selMappa" class="mute" style="font-size:12px">Apri un foglio con coordinate nell\'esploratore e premi «Mostra sulla mappa»: i record filtrati compariranno qui in oro.</div>';
+    STRATI_LINEE[0].attivo=true;
+    box.onchange=async e=>{const x=e.target;if(x.dataset.l!=null)STRATI_LINEE[+x.dataset.l].attivo=x.checked;if(x.dataset.c){const s=STRATI_LINEE[0];x.checked?s.attivi.add(x.dataset.c):s.attivi.delete(x.dataset.c)}if(x.dataset.p!=null)STRATI_PUNTI[+x.dataset.p].attivo=x.checked;await caricaStrati();MAPPA.disegna()};
+    initMappa();
+  }
+  if(MAPPA.selezione){const s=MAPPA.selezione;$('#selMappa').innerHTML=`<label><input type="checkbox" id="selOn" checked><span class="pt" style="background:var(--accento-500)"></span>${esc(s.d.n.replace(/_/g,' '))} · ${NF0.format(s.idx.length)} record filtrati</label>`;$('#selOn').onchange=e=>{s.off=!e.target.checked;MAPPA.disegna()}}
+  $('#mappaInfo').textContent='Caricamento degli strati…';
+  await caricaStrati();MAPPA.disegna();
+};
+async function caricaStrati(){
+  const lav=[];
+  for(const s of STRATI_LINEE)if(s.attivo!==false&&!MAPPA.geo[s.n])lav.push((async()=>{const [g,d]=await Promise.all([caricaJSON('dati/geo_'+s.n+'.json'),ds(s.n)]);
+    const out=[];const c=d.byH[s.campo];
+    g.forEach((parti,i)=>{const val=c?c.get(i):null;parti.forEach(arr=>{const pts=new Float64Array(arr.length);let x=0,y=0;for(let k=0;k<arr.length;k+=2){x+=arr[k];y+=arr[k+1];pts[k]=x/1e5;pts[k+1]=y/1e5}out.push({i,val,pts})})});
+    MAPPA.geo[s.n]={linee:out,d}})());
+  for(const s of STRATI_PUNTI)if(s.attivo&&!DS[s.n])lav.push(ds(s.n));
+  await Promise.all(lav);
+}
+function initMappa(){
+  const cv=$('#mappa'),box=$('#mappaBox'),tip=$('#mappaTip');const ctx=cv.getContext('2d');
+  const BB={x0:12.30,x1:13.95,y0:45.55,y1:46.68};const KX=Math.cos(46.1*Math.PI/180);
+  let W,H,dpr;let v={cx:(BB.x0+BB.x1)/2,cy:(BB.y0+BB.y1)/2,s:1};
+  function adatta(){dpr=window.devicePixelRatio||1;W=box.clientWidth;H=box.clientHeight;cv.width=W*dpr;cv.height=H*dpr;if(!MAPPA.vista){v.s=Math.min(W/((BB.x1-BB.x0)*KX),H/(BB.y1-BB.y0))*0.95;MAPPA.base=v.s;MAPPA.vista=v}}
+  const px=x=>(x-v.cx)*KX*v.s+W/2,py=y=>H/2-(y-v.cy)*v.s;
+  MAPPA.disegna=function(){
+    if(!W||W!==box.clientWidth||H!==box.clientHeight)adatta();
+    ctx.setTransform(dpr,0,0,dpr,0,0);ctx.fillStyle=css('--map-bg');ctx.fillRect(0,0,W,H);
+    const xmin=v.cx-W/2/(KX*v.s),xmax=v.cx+W/2/(KX*v.s),ymin=v.cy-H/2/v.s,ymax=v.cy+H/2/v.s;
+    const zoom=v.s/MAPPA.base;let nL=0,nP=0;
+    const CLS={AS:[2.6,'--c5'],RA:[2,'--c5'],SS:[1.8,'--c2'],SR:[1.5,'--c2'],SP:[1,'--ink-3'],SC:[.6,'--line-strong'],NSA:[.6,'--line-strong']};
+    for(const s of STRATI_LINEE){if(s.attivo===false||!MAPPA.geo[s.n])continue;const g=MAPPA.geo[s.n];
+      const gruppi={};
+      for(const l of g.linee){if(s.valori&&!s.attivi.has(l.val))continue;const key=s.valori?l.val:(s.n==='Ciclovie_2020'&&/realizzat|percorribile$/.test(l.val||'')?'r':'p');(gruppi[key]=gruppi[key]||[]).push(l)}
+      const ordine=s.valori?['SC','NSA','SP','SR','SS','RA','AS']:Object.keys(gruppi);
+      for(const k of ordine){const arr=gruppi[k];if(!arr)continue;
+        if(s.valori){ctx.strokeStyle=css(CLS[k][1]);ctx.lineWidth=CLS[k][0]*Math.min(2,Math.max(1,zoom/3))}else{ctx.strokeStyle=css(s.col);ctx.lineWidth=2;ctx.setLineDash(k==='p'?[4,3]:[])}
+        ctx.beginPath();
+        for(const l of arr){const p=l.pts;let dentro=false;for(let q=0;q<p.length;q+=2){if(p[q]>=xmin&&p[q]<=xmax&&p[q+1]>=ymin&&p[q+1]<=ymax){dentro=true;break}}if(!dentro)continue;nL++;
+          ctx.moveTo(px(p[0]),py(p[1]));for(let q=2;q<p.length;q+=2)ctx.lineTo(px(p[q]),py(p[q+1]))}
+        ctx.stroke();ctx.setLineDash([]);
+      }
+    }
+    MAPPA.punti=[];
+    const r=Math.max(3,Math.min(6,2.5+zoom*0.6));
+    const disegnaPunti=(d,idx,col,etich)=>{ctx.fillStyle=col;ctx.strokeStyle=css('--surface');ctx.lineWidth=1.5;
+      for(const i of idx){const la=d.lat[i],lo=d.lon[i];if(!la||lo<xmin||lo>xmax||la<ymin||la>ymax)continue;const X=px(lo),Y=py(la);ctx.beginPath();ctx.arc(X,Y,r,0,6.2832);ctx.fill();ctx.stroke();MAPPA.punti.push({X,Y,d,i,etich});nP++}};
+    for(const s of STRATI_PUNTI){if(!s.attivo||!DS[s.n])continue;const d=DS[s.n];const idx=[];for(let i=0;i<d.N;i++)if(okGlob(d,i))idx.push(i);disegnaPunti(d,idx,css(s.col),s.l)}
+    if(MAPPA.selezione&&!MAPPA.selezione.off&&MAPPA.selezione.d.lat)disegnaPunti(MAPPA.selezione.d,MAPPA.selezione.idx,css('--accento-500'),MAPPA.selezione.d.n.replace(/_/g,' '));
+    // scala
+    const km=v.s*KX*0+v.s/111;const passi=[1,2,5,10,20,50];let L=passi.find(p=>p*km>60)||50;ctx.fillStyle=css('--ink-2');ctx.strokeStyle=css('--ink-2');ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(W-20-L*km,H-18);ctx.lineTo(W-20,H-18);ctx.stroke();ctx.font='11px '+getComputedStyle(document.body).fontFamily;ctx.textAlign='right';ctx.fillText(L+' km',W-20,H-24);
+    $('#mappaInfo').textContent=`${NF0.format(nL)} tratti · ${NF0.format(nP)} punti in vista${globAttivo()?' · filtro: '+nomeGlob():''}`;
+  };
+  // interazione
+  let trasc=null;const pts=new Map();
+  cv.addEventListener('pointerdown',e=>{cv.setPointerCapture(e.pointerId);pts.set(e.pointerId,{x:e.offsetX,y:e.offsetY});trasc={x:e.offsetX,y:e.offsetY,cx:v.cx,cy:v.cy,mosso:false};cv.style.cursor='grabbing'});
+  cv.addEventListener('pointermove',e=>{
+    if(pts.has(e.pointerId)){const prev=pts.get(e.pointerId);pts.set(e.pointerId,{x:e.offsetX,y:e.offsetY});
+      if(pts.size===2){const [a,b]=[...pts.values()];const da=Math.hypot(a.x-b.x,a.y-b.y);const pa=[...pts.entries()].map(([k,p])=>k===e.pointerId?prev:p);const db=Math.hypot(pa[0].x-pa[1].x,pa[0].y-pa[1].y)||1;zoomA((a.x+b.x)/2,(a.y+b.y)/2,da/db);trasc=null;return}
+      if(trasc){const dx=e.offsetX-trasc.x,dy=e.offsetY-trasc.y;if(Math.abs(dx)+Math.abs(dy)>3)trasc.mosso=true;v.cx=trasc.cx-dx/(KX*v.s);v.cy=trasc.cy+dy/v.s;richiedi()}return}
+    const p=vicino(e.offsetX,e.offsetY);if(p){tip.hidden=false;tip.innerHTML=`<b>${esc(abbrevia(titoloRecord(p.d,p.i),60))}</b><br><span style="opacity:.8">${esc(p.etich)}</span>`;tip.style.left=Math.min(e.offsetX+14,W-290)+'px';tip.style.top=(e.offsetY+14)+'px';cv.style.cursor='pointer'}else{tip.hidden=true;cv.style.cursor='grab'}
+  });
+  const fine=e=>{pts.delete(e.pointerId);if(trasc&&!trasc.mosso&&e.type==='pointerup'){const p=vicino(e.offsetX,e.offsetY);if(p)dettaglioRecord(p.d,p.i)}trasc=null;cv.style.cursor='grab'};
+  cv.addEventListener('pointerup',fine);cv.addEventListener('pointercancel',fine);cv.addEventListener('pointerleave',()=>{tip.hidden=true});
+  cv.addEventListener('wheel',e=>{e.preventDefault();zoomA(e.offsetX,e.offsetY,e.deltaY<0?1.25:0.8)},{passive:false});
+  function zoomA(X,Y,f){const lx=v.cx+(X-W/2)/(KX*v.s),ly=v.cy-(Y-H/2)/v.s;v.s=Math.max(MAPPA.base*.6,Math.min(MAPPA.base*400,v.s*f));v.cx=lx-(X-W/2)/(KX*v.s);v.cy=ly+(Y-H/2)/v.s;richiedi()}
+  function vicino(X,Y){let b=null,bd=100;for(const p of MAPPA.punti){const d=(p.X-X)**2+(p.Y-Y)**2;if(d<bd){bd=d;b=p}}return b}
+  let raf=0;function richiedi(){if(!raf)raf=requestAnimationFrame(()=>{raf=0;MAPPA.disegna()})}
+  $('#zPiu').onclick=()=>zoomA(W/2,H/2,1.5);$('#zMeno').onclick=()=>zoomA(W/2,H/2,1/1.5);$('#zReset').onclick=()=>{MAPPA.vista=null;v={cx:(BB.x0+BB.x1)/2,cy:(BB.y0+BB.y1)/2,s:1};adatta();MAPPA.disegna()};
+  new ResizeObserver(()=>{if(VISTA==='mappa'){adatta();MAPPA.disegna()}}).observe(box);
+  adatta();
+}
+function adattaGrigliaMappa(){$('#gridMappa').style.gridTemplateColumns=innerWidth<900?'minmax(0,1fr)':'minmax(0,1fr) 280px'}
+addEventListener('resize',adattaGrigliaMappa);adattaGrigliaMappa();
+
+/* ============ FONTI ============ */
+RENDER.fonti=async function(){
+  if(!$('#leggimi').dataset.ok){$('#leggimi').dataset.ok=1;
+    $('#leggimi').innerHTML=CAT.leggimi.filter(r=>r[1]).map(r=>`<dt>${esc(r[0])}</dt><dd>${/^https?:/.test(r[1])?`<a href="${esc(r[1])}" target="_blank" rel="noopener">${esc(r[1])}</a>`:esc(r[1])}</dd>`).join('');
+    const Q=await ds('Qualita_limiti');const h=['Tipo controllo','Foglio / ambito','Descrizione','Coordinate / periodo','Valori / dettaglio'];
+    $('#qualita').innerHTML=[...Array(Q.N).keys()].map(i=>`<div class="avviso ${/CONFLITTO|ACCESSO/.test(Q.byH['Tipo controllo'].get(i))?'rosso':''}" style="margin-bottom:8px"><span class="stato-pill ${/CONFLITTO|ACCESSO/.test(Q.byH['Tipo controllo'].get(i))?'sp-bad':'sp-warn'}">${esc(Q.byH['Tipo controllo'].get(i))}</span> <b>${esc(Q.byH['Foglio / ambito'].get(i))}</b><br>${esc(Q.byH['Descrizione'].get(i))}${Q.byH['Valori / dettaglio'].get(i)?'<br><span class="mute">'+esc(Q.byH['Valori / dettaglio'].get(i))+'</span>':''}${Q.byH['Fonte URL'].get(i)?`<br><a href="${esc(Q.byH['Fonte URL'].get(i))}" target="_blank" rel="noopener">Fonte</a>`:''}</div>`).join('');
+    const amb=[...new Set(CAT.catalogo.map(m=>m.ambito))].sort(collator.compare);$('#catAmb').insertAdjacentHTML('beforeend',amb.map(a=>`<option>${esc(a)}</option>`).join(''));
+    $('#catAmb').onchange=RENDER.fonti;$('#catQ').oninput=RENDER.fonti;
+  }
+  const a=$('#catAmb').value,q=norm($('#catQ').value);
+  const lista=CAT.catalogo.filter(m=>(!a||m.ambito===a)&&(!q||norm(m.n+' '+m.descr+' '+m.ambito+' '+m.fonte).includes(q)));
+  tabellaSemplice('tabCat',['Foglio','Ambito','Righe','Colonne','Collegato ai comuni','Coordinate','Descrizione','Fonte'],lista.map(m=>[m.n.replace(/_/g,' '),m.ambito,NF0.format(m.righe),String(m.colonne.length+m.consts.length),m.mcol?'Sì · '+NF0.format(m.match):'No',m.geo||'',abbrevia(m.descr,180),String(m.fonte||'').replace(/^Fonte:\s*/,'')]),r=>apriFoglio(lista[r].n),[2,3]);
+};
+
+/* ============ avvio ============ */
+(async function(){
+  try{
+    CAT=await caricaJSON('dati/catalogo.json');COMUNI=CAT.comuni;CAT.catalogo.forEach(m=>META[m.n]=m);
+    popolaGlobali();
+    try{const g=JSON.parse(localStorage.getItem('dbfvg-glob')||'null');if(g)impostaGlob(g.prov||'',g.com??-1,true)}catch(e){}
+    let v='panoramica';try{v=localStorage.getItem('dbfvg-vista')||v}catch(e){}
+    const h=location.hash.replace('#','');if(h&&RENDER[h])v=h;
+    vai(RENDER[v]?v:'panoramica');
+  }catch(e){console.error(e);$('main').insertAdjacentHTML('afterbegin',`<div class="card avviso rosso" style="margin-top:16px">Non riesco a caricare i dati (${esc(e.message)}). Se hai aperto il file direttamente dal disco, servilo tramite un server web: i fogli vengono letti dalla cartella «dati».</div>`)}
+})();
+</script>
+</body>
+</html>
