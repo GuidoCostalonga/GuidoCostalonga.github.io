@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Cuore con traccia del battito: disegnato per questa app. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="108" android:viewportHeight="108">
+    <path android:fillColor="#FFFFFFFF"
+        android:pathData="M54,78 C40,67 30,59 30,47 C30,40 35,35 42,35 C47,35 51,38 54,42 C57,38 61,35 66,35 C73,35 78,40 78,47 C78,59 68,67 54,78 Z" />
+    <path android:strokeColor="#FF0E5C63" android:strokeWidth="3" android:strokeLineCap="round" android:strokeLineJoin="round"
+        android:pathData="M33,52 L44,52 L48,44 L53,60 L57,48 L60,52 L75,52" />
+</vector>

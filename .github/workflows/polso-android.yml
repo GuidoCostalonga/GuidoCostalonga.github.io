@@ -1,0 +1,71 @@
+# Compila l'app Android "Polso", esegue le prove e lascia l'APK
+# fra i file dell'esecuzione (scheda Actions, in fondo alla pagina).
+name: Polso · app Android
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "polso-android/**"
+      - ".github/workflows/polso-android.yml"
+  pull_request:
+    paths:
+      - "polso-android/**"
+      - ".github/workflows/polso-android.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  apk:
+    name: Prove e APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Scarica il codice
+        uses: actions/checkout@v4
+
+      - name: Prepara Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Ricorda le dipendenze
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: polso-${{ hashFiles('polso-android/**/*.gradle.kts', 'polso-android/gradle/wrapper/gradle-wrapper.properties') }}
+          restore-keys: polso-
+
+      - name: Prove automatiche (motore e app)
+        working-directory: polso-android
+        run: ./gradlew --no-daemon :motore:test :app:testDebugUnitTest
+
+      - name: Compila l'APK e controlla il codice
+        working-directory: polso-android
+        run: ./gradlew --no-daemon :app:assembleRelease :app:lintDebug
+
+      - name: Metti a disposizione l'APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Polso-apk
+          if-no-files-found: error
+          retention-days: 60
+          path: polso-android/app/build/outputs/apk/release/*.apk
+
+      - name: Metti a disposizione schermate e resoconti
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Polso-resoconti
+          if-no-files-found: ignore
+          path: |
+            polso-android/app/build/schermate/**
+            polso-android/app/build/reports/**
+            polso-android/motore/build/reports/**

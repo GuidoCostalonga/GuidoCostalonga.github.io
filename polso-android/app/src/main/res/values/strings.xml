@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Polso</string>
+    <string name="canale_variazioni">Variazioni importanti</string>
+    <string name="canale_variazioni_descrizione">Solo cambiamenti persistenti rispetto al tuo storico, con dato, periodo e motivo.</string>
+</resources>
