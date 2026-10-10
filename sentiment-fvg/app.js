@@ -1,8 +1,11 @@
 /* Monitor della percezione pubblica FVG: logica del cruscotto.
  *
- * Mostra solo dati reali: legge /api/istantanea dal servizio indicato in
- * data-servizio e resta in ascolto su /api/flusso (eventi SSE). Se il servizio
- * non è indicato, il cruscotto resta vuoto e lo dice chiaramente.
+ * Mostra solo dati reali, da una di due sorgenti:
+ *  - data-servizio: servizio Python in diretta (/api/istantanea e /api/flusso, eventi SSE);
+ *  - data-dati: file cifrato prodotto ogni 30 minuti dalla raccolta automatica dell'Atlante FVG,
+ *    aperto con la chiave che la pagina ha già ricavato dalla parola d'ordine
+ *    (window.ATLANTE_MONITOR_CHIAVE).
+ * Senza sorgente il cruscotto resta vuoto e lo dice chiaramente.
  *
  * Il cruscotto non contiene e non riceve mai chiavi private: l'accesso al
  * servizio avviene con un cookie di sessione HttpOnly impostato dal server.
@@ -15,8 +18,14 @@
   // L'indirizzo del servizio sta su #monitor (pagina incorporata, es. Atlante FVG) oppure su <body>
   const SERVIZIO = (document.getElementById('monitor')?.dataset.servizio || document.body.dataset.servizio || '')
     .trim().replace(/\/+$/, '');
-  const INTERVALLO_MIN = 10;                 // ampiezza degli intervalli nei grafici
-  const ORE_GRAFICO = 6;
+  const FILE_DATI = (document.getElementById('monitor')?.dataset.dati || '').trim();
+  const OGNI_QUANTO = 5 * 60_000;            // controllo del file cifrato
+  // Grafici: in diretta 6 ore a intervalli di 10 minuti; con la raccolta ogni 30 minuti (notizie, meno
+  // frequenti) 24 ore a intervalli di un'ora. Con un solo politico o partito gli intervalli raddoppiano o triplicano.
+  const A_GIRI = !(document.getElementById('monitor')?.dataset.servizio || document.body.dataset.servizio)
+    && !!document.getElementById('monitor')?.dataset.dati;
+  const INTERVALLO_MIN = A_GIRI ? 60 : 10;
+  const ORE_GRAFICO = A_GIRI ? 24 : 6;
   const MAX_SCHEDE = 80;
   const MINUTO = 60_000, ORA = 60 * MINUTO;
 
@@ -40,7 +49,12 @@
   };
 
   const $ = (id) => document.getElementById(id);
-  const tempo = (m) => Date.parse(m.raccolto);
+  // Ora di pubblicazione (se plausibile), altrimenti di raccolta: con la raccolta a giri ogni 30 minuti
+  // l'ora di raccolta è la stessa per molte menzioni e appiattirebbe i grafici
+  const tempo = (m) => {
+    const r = Date.parse(m.raccolto), p = Date.parse(m.pubblicato);
+    return Number.isFinite(p) && p <= r ? p : r;
+  };
   const css = (nome) => getComputedStyle(document.documentElement).getPropertyValue(nome).trim();
 
   // ------------------------------------------------------------------ obiettivo del monitoraggio
@@ -133,7 +147,7 @@
     const varVol = precedente.length ? ((ultima.length - precedente.length) / precedente.length) * 100 : null;
     $('k-volume-var').textContent = varVol == null ? '' : `${conSegno(Math.round(varVol))}% sull'ora prima`;
 
-    const indici = intervalli(2, INTERVALLO_MIN).filter((s) => s.voci.length >= 3).map((s) => indiceNetto(s.voci));
+    const indici = intervalli(A_GIRI ? 24 : 2, INTERVALLO_MIN).filter((s) => s.voci.length >= 3).map((s) => indiceNetto(s.voci));
     const vol = scarto(indici);
     $('k-volatilita').textContent = indici.length >= 3 ? numero(vol, 1) : '–';
     $('k-volatilita-var').textContent = indici.length < 3 ? 'dati insufficienti' : vol < 10 ? 'bassa: opinione stabile' : vol < 20 ? 'media' : 'alta: opinione in movimento';
@@ -182,9 +196,10 @@
       type: 'line',
       data: { labels: [], datasets: [{
         data: [], conteggi: [], borderWidth: 2, tension: 0.2, spanGaps: true,
-        pointRadius: 0, pointHoverRadius: 5, pointHoverBorderWidth: 2, pointHoverBorderColor: sup,
+        pointRadius: 2, pointHoverRadius: 5, pointHoverBorderWidth: 2, pointHoverBorderColor: sup,
         segment: { borderColor: (c) => ((c.p0.parsed.y + c.p1.parsed.y) / 2 >= 0 ? pos : neg) },
         pointHoverBackgroundColor: (c) => ((c.raw ?? 0) >= 0 ? pos : neg),
+        pointBackgroundColor: (c) => ((c.raw ?? 0) >= 0 ? pos : neg), pointBorderWidth: 0,
       }] },
       options: oA,
     });
@@ -219,8 +234,8 @@
   function aggiornaGrafici() {
     if (!grafici.andamento) return;
     // Con un solo politico o partito i dati sono meno: intervalli più ampi, linea più affidabile
-    const ampiezza = stato.obiettivo.length ? 30 : INTERVALLO_MIN;
-    $('nota-andamento').textContent = `Ultime 6 ore, intervalli di ${ampiezza} minuti. Da −100 a +100.`;
+    const ampiezza = stato.obiettivo.length ? (A_GIRI ? 120 : 30) : INTERVALLO_MIN;
+    $('nota-andamento').textContent = `Ultime ${ORE_GRAFICO} ore, intervalli di ${ampiezza === 60 ? 'un\'ora' : ampiezza > 60 ? `${ampiezza / 60} ore` : `${ampiezza} minuti`}. Da −100 a +100.`;
     const secchi = intervalli(ORE_GRAFICO, ampiezza);
     const etichette = secchi.map((s) => oraBreve(s.inizio));
 
@@ -450,7 +465,9 @@
         avviso.hidden = false;
         avviso.textContent = SERVIZIO
           ? 'Nessuna menzione ancora: il servizio ha avviato la ricerca su testate e social, i risultati compaiono qui appena arrivano.'
-          : 'Il servizio di raccolta non è ancora attivo: il nome resta impostato e verrà cercato appena il servizio sarà collegato.';
+          : FILE_DATI
+            ? 'Nessuna menzione di questo nome nelle ultime 24 ore. Per cercarlo anche su Google News e Bluesky va aggiunto all\'elenco dei nomi seguiti (segreto MONITOR_NOMI nelle impostazioni del repository).'
+            : 'Il servizio di raccolta non è ancora attivo: il nome resta impostato e verrà cercato appena il servizio sarà collegato.';
       }
     }
     // Suggerimenti: persone e partiti citati più spesso nelle ultime 24 ore
@@ -614,6 +631,40 @@
     };
   }
 
+  // ------------------------------------------------------------------ file cifrato della raccolta automatica
+  let primaLettura = true;
+  async function leggiFile() {
+    const avviso = $('avviso-servizio');
+    try {
+      const r = await fetch(`${FILE_DATI}?t=${Date.now()}`, { cache: 'no-store' });
+      if (r.status === 404) {
+        impostaStato('attesa', 'In attesa della prima raccolta');
+        if (avviso) { avviso.hidden = false; avviso.textContent = 'La raccolta automatica non ha ancora pubblicato dati: il primo giro arriva entro mezz\'ora da quando sono configurati i segreti.'; }
+        return;
+      }
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      const p = await r.json();
+      const b64 = (t) => Uint8Array.from(atob(t), (c) => c.charCodeAt(0));
+      const chiaro = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64(p.i) }, window.ATLANTE_MONITOR_CHIAVE, b64(p.d));
+      const dati = JSON.parse(await new Response(new Blob([chiaro]).stream().pipeThrough(new DecompressionStream('gzip'))).text());
+      if (avviso) avviso.hidden = true;
+      aggiungiMenzioni(dati.menzioni || [], !primaLettura);
+      (dati.allerte || []).forEach((a) => nuovaAllerta(a, primaLettura));
+      primaLettura = false;
+      const quando = Date.parse(dati.generato);
+      const vecchio = Date.now() - quando > 2 * ORA;
+      impostaStato(vecchio ? 'errore' : 'collegato', `${vecchio ? 'Ultimo aggiornamento' : 'Aggiornato alle'} ${new Date(quando).toLocaleString('it-IT', { hour: '2-digit', minute: '2-digit', day: vecchio ? '2-digit' : undefined, month: vecchio ? '2-digit' : undefined })}`);
+    } catch (e) {
+      impostaStato('errore', 'Dati non leggibili');
+      if (avviso) { avviso.hidden = false; avviso.textContent = `Non riesco a leggere i dati della raccolta (${e.message || 'chiave diversa'}). Se la parola d'ordine è cambiata, va aggiornato anche il segreto MONITOR_PAROLA.`; }
+    }
+  }
+  function avviaFile() {
+    impostaStato('attesa', 'Lettura dei dati');
+    leggiFile();
+    setInterval(leggiFile, OGNI_QUANTO);
+  }
+
   // ------------------------------------------------------------------ servizio non collegato
   function senzaServizio() {
     impostaStato('errore', 'Dati reali non ancora attivi');
@@ -702,7 +753,9 @@
     if (!iniziale) { try { iniziale = (JSON.parse(localStorage.getItem('monitor-obiettivo') || '[]') || []).join(', '); } catch { /* facoltativo */ } }
     if (iniziale) { stato.obiettivo = iniziale.split(',').map((v) => v.trim()).filter((v) => v.length >= 2).slice(0, 5); impostaSchemi(); }
     creaGrafici();
-    if (SERVIZIO) avviaServizio(); else senzaServizio();
+    if (SERVIZIO) avviaServizio();
+    else if (FILE_DATI && window.ATLANTE_MONITOR_CHIAVE) avviaFile();
+    else senzaServizio();
   }
   let giaSbloccato = false;
   try { giaSbloccato = sessionStorage.getItem('monitor-sbloccato') === IMPRONTA_PAROLA; } catch { /* facoltativo */ }
