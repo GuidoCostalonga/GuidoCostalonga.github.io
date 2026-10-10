@@ -1,10 +1,8 @@
 /* Monitor della percezione pubblica FVG: logica del cruscotto.
  *
- * Due modalità:
- *  - servizio: se <body data-servizio="https://..."> è compilato, legge
- *    /api/istantanea e resta in ascolto su /api/flusso (eventi SSE);
- *  - simulazione: se data-servizio è vuoto (o con ?demo=1), genera dati finti
- *    chiaramente etichettati, utili per provare il cruscotto.
+ * Mostra solo dati reali: legge /api/istantanea dal servizio indicato in
+ * data-servizio e resta in ascolto su /api/flusso (eventi SSE). Se il servizio
+ * non è indicato, il cruscotto resta vuoto e lo dice chiaramente.
  *
  * Il cruscotto non contiene e non riceve mai chiavi private: l'accesso al
  * servizio avviene con un cookie di sessione HttpOnly impostato dal server.
@@ -17,12 +15,6 @@
   // L'indirizzo del servizio sta su #monitor (pagina incorporata, es. Atlante FVG) oppure su <body>
   const SERVIZIO = (document.getElementById('monitor')?.dataset.servizio || document.body.dataset.servizio || '')
     .trim().replace(/\/+$/, '');
-  const DEMO = !SERVIZIO || parametri.get('demo') === '1';
-
-  const SOGLIE = {           // le stesse del servizio (vedi servizio/.env.esempio)
-    finestraMin: 15, baseOre: 6, volumeMinimo: 12, caloCrisi: 30, quotaNegativaCrisi: 0.6,
-    crescitaOpportunita: 2, indiceOpportunita: 40, pausaMin: 45,
-  };
   const INTERVALLO_MIN = 10;                 // ampiezza degli intervalli nei grafici
   const ORE_GRAFICO = 6;
   const MAX_SCHEDE = 80;
@@ -44,7 +36,7 @@
     suoni: false,
     filtri: { fonte: 'tutte', polarita: 'tutte', sarcasmo: false, testo: '' },
     obiettivo: [],             // varianti del nome del politico o partito monitorato
-    ora: () => Date.now(),     // in simulazione è l'orologio accelerato
+    ora: () => Date.now(),
   };
 
   const $ = (id) => document.getElementById(id);
@@ -456,9 +448,9 @@
       $('obiettivo-conteggio').textContent = `· ${numero(n24)} menzioni nelle ultime 24 ore, ${numero(n1)} nell'ultima ora`;
       if (!n24) {
         avviso.hidden = false;
-        avviso.textContent = DEMO
-          ? `Nella simulazione compaiono solo nomi di fantasia (${FIGURE_DEMO.map((f) => f.nome).join(', ')}). Con il servizio collegato, il nome che scrivi viene cercato davvero su testate e social.`
-          : 'Nessuna menzione ancora: il servizio ha avviato la ricerca su testate e social, i risultati compaiono qui appena arrivano.';
+        avviso.textContent = SERVIZIO
+          ? 'Nessuna menzione ancora: il servizio ha avviato la ricerca su testate e social, i risultati compaiono qui appena arrivano.'
+          : 'Il servizio di raccolta non è ancora attivo: il nome resta impostato e verrà cercato appena il servizio sarà collegato.';
       }
     }
     // Suggerimenti: persone e partiti citati più spesso nelle ultime 24 ore
@@ -483,7 +475,7 @@
     const url = new URL(location.href);
     if (varianti.length) url.searchParams.set('nome', varianti.join(', ')); else url.searchParams.delete('nome');
     history.replaceState(null, '', url);
-    if (!DEMO && !daServizio) inviaObiettivo(varianti);
+    if (SERVIZIO && !daServizio) inviaObiettivo(varianti);
     aggiornaIndicatori(); aggiornaGrafici(); aggiornaTemi(); aggiornaFonti(); aggiornaObiettivo();
     disegnaFlusso();
     avvisaAltezza();
@@ -622,186 +614,12 @@
     };
   }
 
-  // ------------------------------------------------------------------ simulazione
-  // Testi inventati per la dimostrazione: nessun riferimento a persone reali.
-  const E = (testo, tipo = 'ente') => ({ testo, tipo });
-  const MODELLI = {
-    normale: [
-      ['Complimenti davvero, terzo mese di cantiere e la rotonda è ancora chiusa 👏', 'negativo', -0.7, true, 'rabbia', ['viabilità'], [E('Comune')], null, 'Lode ironica su un cantiere fermo.'],
-      ['Bravissimi, un\'altra ora di coda in tangenziale. Organizzazione perfetta.', 'negativo', -0.6, true, 'rabbia', ['viabilità'], [], null, 'Sarcasmo sulle code.'],
-      ['Grazie per il treno soppresso anche oggi, così mi godo l\'alba in stazione.', 'negativo', -0.6, true, 'rabbia', ['trasporti'], [], null, 'Ringraziamento ironico per un disservizio.'],
-      ['Che efficienza, sei mesi per una visita specialistica. Avanti così!', 'negativo', -0.7, true, 'rabbia', ['sanità'], [E('Azienda sanitaria')], null, 'Ironia sulle liste di attesa.'],
-      ['Pronto soccorso pieno da ieri sera, servono più medici e subito.', 'negativo', -0.6, false, 'rabbia', ['sanità'], [E('Pronto soccorso')], null, 'Protesta esplicita sulla carenza di personale.'],
-      ['Al è un disastri: la strade e je plene di busis.', 'negativo', -0.6, false, 'rabbia', ['viabilità'], [], 'friulano', 'Lamentela sulle buche, in friulano.'],
-      ['Xe ora che i se movi con le corriere, la sera no passa più niente.', 'negativo', -0.5, false, 'rabbia', ['trasporti'], [], 'triestino', 'Critica al trasporto serale, in triestino.'],
-      ['Furti nelle case in zona industriale, i residenti chiedono più controlli.', 'negativo', -0.4, false, 'paura', ['sicurezza'], [], null, 'Preoccupazione per i furti.'],
-      ['Affitti alle stelle, i giovani se ne vanno dal paese.', 'negativo', -0.5, false, 'tristezza', ['casa', 'lavoro'], [], null, 'Amarezza per lo spopolamento.'],
-      ['Approvato il piano per la manutenzione delle scuole: i lavori partiranno in primavera.', 'neutro', 0.1, false, 'indifferenza', ['scuola'], [E('Regione Friuli Venezia Giulia')], null, 'Notizia senza giudizio.'],
-      ['Convocato il Consiglio regionale per l\'esame della legge di assestamento.', 'neutro', 0, false, 'indifferenza', ['bilancio'], [E('Consiglio regionale')], null, 'Notizia di servizio.'],
-      ['Pubblicato il bando per i contributi alle associazioni sportive: domande entro fine mese.', 'neutro', 0.1, false, 'indifferenza', ['sport'], [E('Regione Friuli Venezia Giulia')], null, 'Informazione su un bando.'],
-      ['Domani chiusura temporanea del tratto stradale per lavori notturni.', 'neutro', -0.05, false, 'indifferenza', ['viabilità'], [], null, 'Avviso di servizio.'],
-      ['Finalmente la nuova pista ciclabile lungo il fiume: bellissima, già piena di famiglie!', 'positivo', 0.8, false, 'entusiasmo', ['ambiente', 'mobilità'], [], null, 'Apprezzamento sincero.'],
-      ['Ce biel il centri cul marcjât, mandi a ducj!', 'positivo', 0.8, false, 'entusiasmo', ['eventi'], [], 'friulano', 'Lode sincera in friulano.'],
-      ['Ottimo lavoro della protezione civile durante il temporale, presenti in pochi minuti.', 'positivo', 0.7, false, 'fiducia', ['sicurezza', 'protezione civile'], [E('Protezione civile')], null, 'Riconoscimento per un intervento.'],
-      ['Nuovo ambulatorio di comunità aperto: meno attese e più servizi vicino a casa.', 'positivo', 0.6, false, 'fiducia', ['sanità'], [E('Azienda sanitaria')], null, 'Giudizio favorevole su un servizio.'],
-      ['Il contributo per i libri di scuola è arrivato in tempo, una mano concreta alle famiglie.', 'positivo', 0.6, false, 'fiducia', ['scuola', 'famiglie'], [], null, 'Gratitudine per un sostegno.'],
-    ],
-    crisi: [
-      ['Ancora ponte chiuso e nessuna alternativa: siamo isolati e nessuno risponde!', 'negativo', -0.85, false, 'rabbia', ['viabilità'], [E('Ponte sul torrente', 'localita')], null, 'Protesta forte per un isolamento.'],
-      ['Vergognoso, due ore fermi in colonna senza una sola comunicazione.', 'negativo', -0.8, false, 'rabbia', ['viabilità'], [], null, 'Indignazione per la mancata informazione.'],
-      ['Complimenti per la gestione del cantiere, davvero un capolavoro 👏👏', 'negativo', -0.8, true, 'rabbia', ['viabilità'], [], null, 'Elogio ironico: critica netta.'],
-      ['Ma xe mai possibile che nessun avvisi prima dei lavori?', 'negativo', -0.7, false, 'rabbia', ['viabilità'], [], 'veneto', 'Protesta in veneto pordenonese.'],
-      ['Ambulanze costrette al giro lungo per il ponte chiuso, qui si rischia grosso.', 'negativo', -0.75, false, 'paura', ['viabilità', 'sanità'], [], null, 'Timore per i soccorsi.'],
-    ],
-    ondata: [
-      ['Dimissioni subito! Vergogna! #bastacosì', 'negativo', -0.9, false, 'rabbia', ['viabilità'], [], null, 'Messaggio ripetuto da molti account.'],
-    ],
-    opportunita: [
-      ['Piazze piene per la festa del vino, il Friuli quando vuole è imbattibile!', 'positivo', 0.85, false, 'entusiasmo', ['eventi', 'turismo'], [], null, 'Entusiasmo per un evento.'],
-      ['Fine settimana da record nei rifugi in montagna, che orgoglio vedere tanta gente.', 'positivo', 0.8, false, 'entusiasmo', ['turismo'], [], null, 'Orgoglio per l\'affluenza.'],
-      ['Bellissima la giornata delle borgate, da rifare ogni anno!', 'positivo', 0.8, false, 'entusiasmo', ['eventi', 'turismo'], [], null, 'Richiesta di ripetere l\'iniziativa.'],
-      ['Turisti ovunque sulla costa, ottimo segnale per chi lavora d\'estate.', 'positivo', 0.7, false, 'fiducia', ['turismo', 'lavoro'], [], null, 'Fiducia nella stagione turistica.'],
-    ],
-  };
-  // Politici e partiti DI FANTASIA: la simulazione non attribuisce mai testi a persone reali
-  const FIGURE_DEMO = [
-    { nome: 'Bruno Selvadeo', tipo: 'persona', titolo: 'Sindaco' },
-    { nome: 'Ottavia Riulin', tipo: 'persona', titolo: 'Assessora' },
-    { nome: 'Ilario Castelmur', tipo: 'persona', titolo: 'Consigliere' },
-    { nome: 'Movimento Borghi Uniti', tipo: 'partito', sigla: 'MBU' },
-    { nome: 'Alleanza Laguna e Monti', tipo: 'partito', sigla: 'ALM' },
-  ];
-  const FONTI_DEMO = [['rss', 'Testata locale (simulata)'], ['bluesky', null], ['x', null], ['facebook', null], ['telegram', 'Canale pubblico (simulato)']];
-  const caso = (lista) => lista[Math.floor(Math.random() * lista.length)];
-  const vicino = (v, d) => Math.max(-1, Math.min(1, v + (Math.random() - 0.5) * d));
-  let progressivo = 0;
-
-  function menzioneDemo(t, modello, autore, figura = null) {
-    let [testo, polarita, punteggio, sarcasmo, emo, temi, entita, dialetto, motivazione] = modello;
-    const [fonte, testata] = caso(FONTI_DEMO);
-    if (figura) {
-      const minuscola = testo[0].toLowerCase() + testo.slice(1);
-      testo = fonte === 'rss' ? `${figura.nome}: ${testo}`
-        : figura.tipo === 'persona' ? `${figura.titolo} ${figura.nome}, ${minuscola}` : `${figura.sigla}, ${minuscola}`;
-      entita = [...entita, { testo: figura.nome, tipo: figura.tipo }];
-    }
-    const emozioni = { rabbia: 0.05, paura: 0.05, entusiasmo: 0.05, fiducia: 0.1, tristezza: 0.05 };
-    if (emo !== 'indifferenza') emozioni[emo] = 0.55 + Math.random() * 0.35;
-    if (polarita === 'negativo' && emo !== 'rabbia') emozioni.rabbia = 0.3;
-    return {
-      chiave: `demo-${++progressivo}`,
-      fonte,
-      testo,
-      url: null,
-      testata: testata || `${NOMI_FONTE[fonte]} (simulato)`,
-      autore_pseudonimo: autore || `a${Math.floor(Math.random() * 1e6)}`,
-      pubblicato: new Date(t).toISOString(),
-      raccolto: new Date(t).toISOString(),
-      interazioni: Math.floor(Math.random() * 60),
-      analisi: {
-        polarita, punteggio: vicino(punteggio, 0.2), confidenza: 0.6 + Math.random() * 0.35,
-        sarcasmo, emozione_dominante: emo, emozioni, dialetto,
-        entita, temi, bersaglio: null, ostilita: modello === MODELLI.ondata[0] ? 0.8 : polarita === 'negativo' ? 0.2 : 0.02,
-        motivazione,
-      },
-    };
-  }
-
-  // Motore delle allerte in miniatura, con le stesse regole del servizio (solo per la simulazione)
-  const ultimeAllerte = new Map();
-  function rilevaDemo() {
-    const ora = stato.ora();
-    const inizioF = ora - SOGLIE.finestraMin * MINUTO;
-    const inizioB = inizioF - SOGLIE.baseOre * ORA;
-    const recenti = new Map(), base = new Map();
-    for (const m of stato.menzioni.values()) {
-      const t = tempo(m);
-      if (t < inizioB) continue;
-      const dest = t >= inizioF ? recenti : base;
-      const protagonisti = m.analisi.entita.filter((e) => e.tipo === 'persona' || e.tipo === 'partito').map((e) => `${e.tipo}:${e.testo}`);
-      for (const ambito of ['generale', ...m.analisi.temi.map((x) => `tema:${x}`), ...protagonisti]) {
-        if (!dest.has(ambito)) dest.set(ambito, []);
-        dest.get(ambito).push(m);
-      }
-    }
-    for (const [ambito, f] of recenti) {
-      const b = base.get(ambito) || [];
-      const nome = ambito.split(':').pop();
-      const crescita = (f.length / SOGLIE.finestraMin) / Math.max(b.length / (SOGLIE.baseOre * 60), 1e-9);
-      const ind = indiceNetto(f), calo = b.length ? indiceNetto(b) - ind : 0;
-      const neg = quota(f, 'negativo'), rabbia = media(f, (m) => m.analisi.emozioni.rabbia);
-
-      if (f.length >= SOGLIE.volumeMinimo) {
-        const autori = new Map();
-        for (const m of f) if (m.fonte !== 'rss') {
-          const k = m.testo.toLowerCase().slice(0, 90);
-          if (!autori.has(k)) autori.set(k, new Set());
-          autori.get(k).add(m.autore_pseudonimo);
-        }
-        const massimo = Math.max(0, ...[...autori.values()].map((s) => s.size));
-        if (massimo >= 5 && massimo >= 0.25 * f.length) {
-          emetti('crisi', 'ondata coordinata', ambito, 3, `Possibile azione organizzata: ${massimo} account diversi pubblicano lo stesso testo. Valutare prima di rispondere.`, nome);
-        }
-        const crollo = calo >= SOGLIE.caloCrisi && neg >= 0.5;
-        const indignazione = neg >= SOGLIE.quotaNegativaCrisi && rabbia >= 0.5;
-        if (crollo || indignazione) {
-          emetti('crisi', indignazione ? 'indignazione' : 'calo improvviso', ambito, neg >= 0.8 ? 3 : 2,
-            `${f.length} menzioni in ${SOGLIE.finestraMin} minuti, ` +
-            (crollo ? `indice sceso di ${Math.round(calo)} punti rispetto alle ultime ${SOGLIE.baseOre} ore.` : `${Math.round(neg * 100)}% negative con rabbia diffusa.`), nome);
-        }
-      }
-      if (ambito !== 'generale' && f.length >= Math.max(4, SOGLIE.volumeMinimo / 2) && crescita >= SOGLIE.crescitaOpportunita
-          && ind >= SOGLIE.indiceOpportunita && media(f, (m) => m.analisi.emozioni.entusiasmo) >= 0.4) {
-        emetti('opportunita', 'tema in crescita favorevole', ambito, ind >= 60 ? 3 : 2,
-          `Volume ${numero(crescita, 1)} volte superiore alla media, indice ${conSegno(Math.round(ind))}.`, nome);
-      }
-    }
-  }
-  function emetti(tipo, sottotipo, ambito, gravita, descrizione, nome) {
-    const chiave = `${tipo}${sottotipo}|${ambito}`;
-    const ora = stato.ora();
-    if (ora - (ultimeAllerte.get(chiave) || -Infinity) < SOGLIE.pausaMin * MINUTO) return;
-    ultimeAllerte.set(chiave, ora);
-    nuovaAllerta({
-      id: `demo-al-${ora}-${Math.random().toString(36).slice(2, 7)}`,
-      tipo, sottotipo, ambito, gravita, descrizione,
-      titolo: `${tipo === 'crisi' ? 'Allerta crisi' : 'Opportunità di consenso'}: ${nome}`,
-      metriche: {}, temi_collegati: [], esempi: [], creata: new Date(ora).toISOString(),
-    });
-  }
-
-  function avviaSimulazione() {
-    $('avviso-demo').hidden = false;
-    impostaStato('demo', 'Simulazione');
-    let orologio = Date.now();
-    stato.ora = () => orologio;
-
-    // Sei ore di storico a ritmo normale
-    const storico = [];
-    for (let t = orologio - ORE_GRAFICO * ORA; t < orologio; t += -Math.log(Math.random()) * 30_000) {
-      storico.push(menzioneDemo(t, caso(MODELLI.normale), null, Math.random() < 0.35 ? caso(FIGURE_DEMO) : null));
-    }
-    aggiungiMenzioni(storico, false);
-
-    // Scenari a rotazione: normale, crisi, ondata coordinata, opportunità
-    const scenari = ['normale', 'crisi', 'normale', 'opportunita', 'normale', 'ondata'];
-    let indice = 0, fineScenario = orologio + 25 * MINUTO;
-    setInterval(() => {
-      if (orologio >= fineScenario) {
-        indice = (indice + 1) % scenari.length;
-        fineScenario = orologio + (scenari[indice] === 'normale' ? 40 : 25) * MINUTO;
-      }
-      const scenario = scenari[indice];
-      const speciale = scenario !== 'normale';
-      orologio += -Math.log(Math.random()) * (speciale ? 9_000 : 30_000);
-      const usaSpeciale = speciale && Math.random() < 0.65;
-      const modello = usaSpeciale ? caso(MODELLI[scenario]) : caso(MODELLI.normale);
-      // Crisi e ondata colpiscono il sindaco di fantasia, l'opportunità premia l'assessora di fantasia
-      const protagonista = { crisi: FIGURE_DEMO[0], ondata: FIGURE_DEMO[0], opportunita: FIGURE_DEMO[1] }[scenario];
-      const figura = usaSpeciale && Math.random() < 0.7 ? protagonista : (Math.random() < 0.35 ? caso(FIGURE_DEMO) : null);
-      aggiungiMenzioni([menzioneDemo(orologio, modello, null, figura)]);
-      rilevaDemo();
-    }, 1200);
+  // ------------------------------------------------------------------ servizio non collegato
+  function senzaServizio() {
+    impostaStato('errore', 'Dati reali non ancora attivi');
+    const avviso = $('avviso-servizio');
+    if (avviso) avviso.hidden = false;
+    disegnaFlusso();
   }
 
   // ------------------------------------------------------------------ comandi
@@ -884,7 +702,7 @@
     if (!iniziale) { try { iniziale = (JSON.parse(localStorage.getItem('monitor-obiettivo') || '[]') || []).join(', '); } catch { /* facoltativo */ } }
     if (iniziale) { stato.obiettivo = iniziale.split(',').map((v) => v.trim()).filter((v) => v.length >= 2).slice(0, 5); impostaSchemi(); }
     creaGrafici();
-    if (DEMO) avviaSimulazione(); else avviaServizio();
+    if (SERVIZIO) avviaServizio(); else senzaServizio();
   }
   let giaSbloccato = false;
   try { giaSbloccato = sessionStorage.getItem('monitor-sbloccato') === IMPRONTA_PAROLA; } catch { /* facoltativo */ }

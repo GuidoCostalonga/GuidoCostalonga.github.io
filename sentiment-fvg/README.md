@@ -6,7 +6,7 @@ linguistiche del territorio, entità citate) e avvisa lo staff in caso di
 **Allerta crisi** o **Opportunità di consenso**.
 
 Il cruscotto è pubblicato sull'Atlante FVG, nella sezione riservata `https://atlantefvg.it/monitor/`
-(con dati simulati finché il servizio non è collegato). Il vecchio indirizzo
+(solo dati reali: finché il servizio non è collegato la pagina resta vuota e lo segnala). Il vecchio indirizzo
 `https://costalonga.org/sentiment-fvg/` rimanda lì, conservando l'eventuale `?nome=`.
 
 ## Contenuto della cartella
@@ -81,8 +81,6 @@ In cima al cruscotto c'è la casella **«Politico o partito da monitorare»**.
 - **Mostra tutto** toglie il filtro e ferma la ricerca aggiuntiva.
 - Il nome resta anche nell'indirizzo della pagina (`?nome=...`), utile da condividere con lo staff.
 - Le allerte restano tutte visibili; quelle che riguardano il nome monitorato hanno il nome nel titolo.
-- Nella simulazione compaiono solo politici e partiti di fantasia: un nome reale non dà risultati,
-  perché la simulazione non attribuisce mai testi inventati a persone reali.
 
 ## Indicatori del cruscotto
 
