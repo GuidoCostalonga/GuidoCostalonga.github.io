@@ -5,13 +5,16 @@ social, ne analizza il tono con Claude (sarcasmo, emozioni, varietà
 linguistiche del territorio, entità citate) e avvisa lo staff in caso di
 **Allerta crisi** o **Opportunità di consenso**.
 
-Anteprima con dati simulati: `https://costalonga.org/sentiment-fvg/`
+Il cruscotto è pubblicato sull'Atlante FVG, nella sezione riservata `https://atlantefvg.it/monitor/`
+(con dati simulati finché il servizio non è collegato). Il vecchio indirizzo
+`https://costalonga.org/sentiment-fvg/` rimanda lì, conservando l'eventuale `?nome=`.
 
 ## Contenuto della cartella
 
 | Percorso | A cosa serve |
 |---|---|
-| `index.html`, `style.css`, `app.js` | il cruscotto: HTML, CSS e JavaScript senza compilazione, pronto per un iframe |
+| `app.js` | il programma del cruscotto, usato dalla sezione `monitor/` dell'Atlante FVG (grafica e cifratura sono nel repository dell'Atlante) |
+| `index.html` | rimando a `https://atlantefvg.it/monitor/` |
 | `servizio/app.py` | servizio FastAPI: accesso, istantanea, eventi in diretta (SSE), ingresso firmato |
 | `servizio/analisi.py` | analisi con Claude: istruzioni, schema JSON della risposta, lotti |
 | `servizio/allerte.py` | regole di Allerta crisi, Ondata coordinata e Opportunità di consenso |
@@ -139,39 +142,18 @@ e l'intestazione `X-Firma: sha256=<HMAC del corpo con SEGRETO_WEBHOOK>`.
 
 ## Pubblicazione del cruscotto su AtlanteFVG.it
 
-1. Copiare `index.html`, `style.css` e `app.js` sul server (es. `/var/www/monitor/`).
-2. In `index.html` impostare l'indirizzo del servizio:
-   `<body data-servizio="https://atlantefvg.it/monitor">`.
-   Se resta vuoto, il cruscotto parte con dati simulati (utile per provarlo).
-3. Incorporarlo nella pagina del portale:
+Il cruscotto vive nella pagina `monitor/` del repository Atlante-FVG, con la grafica dell'Atlante e lo stesso
+accesso cifrato della sezione Elezioni (vedi la sezione «Monitor della percezione pubblica» nel README dell'Atlante).
+Dopo una modifica di `app.js` si rigenera il contenuto cifrato da lì:
 
-```html
-<iframe id="monitor-percezione"
-        src="https://atlantefvg.it/monitor/"
-        title="Monitor della percezione pubblica"
-        style="width:100%;border:0;min-height:900px"
-        allow="autoplay"
-        loading="lazy"></iframe>
-<script>
-  // Adatta l'altezza dell'iframe al contenuto, senza barre di scorrimento interne
-  window.addEventListener('message', function (e) {
-    if (e.origin !== 'https://atlantefvg.it') return;
-    if (e.data && e.data.tipo === 'monitor-percezione-altezza') {
-      document.getElementById('monitor-percezione').style.height = e.data.altezza + 'px';
-    }
-  });
-</script>
+```
+python3 -I scripts/prepara_monitor.py <questa cartella>/app.js <chart.umd.min.js 4.4.1> /tmp/frammento.html
+PAROLA='…' node scripts/cifra_pagina.js /tmp/frammento.html monitor/contenuto.json
 ```
 
-Il cruscotto si adatta da 360 pixel di larghezza in su, ha il tema chiaro e
-scuro e funziona anche senza la libreria dei grafici (in quel caso mostra solo
-indicatori, temi e flusso).
-
-### Personalizzazione grafica
-
-Tutti i colori sono variabili in cima a `style.css` (`--accento`, `--positivo`,
-`--negativo`, `--crisi`, `--opportunita`...). Per adattarli all'identità del
-portale basta cambiare quei valori, sia nel blocco chiaro sia in quello scuro.
+Per collegare il servizio si scrive il suo indirizzo in `data-servizio` di `#monitor`, nel modello
+`scripts/monitor_frammento.html` dell'Atlante, e si rigenera il contenuto. La versione autonoma del cruscotto
+(`index.html` e `style.css`, adatta anche a un iframe) resta nella storia di questo repository, al commit `9356774`.
 
 ## Costi dell'analisi
 

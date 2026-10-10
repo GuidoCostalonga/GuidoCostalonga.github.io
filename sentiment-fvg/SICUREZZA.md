@@ -2,7 +2,7 @@
 
 ## 1. Regola d'oro: nessuna chiave nel cruscotto
 
-Il cruscotto (`index.html`, `style.css`, `app.js`) viene scaricato nel browser
+Il cruscotto (la pagina `monitor/` dell'Atlante FVG e il suo programma `app.js`) viene scaricato nel browser
 di chi lo apre: **tutto ciò che contiene è leggibile da chiunque**. Per questo:
 
 | Dove sta | Cosa contiene | Chi la vede |
@@ -29,7 +29,7 @@ motore di analisi: lo fa solo il servizio, che tiene le chiavi in memoria.
 4. Generare i segreti con `python3 -c "import secrets; print(secrets.token_hex(32))"`.
 5. Codici di accesso lunghi (almeno 20 caratteri casuali), uno per persona, da revocare togliendoli da `CODICI_ACCESSO` e riavviando.
 6. Cambiare tutte le chiavi subito se il file `.env` finisce per errore in una chat, in una email o in un repository.
-7. Mai incollare chiavi in `app.js`, in `index.html` o negli attributi dell'iframe.
+7. Mai incollare chiavi in `app.js`, nel modello della pagina `monitor/` o negli attributi di un iframe.
 
 ## 2. Configurazione consigliata: stesso dominio
 
