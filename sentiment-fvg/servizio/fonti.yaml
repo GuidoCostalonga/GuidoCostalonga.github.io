@@ -1,0 +1,36 @@
+# Fonti e parole da monitorare.
+#
+# ATTENZIONE: gli indirizzi dei feed qui sotto sono SEGNAPOSTO DA VERIFICARE.
+# Prima dell'uso aprire il sito di ogni testata o ente, cercare il link RSS
+# ufficiale (di solito in fondo alla pagina o in /rss) e incollarlo al posto
+# dell'indirizzo di esempio. Un feed sbagliato viene saltato e segnalato nel registro.
+
+parole_chiave:
+  # Il filtro tiene solo i testi che contengono almeno una di queste parole.
+  # Inserire nomi e cognomi, partiti, sigle, riforme e località di interesse.
+  - Friuli Venezia Giulia
+  - Regione FVG
+  - Consiglio regionale
+  - Pordenone
+  - Udine
+  - Trieste
+  - Gorizia
+
+ricerche_social:
+  # Ricerche lanciate su Bluesky e X. Una riga per ricerca.
+  - "Friuli Venezia Giulia"
+  - "Regione FVG"
+
+feed_rss:
+  - nome: Regione FVG, notizie
+    url: https://DA-VERIFICARE.regione.fvg.it/rss
+  - nome: Messaggero Veneto
+    url: https://DA-VERIFICARE.messaggeroveneto.it/rss
+  - nome: Il Gazzettino, Friuli
+    url: https://DA-VERIFICARE.ilgazzettino.it/rss
+  - nome: Il Piccolo
+    url: https://DA-VERIFICARE.ilpiccolo.it/rss
+
+canali_telegram:
+  # Nomi pubblici dei canali (senza @). Solo canali pubblici.
+  # - nome_canale_esempio
