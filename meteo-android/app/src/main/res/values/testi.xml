@@ -9,4 +9,9 @@
     <!-- Segnaposto della temperatura, finché il dato non è arrivato. -->
     <string name="widget_temperatura_vuota">--</string>
     <string name="grado">°</string>
+
+    <!-- Avvisi di allerta della Protezione Civile regionale. -->
+    <string name="avvisi_canale">Allerte della Protezione Civile</string>
+    <string name="avvisi_canale_descrizione">Avviso quando la Protezione Civile della Regione Friuli Venezia Giulia pubblica un\'allerta per il Comune scelto.</string>
+    <string name="avvisi_titolo">Allerta della Protezione Civile · %1$s</string>
 </resources>
