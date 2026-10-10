@@ -49,6 +49,24 @@
     con un orologio accelerato (circa 25 volte). Nessun contenuto si riferisce a persone o fatti reali.
   </p>
 
+  <section class="obiettivo" aria-label="Politico o partito da monitorare">
+    <form id="obiettivo-modulo" class="obiettivo-modulo" role="search">
+      <label for="obiettivo-campo">Politico o partito da monitorare</label>
+      <div class="obiettivo-riga">
+        <input type="search" id="obiettivo-campo" list="obiettivo-suggerimenti" maxlength="200" autocomplete="off"
+               placeholder="Nome del politico o del partito">
+        <button type="submit" class="tasto tasto-pieno">Monitora</button>
+      </div>
+      <datalist id="obiettivo-suggerimenti"></datalist>
+      <p class="nota">Puoi scrivere più varianti separate da virgola, per esempio nome completo, cognome e sigla del partito.</p>
+    </form>
+    <div class="obiettivo-attivo" id="obiettivo-attivo" hidden>
+      <span>🎯 Stai monitorando <strong id="obiettivo-nome"></strong> <span class="nota" id="obiettivo-conteggio"></span></span>
+      <button type="button" class="tasto" id="obiettivo-togli">✕ Mostra tutto</button>
+    </div>
+    <p class="obiettivo-avviso" id="obiettivo-avviso" hidden></p>
+  </section>
+
   <section class="striscione" id="striscione" hidden aria-live="assertive">
     <span class="striscione-icona" id="striscione-icona" aria-hidden="true"></span>
     <div class="striscione-corpo">
@@ -93,7 +111,7 @@
       <section class="pannello">
         <header class="pannello-testa">
           <h2>Andamento dell'indice netto</h2>
-          <p class="nota">Ultime 6 ore, intervalli di 10 minuti. Da −100 a +100.</p>
+          <p class="nota" id="nota-andamento">Ultime 6 ore, intervalli di 10 minuti. Da −100 a +100.</p>
         </header>
         <div class="tela alta"><canvas id="g-andamento" aria-label="Andamento dell'indice netto del sentimento nelle ultime 6 ore" role="img"></canvas></div>
       </section>

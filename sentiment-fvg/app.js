@@ -41,12 +41,33 @@
     pausa: false,
     suoni: false,
     filtri: { fonte: 'tutte', polarita: 'tutte', sarcasmo: false, testo: '' },
+    obiettivo: [],             // varianti del nome del politico o partito monitorato
     ora: () => Date.now(),     // in simulazione è l'orologio accelerato
   };
 
   const $ = (id) => document.getElementById(id);
   const tempo = (m) => Date.parse(m.raccolto);
   const css = (nome) => getComputedStyle(document.documentElement).getPropertyValue(nome).trim();
+
+  // ------------------------------------------------------------------ obiettivo del monitoraggio
+  const normalizza = (t) => String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase().replace(/[’`]/g, "'").replace(/\s+/g, ' ').trim();
+  const fuga = (t) => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  let schemiObiettivo = [];
+  function impostaSchemi() {
+    schemiObiettivo = stato.obiettivo.map((v) =>
+      new RegExp(`(^|[^\\p{L}\\p{N}])${fuga(normalizza(v))}(?=$|[^\\p{L}\\p{N}])`, 'u'));
+  }
+  function testoNormalizzato(m) {
+    if (m._norm === undefined) {
+      Object.defineProperty(m, '_norm', {
+        value: normalizza([m.testo, ...m.analisi.entita.map((e) => e.testo)].join(' | ')), enumerable: false,
+      });
+    }
+    return m._norm;
+  }
+  // Una menzione è pertinente se cita almeno una delle varianti (anche come entità riconosciuta)
+  const pertinente = (m) => !schemiObiettivo.length || schemiObiettivo.some((r) => r.test(testoNormalizzato(m)));
 
   // ------------------------------------------------------------------ calcoli
   function indiceNetto(lista) {
@@ -66,7 +87,7 @@
   }
   function tra(da, a) {
     const r = [];
-    for (const m of stato.menzioni.values()) { const t = tempo(m); if (t >= da && t < a) r.push(m); }
+    for (const m of stato.menzioni.values()) { const t = tempo(m); if (t >= da && t < a && pertinente(m)) r.push(m); }
     return r;
   }
   function intervalli(ore, minuti) {
@@ -76,7 +97,7 @@
     const inizio = secchi[0].inizio;
     for (const m of stato.menzioni.values()) {
       const t = tempo(m);
-      if (t < inizio || t >= fine) continue;
+      if (t < inizio || t >= fine || !pertinente(m)) continue;
       secchi[Math.floor((t - inizio) / (minuti * MINUTO))].voci.push(m);
     }
     return secchi;
@@ -166,7 +187,7 @@
     grafici.andamento = new Chart($('g-andamento'), {
       type: 'line',
       data: { labels: [], datasets: [{
-        data: [], conteggi: [], borderWidth: 2, tension: 0.3, spanGaps: true,
+        data: [], conteggi: [], borderWidth: 2, tension: 0.2, spanGaps: true,
         pointRadius: 0, pointHoverRadius: 5, pointHoverBorderWidth: 2, pointHoverBorderColor: sup,
         segment: { borderColor: (c) => ((c.p0.parsed.y + c.p1.parsed.y) / 2 >= 0 ? pos : neg) },
         pointHoverBackgroundColor: (c) => ((c.raw ?? 0) >= 0 ? pos : neg),
@@ -203,7 +224,10 @@
 
   function aggiornaGrafici() {
     if (!grafici.andamento) return;
-    const secchi = intervalli(ORE_GRAFICO, INTERVALLO_MIN);
+    // Con un solo politico o partito i dati sono meno: intervalli più ampi, linea più affidabile
+    const ampiezza = stato.obiettivo.length ? 30 : INTERVALLO_MIN;
+    $('nota-andamento').textContent = `Ultime 6 ore, intervalli di ${ampiezza} minuti. Da −100 a +100.`;
+    const secchi = intervalli(ORE_GRAFICO, ampiezza);
     const etichette = secchi.map((s) => oraBreve(s.inizio));
 
     const a = grafici.andamento;
@@ -345,10 +369,11 @@
   }
 
   function disegnaFlusso(nuove = new Set()) {
-    const elenco = [...stato.menzioni.values()].filter(passaFiltri).sort((a, b) => tempo(b) - tempo(a));
+    const elenco = [...stato.menzioni.values()].filter((m) => pertinente(m) && passaFiltri(m)).sort((a, b) => tempo(b) - tempo(a));
     const c = $('flusso');
     c.replaceChildren(...elenco.slice(0, MAX_SCHEDE).map((m) => scheda(m, nuove.has(m.chiave))));
-    if (!elenco.length) c.append(elemento('li', 'vuoto', 'Nessuna menzione con questi filtri.'));
+    if (!elenco.length) c.append(elemento('li', 'vuoto', stato.obiettivo.length
+      ? `Nessuna menzione di ${stato.obiettivo[0]} nelle ultime 24 ore con questi filtri.` : 'Nessuna menzione con questi filtri.'));
     $('flusso-conteggio').textContent = `${numero(elenco.length)} menzioni nelle ultime 24 ore${elenco.length > MAX_SCHEDE ? `, mostrate le ultime ${MAX_SCHEDE}` : ''}`;
   }
 
@@ -416,6 +441,69 @@
     } catch { /* audio non disponibile */ }
   }
 
+  // ------------------------------------------------------------------ pannello obiettivo
+  function aggiornaObiettivo() {
+    const attivo = stato.obiettivo.length > 0;
+    $('obiettivo-attivo').hidden = !attivo;
+    const avviso = $('obiettivo-avviso');
+    avviso.hidden = true;
+    if (attivo) {
+      $('obiettivo-nome').textContent = stato.obiettivo.join(', ');
+      const ora = stato.ora();
+      const n24 = tra(ora - 24 * ORA, ora + 1).length, n1 = tra(ora - ORA, ora + 1).length;
+      $('obiettivo-conteggio').textContent = `· ${numero(n24)} menzioni nelle ultime 24 ore, ${numero(n1)} nell'ultima ora`;
+      if (!n24) {
+        avviso.hidden = false;
+        avviso.textContent = DEMO
+          ? `Nella simulazione compaiono solo nomi di fantasia (${FIGURE_DEMO.map((f) => f.nome).join(', ')}). Con il servizio collegato, il nome che scrivi viene cercato davvero su testate e social.`
+          : 'Nessuna menzione ancora: il servizio ha avviato la ricerca su testate e social, i risultati compaiono qui appena arrivano.';
+      }
+    }
+    // Suggerimenti: persone e partiti citati più spesso nelle ultime 24 ore
+    const conta = new Map();
+    for (const m of stato.menzioni.values()) {
+      for (const e of m.analisi.entita) if (e.tipo === 'persona' || e.tipo === 'partito') conta.set(e.testo, (conta.get(e.testo) || 0) + 1);
+    }
+    const lista = $('obiettivo-suggerimenti');
+    const voci = [...conta.entries()].sort((a, b) => b[1] - a[1]).slice(0, 30);
+    if (lista.dataset.firma !== voci.map((v) => v[0]).join('|')) {
+      lista.dataset.firma = voci.map((v) => v[0]).join('|');
+      lista.replaceChildren(...voci.map(([nome, n]) => { const o = elemento('option'); o.value = nome; o.label = `${n} menzioni`; return o; }));
+    }
+  }
+
+  function scegliObiettivo(testo, daServizio = false) {
+    const varianti = [...new Set(String(testo).split(',').map((v) => v.replace(/\s+/g, ' ').trim()).filter((v) => v.length >= 2))].slice(0, 5);
+    stato.obiettivo = varianti;
+    impostaSchemi();
+    $('obiettivo-campo').value = '';
+    try { localStorage.setItem('monitor-obiettivo', JSON.stringify(varianti)); } catch { /* facoltativo */ }
+    const url = new URL(location.href);
+    if (varianti.length) url.searchParams.set('nome', varianti.join(', ')); else url.searchParams.delete('nome');
+    history.replaceState(null, '', url);
+    if (!DEMO && !daServizio) inviaObiettivo(varianti);
+    aggiornaIndicatori(); aggiornaGrafici(); aggiornaTemi(); aggiornaFonti(); aggiornaObiettivo();
+    disegnaFlusso();
+    avvisaAltezza();
+  }
+
+  async function inviaObiettivo(varianti) {
+    try {
+      const r = await fetch(`${SERVIZIO}/api/obiettivo`, {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ varianti }),
+      });
+      if (!r.ok) {
+        const avviso = $('obiettivo-avviso');
+        avviso.hidden = false;
+        avviso.textContent = r.status === 422
+          ? 'Il servizio non accetta questo nome: usa solo lettere, cifre, spazi, apostrofi, punti e trattini, al massimo 5 varianti.'
+          : 'Il servizio non ha ricevuto il nome: il filtro funziona sui dati già raccolti, ma la nuova ricerca non è partita.';
+      }
+    } catch { /* il filtro locale resta comunque attivo */ }
+  }
+
   // ------------------------------------------------------------------ aggiornamento
   let nuoveInAttesa = new Set();
   let programmato = false;
@@ -438,6 +526,7 @@
       aggiornaGrafici();
       aggiornaTemi();
       aggiornaFonti();
+      aggiornaObiettivo();
       if (!stato.pausa) { disegnaFlusso(nuoveInAttesa); nuoveInAttesa = new Set(); }
       avvisaAltezza();
     }, 800);
@@ -473,6 +562,8 @@
     if (r.status === 401) { chiediAccesso(); return; }
     if (!r.ok) { impostaStato('errore', `Errore ${r.status}`); setTimeout(avviaServizio, 15000); return; }
     const dati = await r.json();
+    if (!stato.obiettivo.length && dati.obiettivo?.length) scegliObiettivo(dati.obiettivo.join(', '), true);
+    else if (stato.obiettivo.length && (dati.obiettivo || []).join('|') !== stato.obiettivo.join('|')) inviaObiettivo(stato.obiettivo);
     aggiungiMenzioni(dati.menzioni || [], false);
     (dati.allerte || []).forEach((a) => nuovaAllerta(a, true));
 
@@ -485,6 +576,10 @@
     });
     sorgente.addEventListener('menzione', (e) => aggiungiMenzioni([JSON.parse(e.data)]));
     sorgente.addEventListener('allerta', (e) => nuovaAllerta(JSON.parse(e.data)));
+    sorgente.addEventListener('obiettivo', (e) => {
+      const v = JSON.parse(e.data).varianti || [];
+      if (v.join('|') !== stato.obiettivo.join('|')) scegliObiettivo(v.join(', '), true);
+    });
     sorgente.addEventListener('error', () => {
       eraCaduto = true;
       if (sorgente.readyState === EventSource.CLOSED) { setTimeout(avviaServizio, 5000); impostaStato('errore', 'Disconnesso'); }
@@ -566,14 +661,28 @@
       ['Turisti ovunque sulla costa, ottimo segnale per chi lavora d\'estate.', 'positivo', 0.7, false, 'fiducia', ['turismo', 'lavoro'], [], null, 'Fiducia nella stagione turistica.'],
     ],
   };
+  // Politici e partiti DI FANTASIA: la simulazione non attribuisce mai testi a persone reali
+  const FIGURE_DEMO = [
+    { nome: 'Bruno Selvadeo', tipo: 'persona', titolo: 'Sindaco' },
+    { nome: 'Ottavia Riulin', tipo: 'persona', titolo: 'Assessora' },
+    { nome: 'Ilario Castelmur', tipo: 'persona', titolo: 'Consigliere' },
+    { nome: 'Movimento Borghi Uniti', tipo: 'partito', sigla: 'MBU' },
+    { nome: 'Alleanza Laguna e Monti', tipo: 'partito', sigla: 'ALM' },
+  ];
   const FONTI_DEMO = [['rss', 'Testata locale (simulata)'], ['bluesky', null], ['x', null], ['facebook', null], ['telegram', 'Canale pubblico (simulato)']];
   const caso = (lista) => lista[Math.floor(Math.random() * lista.length)];
   const vicino = (v, d) => Math.max(-1, Math.min(1, v + (Math.random() - 0.5) * d));
   let progressivo = 0;
 
-  function menzioneDemo(t, modello, autore) {
-    const [testo, polarita, punteggio, sarcasmo, emo, temi, entita, dialetto, motivazione] = modello;
+  function menzioneDemo(t, modello, autore, figura = null) {
+    let [testo, polarita, punteggio, sarcasmo, emo, temi, entita, dialetto, motivazione] = modello;
     const [fonte, testata] = caso(FONTI_DEMO);
+    if (figura) {
+      const minuscola = testo[0].toLowerCase() + testo.slice(1);
+      testo = fonte === 'rss' ? `${figura.nome}: ${testo}`
+        : figura.tipo === 'persona' ? `${figura.titolo} ${figura.nome}, ${minuscola}` : `${figura.sigla}, ${minuscola}`;
+      entita = [...entita, { testo: figura.nome, tipo: figura.tipo }];
+    }
     const emozioni = { rabbia: 0.05, paura: 0.05, entusiasmo: 0.05, fiducia: 0.1, tristezza: 0.05 };
     if (emo !== 'indifferenza') emozioni[emo] = 0.55 + Math.random() * 0.35;
     if (polarita === 'negativo' && emo !== 'rabbia') emozioni.rabbia = 0.3;
@@ -607,7 +716,8 @@
       const t = tempo(m);
       if (t < inizioB) continue;
       const dest = t >= inizioF ? recenti : base;
-      for (const ambito of ['generale', ...m.analisi.temi.map((x) => `tema:${x}`)]) {
+      const protagonisti = m.analisi.entita.filter((e) => e.tipo === 'persona' || e.tipo === 'partito').map((e) => `${e.tipo}:${e.testo}`);
+      for (const ambito of ['generale', ...m.analisi.temi.map((x) => `tema:${x}`), ...protagonisti]) {
         if (!dest.has(ambito)) dest.set(ambito, []);
         dest.get(ambito).push(m);
       }
@@ -667,7 +777,7 @@
     // Sei ore di storico a ritmo normale
     const storico = [];
     for (let t = orologio - ORE_GRAFICO * ORA; t < orologio; t += -Math.log(Math.random()) * 30_000) {
-      storico.push(menzioneDemo(t, caso(MODELLI.normale)));
+      storico.push(menzioneDemo(t, caso(MODELLI.normale), null, Math.random() < 0.35 ? caso(FIGURE_DEMO) : null));
     }
     aggiungiMenzioni(storico, false);
 
@@ -684,7 +794,10 @@
       orologio += -Math.log(Math.random()) * (speciale ? 9_000 : 30_000);
       const usaSpeciale = speciale && Math.random() < 0.65;
       const modello = usaSpeciale ? caso(MODELLI[scenario]) : caso(MODELLI.normale);
-      aggiungiMenzioni([menzioneDemo(orologio, modello)]);
+      // Crisi e ondata colpiscono il sindaco di fantasia, l'opportunità premia l'assessora di fantasia
+      const protagonista = { crisi: FIGURE_DEMO[0], ondata: FIGURE_DEMO[0], opportunita: FIGURE_DEMO[1] }[scenario];
+      const figura = usaSpeciale && Math.random() < 0.7 ? protagonista : (Math.random() < 0.35 ? caso(FIGURE_DEMO) : null);
+      aggiungiMenzioni([menzioneDemo(orologio, modello, null, figura)]);
       rilevaDemo();
     }, 1200);
   }
@@ -692,6 +805,11 @@
   // ------------------------------------------------------------------ comandi
   function collegaComandi() {
     $('filtri').addEventListener('submit', (e) => e.preventDefault());
+    $('obiettivo-modulo').addEventListener('submit', (e) => {
+      e.preventDefault();
+      if ($('obiettivo-campo').value.trim()) scegliObiettivo($('obiettivo-campo').value);
+    });
+    $('obiettivo-togli').addEventListener('click', () => scegliObiettivo(''));
     const filtro = (id, campo, valore = (e) => e.target.value) =>
       $(id).addEventListener('input', (e) => { stato.filtri[campo] = valore(e); disegnaFlusso(); });
     filtro('f-fonte', 'fonte');
@@ -760,6 +878,9 @@
     if (avviato) return;
     avviato = true;
     collegaComandi();
+    let iniziale = parametri.get('nome') || '';
+    if (!iniziale) { try { iniziale = (JSON.parse(localStorage.getItem('monitor-obiettivo') || '[]') || []).join(', '); } catch { /* facoltativo */ } }
+    if (iniziale) { stato.obiettivo = iniziale.split(',').map((v) => v.trim()).filter((v) => v.length >= 2).slice(0, 5); impostaSchemi(); }
     creaGrafici();
     if (DEMO) avviaSimulazione(); else avviaServizio();
   }
