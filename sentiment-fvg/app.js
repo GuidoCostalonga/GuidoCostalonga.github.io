@@ -14,7 +14,9 @@
 
   // ------------------------------------------------------------------ configurazione
   const parametri = new URLSearchParams(location.search);
-  const SERVIZIO = (document.body.dataset.servizio || '').trim().replace(/\/+$/, '');
+  // L'indirizzo del servizio sta su #monitor (pagina incorporata, es. Atlante FVG) oppure su <body>
+  const SERVIZIO = (document.getElementById('monitor')?.dataset.servizio || document.body.dataset.servizio || '')
+    .trim().replace(/\/+$/, '');
   const DEMO = !SERVIZIO || parametri.get('demo') === '1';
 
   const SOGLIE = {           // le stesse del servizio (vedi servizio/.env.esempio)
@@ -838,7 +840,7 @@
       tn.textContent = esito === 'granted' ? '🔔 Notifiche attive' : '🔔 Notifiche bloccate';
     });
 
-    $('tasto-tema').addEventListener('click', () => {
+    $('tasto-tema')?.addEventListener('click', () => {
       const scuro = document.documentElement.dataset.theme
         ? document.documentElement.dataset.theme === 'dark'
         : matchMedia('(prefers-color-scheme: dark)').matches;
@@ -886,8 +888,9 @@
   }
   let giaSbloccato = false;
   try { giaSbloccato = sessionStorage.getItem('monitor-sbloccato') === IMPRONTA_PAROLA; } catch { /* facoltativo */ }
-  if (giaSbloccato) sblocca();
-  $('lucchetto-modulo').addEventListener('submit', async (e) => {
+  // Senza il riquadro della parola d'ordine (pagina che ha già un suo accesso) si parte subito
+  if (giaSbloccato || !$('lucchetto-modulo')) sblocca();
+  $('lucchetto-modulo')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const campo = $('lucchetto-parola');
     if (await impronta(campo.value.trim().toUpperCase()) !== IMPRONTA_PAROLA) {
