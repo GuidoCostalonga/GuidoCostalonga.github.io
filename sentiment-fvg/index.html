@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="referrer" content="no-referrer">
+  <title>Monitor percezione FVG</title>
+  <meta name="description" content="Cruscotto in tempo reale della percezione pubblica su temi, enti e protagonisti della politica in Friuli Venezia Giulia.">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"
+          integrity="sha384-bs/nf9FbdNouRbMiFcrcZfLXYPKiPaGVGplVbv7dLGECccEXDW+S3zjqSKR5ZEaD"
+          crossorigin="anonymous" referrerpolicy="no-referrer" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<!--
+  data-servizio: indirizzo del servizio (es. https://monitor.atlantefvg.it).
+  Se resta vuoto, il cruscotto parte con dati simulati.
+-->
+<body data-servizio="" class="bloccato">
+<section class="lucchetto" id="lucchetto" aria-labelledby="lucchetto-titolo">
+  <form id="lucchetto-modulo" class="lucchetto-scheda">
+    <p class="occhiello">Friuli Venezia Giulia</p>
+    <h1 id="lucchetto-titolo">Monitor della percezione pubblica</h1>
+    <p>Area riservata. Inserisci la parola d'ordine per entrare.</p>
+    <label for="lucchetto-parola">Parola d'ordine</label>
+    <input type="password" id="lucchetto-parola" autocomplete="current-password" required autofocus>
+    <p class="errore" id="lucchetto-errore" role="alert"></p>
+    <button type="submit" class="tasto tasto-pieno">Entra</button>
+  </form>
+</section>
+<div class="monitor" id="monitor">
+
+  <header class="testata">
+    <div class="titolo">
+      <p class="occhiello">Friuli Venezia Giulia</p>
+      <h1>Monitor della percezione pubblica</h1>
+    </div>
+    <div class="comandi">
+      <span class="stato" id="stato" data-tipo="attesa" role="status"><span class="punto" aria-hidden="true"></span><span id="stato-testo">Avvio</span></span>
+      <button type="button" class="tasto" id="tasto-suoni" aria-pressed="false" title="Avviso sonoro per le nuove allerte">🔕 Suoni</button>
+      <button type="button" class="tasto" id="tasto-notifiche" title="Notifiche del browser per le nuove allerte">🔔 Notifiche</button>
+      <button type="button" class="tasto" id="tasto-tema" title="Cambia tema chiaro o scuro">◐ Tema</button>
+    </div>
+  </header>
+
+  <p class="avviso-demo" id="avviso-demo" hidden>
+    <strong>DATI SIMULATI.</strong> Testi, fonti e numeri sono generati per dimostrazione,
+    con un orologio accelerato (circa 25 volte). Nessun contenuto si riferisce a persone o fatti reali.
+  </p>
+
+  <section class="striscione" id="striscione" hidden aria-live="assertive">
+    <span class="striscione-icona" id="striscione-icona" aria-hidden="true"></span>
+    <div class="striscione-corpo">
+      <strong id="striscione-titolo"></strong>
+      <span id="striscione-testo"></span>
+    </div>
+    <button type="button" class="tasto tasto-chiaro" id="striscione-visto">Presa visione</button>
+  </section>
+
+  <section class="indicatori" aria-label="Indicatori principali">
+    <article class="indicatore">
+      <h2>Indice netto <span class="nota">ultima ora</span></h2>
+      <p class="valore" id="k-indice">–</p>
+      <p class="variazione" id="k-indice-var"></p>
+      <div class="scala" aria-hidden="true"><span id="k-indice-cursore"></span></div>
+    </article>
+    <article class="indicatore">
+      <h2>Menzioni all'ora</h2>
+      <p class="valore" id="k-volume">–</p>
+      <p class="variazione" id="k-volume-var"></p>
+    </article>
+    <article class="indicatore">
+      <h2>Volatilità <span class="nota">ultime 2 ore</span></h2>
+      <p class="valore" id="k-volatilita">–</p>
+      <p class="variazione" id="k-volatilita-var"></p>
+    </article>
+    <article class="indicatore">
+      <h2>Sarcasmo rilevato</h2>
+      <p class="valore" id="k-sarcasmo">–</p>
+      <p class="variazione" id="k-sarcasmo-var"></p>
+    </article>
+    <article class="indicatore">
+      <h2>Emozione prevalente</h2>
+      <p class="valore valore-testo" id="k-emozione">–</p>
+      <p class="variazione" id="k-emozione-var"></p>
+    </article>
+  </section>
+
+  <div class="griglia">
+    <div class="colonna-grafici">
+
+      <section class="pannello">
+        <header class="pannello-testa">
+          <h2>Andamento dell'indice netto</h2>
+          <p class="nota">Ultime 6 ore, intervalli di 10 minuti. Da −100 a +100.</p>
+        </header>
+        <div class="tela alta"><canvas id="g-andamento" aria-label="Andamento dell'indice netto del sentimento nelle ultime 6 ore" role="img"></canvas></div>
+      </section>
+
+      <section class="pannello">
+        <header class="pannello-testa">
+          <h2>Volume delle menzioni per tono</h2>
+          <p class="nota">Stessi intervalli del grafico precedente.</p>
+        </header>
+        <div class="tela"><canvas id="g-volume" aria-label="Numero di menzioni positive, neutre e negative per intervallo" role="img"></canvas></div>
+      </section>
+
+      <div class="coppia">
+        <section class="pannello">
+          <header class="pannello-testa">
+            <h2>Temi caldi</h2>
+            <p class="nota">Ultime 2 ore. Dimensione = volume, colore = indice del tema.</p>
+          </header>
+          <div class="nuvola" id="nuvola" aria-live="polite"></div>
+          <div class="legenda-divergente" aria-hidden="true">
+            <span>Negativo</span><span class="barra-divergente"></span><span>Positivo</span>
+          </div>
+        </section>
+
+        <section class="pannello">
+          <header class="pannello-testa">
+            <h2>Emozioni</h2>
+            <p class="nota">Intensità media nell'ultima ora.</p>
+          </header>
+          <div class="tela"><canvas id="g-emozioni" aria-label="Intensità media delle emozioni nell'ultima ora" role="img"></canvas></div>
+        </section>
+      </div>
+
+      <section class="pannello">
+        <header class="pannello-testa">
+          <h2>Fonti nell'ultima ora</h2>
+        </header>
+        <div class="fonti" id="fonti"></div>
+      </section>
+
+      <section class="pannello">
+        <header class="pannello-testa">
+          <h2>Registro delle allerte</h2>
+          <p class="nota">Ultime 24 ore.</p>
+        </header>
+        <ol class="registro" id="registro"><li class="vuoto">Nessuna allerta.</li></ol>
+      </section>
+    </div>
+
+    <section class="pannello colonna-flusso" aria-label="Flusso delle menzioni">
+      <header class="pannello-testa">
+        <h2>Menzioni in diretta</h2>
+        <p class="nota" id="flusso-conteggio"></p>
+      </header>
+      <form class="filtri" id="filtri">
+        <label>Fonte
+          <select id="f-fonte">
+            <option value="tutte">Tutte</option>
+            <option value="rss">Testate</option>
+            <option value="bluesky">Bluesky</option>
+            <option value="x">X</option>
+            <option value="facebook">Facebook</option>
+            <option value="telegram">Telegram</option>
+            <option value="webhook">Altre</option>
+          </select>
+        </label>
+        <label>Tono
+          <select id="f-polarita">
+            <option value="tutte">Tutti</option>
+            <option value="negativo">Negativo</option>
+            <option value="neutro">Neutro</option>
+            <option value="positivo">Positivo</option>
+          </select>
+        </label>
+        <label class="spunta"><input type="checkbox" id="f-sarcasmo"> Solo sarcasmo</label>
+        <label class="cerca">Cerca
+          <input type="search" id="f-testo" placeholder="parola, tema, ente">
+        </label>
+        <button type="button" class="tasto" id="tasto-pausa" aria-pressed="false">⏸ Pausa</button>
+      </form>
+      <ol class="flusso" id="flusso"></ol>
+    </section>
+  </div>
+
+  <details class="metodo">
+    <summary>Come si leggono gli indicatori</summary>
+    <ul>
+      <li><strong>Indice netto</strong>: media dei punteggi (da −1 a +1) pesata per la sicurezza del giudizio, moltiplicata per 100. Il sarcasmo è già conteggiato con il suo significato reale.</li>
+      <li><strong>Menzioni all'ora</strong>: contenuti raccolti negli ultimi 60 minuti, confrontati con l'ora precedente.</li>
+      <li><strong>Volatilità</strong>: scarto quadratico medio dell'indice sui 12 intervalli delle ultime 2 ore. Sotto 10 bassa, da 10 a 20 media, oltre 20 alta.</li>
+      <li><strong>Allerta crisi</strong>: almeno 12 menzioni in 15 minuti con calo dell'indice di 30 punti rispetto alle 6 ore precedenti, oppure oltre il 60% negative con rabbia diffusa, oppure testi identici da molti account (possibile azione organizzata).</li>
+      <li><strong>Opportunità di consenso</strong>: tema con volume almeno doppio rispetto alla media, indice sopra +40 ed entusiasmo diffuso.</li>
+      <li>Il giudizio automatico è un supporto: prima di rispondere pubblicamente, leggere sempre le fonti originali.</li>
+    </ul>
+  </details>
+
+  <dialog class="accesso" id="accesso">
+    <form method="dialog" id="accesso-modulo">
+      <h2>Accesso riservato allo staff</h2>
+      <p>Inserisci il codice di accesso ricevuto.</p>
+      <label for="accesso-codice">Codice</label>
+      <input type="password" id="accesso-codice" autocomplete="current-password" required minlength="8">
+      <p class="errore" id="accesso-errore" role="alert"></p>
+      <button type="submit" class="tasto tasto-pieno">Entra</button>
+    </form>
+  </dialog>
+</div>
+</body>
+</html>

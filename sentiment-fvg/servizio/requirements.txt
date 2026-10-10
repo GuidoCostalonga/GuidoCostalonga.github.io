@@ -1,0 +1,9 @@
+anthropic>=1.0
+fastapi>=0.115
+uvicorn[standard]>=0.30
+httpx>=0.27
+feedparser>=6.0
+python-dotenv>=1.0
+pyyaml>=6.0
+# Facoltativo, solo per i canali Telegram pubblici
+telethon>=1.36
