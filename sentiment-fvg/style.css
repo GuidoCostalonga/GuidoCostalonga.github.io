@@ -93,6 +93,7 @@ button, input, select { font: inherit; color: inherit; }
   margin: 0 auto;
   padding: 16px;
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 16px;
 }
 
@@ -168,6 +169,27 @@ h1 { font-size: clamp(20px, 3vw, 28px); line-height: 1.15; text-wrap: balance; }
 @keyframes lampeggio-crisi { 50% { box-shadow: 0 0 0 6px rgb(208 59 59 / .35); filter: brightness(1.12); } }
 @keyframes lampeggio-opportunita { 50% { box-shadow: 0 0 0 6px rgb(12 163 12 / .3); filter: brightness(1.12); } }
 @keyframes battito { 50% { opacity: .35; } }
+
+/* ------------------------------------------------------------- obiettivo del monitoraggio */
+.obiettivo {
+  background: var(--superficie); border: 1px solid var(--bordo); border-radius: var(--raggio);
+  box-shadow: var(--ombra); padding: 14px 16px; display: grid; gap: 10px;
+}
+.obiettivo-modulo { display: grid; gap: 6px; }
+.obiettivo-modulo label { font-weight: 700; font-size: 15px; }
+.obiettivo-riga { display: flex; gap: 8px; }
+.obiettivo-riga input {
+  flex: 1; min-width: 0; width: 100%; min-height: 44px; padding: 8px 12px; font-size: 16px;
+  border: 1px solid var(--bordo); border-radius: 8px; background: var(--superficie-2);
+}
+.obiettivo-riga .tasto { min-height: 44px; }
+.obiettivo-attivo {
+  display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; justify-content: space-between;
+  padding: 10px 12px; border-radius: 8px; background: var(--superficie-2); border-left: 5px solid var(--accento);
+}
+.obiettivo-attivo strong { font-size: 16px; }
+.obiettivo-attivo > span { min-width: 0; overflow-wrap: anywhere; }
+.obiettivo-avviso { font-size: 14px; color: var(--testo-2); border-left: 4px solid var(--avviso); padding: 6px 10px; background: var(--superficie-2); border-radius: 6px; }
 
 /* ------------------------------------------------------------- indicatori */
 .indicatori {

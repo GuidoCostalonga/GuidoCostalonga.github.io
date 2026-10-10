@@ -32,6 +32,10 @@ class Archivio:
                 creata TEXT NOT NULL,
                 dati TEXT NOT NULL
             );
+            CREATE TABLE IF NOT EXISTS impostazioni (
+                chiave TEXT PRIMARY KEY,
+                valore TEXT NOT NULL
+            );
             CREATE TABLE IF NOT EXISTS viste (
                 chiave TEXT PRIMARY KEY,
                 vista TEXT NOT NULL
@@ -76,6 +80,15 @@ class Archivio:
             "SELECT dati FROM allerte WHERE creata >= ? ORDER BY creata DESC", (da,)
         ).fetchall()
         return [json.loads(r[0]) for r in righe]
+
+    def leggi_impostazione(self, chiave: str, predefinito=None):
+        riga = self.db.execute("SELECT valore FROM impostazioni WHERE chiave = ?", (chiave,)).fetchone()
+        return json.loads(riga[0]) if riga else predefinito
+
+    def scrivi_impostazione(self, chiave: str, valore) -> None:
+        self.db.execute("INSERT OR REPLACE INTO impostazioni(chiave, valore) VALUES (?, ?)",
+                        (chiave, json.dumps(valore, ensure_ascii=False)))
+        self.db.commit()
 
     def pulizia(self) -> None:
         """Cancella i dati più vecchi del periodo di conservazione stabilito."""

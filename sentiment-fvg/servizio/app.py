@@ -13,6 +13,7 @@ import hashlib
 import hmac
 import json
 import logging
+import re
 import time
 from contextlib import asynccontextmanager, suppress
 from datetime import timedelta
@@ -65,33 +66,51 @@ async def accoda(menzioni: list[MenzioneGrezza]) -> None:
             await coda.put(m)
 
 
+# Politico o partito monitorato in questo momento (varianti del nome, es. nome e sigla).
+# Si aggiunge alle parole e alle ricerche di fonti.yaml e sopravvive ai riavvii.
+FONTI = carica_fonti()
+obiettivo: list[str] = archivio.leggi_impostazione("obiettivo", [])
+risveglio = asyncio.Event()       # fa partire subito una raccolta quando cambia l'obiettivo
+
+
+def parole_correnti() -> list[str]:
+    return FONTI.get("parole_chiave", []) + obiettivo
+
+
+def ricerche_correnti() -> list[str]:
+    # Tra virgolette, così le piattaforme cercano il nome esatto
+    return FONTI.get("ricerche_social", []) + [f'"{v}"' for v in obiettivo]
+
+
+async def attendi(secondi: int) -> None:
+    with suppress(asyncio.TimeoutError):
+        await asyncio.wait_for(risveglio.wait(), secondi)
+
+
 async def ciclo_rss() -> None:
-    fonti = carica_fonti()
     while True:
         try:
-            await accoda(await rss.raccogli(fonti.get("feed_rss", []), fonti.get("parole_chiave", [])))
+            await accoda(await rss.raccogli(FONTI.get("feed_rss", []), parole_correnti()))
         except Exception:
             log.exception("Errore nella lettura dei feed RSS")
-        await asyncio.sleep(I.intervallo_rss)
+        await attendi(I.intervallo_rss)
 
 
 async def ciclo_social() -> None:
-    fonti = carica_fonti()
-    ricerche = fonti.get("ricerche_social", [])
     while True:
+        ricerche = ricerche_correnti()
         for connettore in (lambda: bluesky.raccogli(ricerche), lambda: x.raccogli(ricerche), meta.raccogli):
             try:
                 await accoda(await connettore())
             except Exception:
                 log.exception("Errore in un connettore social")
-        await asyncio.sleep(I.intervallo_social)
+        await attendi(I.intervallo_social)
 
 
 async def ciclo_telegram() -> None:
-    fonti = carica_fonti()
     coda_tg: asyncio.Queue = asyncio.Queue()
     ascolto = asyncio.create_task(
-        telegram.ascolta(fonti.get("canali_telegram", []), fonti.get("parole_chiave", []), coda_tg)
+        telegram.ascolta(FONTI.get("canali_telegram", []), parole_correnti, coda_tg)
     )
     try:
         while True:
@@ -228,6 +247,7 @@ async def istantanea():
     return {
         "menzioni": archivio.menzioni_recenti(ore=24, limite=1500),
         "allerte": archivio.allerte_recenti(ore=24),
+        "obiettivo": obiettivo,
         "generato": adesso().isoformat(),
     }
 
@@ -250,6 +270,35 @@ async def flusso(request: Request):
 
     return StreamingResponse(generatore(), media_type="text/event-stream",
                              headers={"X-Accel-Buffering": "no"})
+
+
+# --------------------------------------------------------------------------- obiettivo del monitoraggio
+
+_VARIANTE = re.compile(r"^[\w][\w\s'’.&-]{1,79}$")
+
+
+class Obiettivo(BaseModel):
+    varianti: list[str] = Field(default_factory=list, max_length=5)
+
+
+@app.get("/api/obiettivo", dependencies=[Depends(richiede_accesso)])
+async def leggi_obiettivo():
+    return {"varianti": obiettivo}
+
+
+@app.post("/api/obiettivo", dependencies=[Depends(richiede_accesso)])
+async def imposta_obiettivo(dati: Obiettivo):
+    """Imposta il politico o il partito da cercare (lista vuota = nessuno)."""
+    varianti = list(dict.fromkeys(" ".join(v.split()) for v in dati.varianti if v.strip()))
+    if any(not _VARIANTE.match(v) for v in varianti):
+        raise HTTPException(status_code=422, detail="Nome non valido: usare solo lettere, cifre, spazi, apostrofi, punti, trattini e &")
+    obiettivo[:] = varianti
+    archivio.scrivi_impostazione("obiettivo", varianti)
+    risveglio.set()
+    risveglio.clear()
+    diffondi("obiettivo", {"varianti": varianti})
+    log.info("Obiettivo del monitoraggio: %s", varianti or "nessuno")
+    return {"varianti": varianti}
 
 
 # --------------------------------------------------------------------------- ingresso esterno

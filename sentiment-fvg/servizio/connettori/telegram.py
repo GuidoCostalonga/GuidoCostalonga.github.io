@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from typing import Callable
 
 from configurazione import CARTELLA, IMPOSTAZIONI as I
 from connettori import MenzioneGrezza, filtro_parole
@@ -16,7 +17,7 @@ from connettori import MenzioneGrezza, filtro_parole
 log = logging.getLogger("telegram")
 
 
-async def ascolta(canali: list[str], parole: list[str], coda: asyncio.Queue) -> None:
+async def ascolta(canali: list[str], parole: Callable[[], list[str]], coda: asyncio.Queue) -> None:
     """Resta in ascolto e mette in coda i nuovi messaggi pertinenti."""
     if not (I.telegram_api_id and I.telegram_api_hash and canali):
         return
@@ -26,13 +27,12 @@ async def ascolta(canali: list[str], parole: list[str], coda: asyncio.Queue) -> 
         log.warning("Telethon non installato: connettore Telegram disattivato")
         return
 
-    pertinente = filtro_parole(parole)
     client = TelegramClient(str(CARTELLA / "dati" / "telegram"), int(I.telegram_api_id), I.telegram_api_hash)
 
     @client.on(events.NewMessage(chats=canali))
     async def nuovo(evento):
         testo = evento.raw_text or ""
-        if not pertinente(testo):
+        if not filtro_parole(parole())(testo):     # le parole possono cambiare nel tempo
             return
         chat = await evento.get_chat()
         nome = getattr(chat, "username", None)

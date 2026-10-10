@@ -62,6 +62,25 @@ La stessa allerta non si ripete per 45 minuti. Le soglie vanno tarate dopo le
 prime settimane di uso reale: con poche menzioni conviene abbassare
 `VOLUME_MINIMO`, con molte alzarlo.
 
+## Politico o partito da monitorare
+
+In cima al cruscotto c'è la casella **«Politico o partito da monitorare»**.
+
+- Si scrive un nome e si preme **Monitora**: indicatori, grafici, temi, fonti e flusso
+  mostrano solo le menzioni che lo citano (nel testo o tra le entità riconosciute).
+- Si possono scrivere fino a 5 varianti separate da virgola, per esempio
+  `Mario Rossi, Rossi` oppure `Fratelli d'Italia, FdI`. Maiuscole e accenti non contano.
+- I suggerimenti propongono le persone e i partiti citati più spesso nelle ultime 24 ore.
+- **Con il servizio collegato** il nome viene inviato a `POST /api/obiettivo`: il servizio lo
+  aggiunge subito alle ricerche su Bluesky e X (tra virgolette, per cercare il nome esatto) e
+  alle parole dei filtri RSS e Telegram, avvia una raccolta immediata e lo ricorda anche dopo
+  un riavvio. Tutti i cruscotti collegati ricevono il cambio in diretta.
+- **Mostra tutto** toglie il filtro e ferma la ricerca aggiuntiva.
+- Il nome resta anche nell'indirizzo della pagina (`?nome=...`), utile da condividere con lo staff.
+- Le allerte restano tutte visibili; quelle che riguardano il nome monitorato hanno il nome nel titolo.
+- Nella simulazione compaiono solo politici e partiti di fantasia: un nome reale non dà risultati,
+  perché la simulazione non attribuisce mai testi inventati a persone reali.
+
 ## Indicatori del cruscotto
 
 | Indicatore | Calcolo |
