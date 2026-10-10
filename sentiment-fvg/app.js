@@ -746,7 +746,36 @@
     if (tema) document.documentElement.dataset.theme = tema;
   } catch { /* facoltativo */ }
 
-  collegaComandi();
-  creaGrafici();
-  if (DEMO) avviaSimulazione(); else avviaServizio();
+  // Area riservata: la pagina si apre solo con la parola d'ordine.
+  // È una protezione di cortesia (il codice di un sito statico è leggibile da
+  // chiunque): i dati reali restano protetti dai codici di accesso del servizio.
+  const IMPRONTA_PAROLA = '261b3791571ca49823a094309607326e71769c57dd89c02ca55635459e9b38a0';
+  async function impronta(testo) {
+    const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(testo));
+    return [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, '0')).join('');
+  }
+  let avviato = false;
+  function sblocca() {
+    document.body.classList.remove('bloccato');
+    if (avviato) return;
+    avviato = true;
+    collegaComandi();
+    creaGrafici();
+    if (DEMO) avviaSimulazione(); else avviaServizio();
+  }
+  let giaSbloccato = false;
+  try { giaSbloccato = sessionStorage.getItem('monitor-sbloccato') === IMPRONTA_PAROLA; } catch { /* facoltativo */ }
+  if (giaSbloccato) sblocca();
+  $('lucchetto-modulo').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const campo = $('lucchetto-parola');
+    if (await impronta(campo.value.trim().toUpperCase()) !== IMPRONTA_PAROLA) {
+      $('lucchetto-errore').textContent = 'Parola d\'ordine non corretta.';
+      campo.select();
+      return;
+    }
+    try { sessionStorage.setItem('monitor-sbloccato', IMPRONTA_PAROLA); } catch { /* facoltativo */ }
+    campo.value = '';
+    sblocca();
+  });
 })();

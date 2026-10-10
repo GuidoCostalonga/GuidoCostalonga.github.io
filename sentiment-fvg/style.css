@@ -296,6 +296,21 @@ h1 { font-size: clamp(20px, 3vw, 28px); line-height: 1.15; text-wrap: balance; }
 .accesso input { border: 1px solid var(--bordo); border-radius: 8px; padding: 10px; background: var(--superficie-2); }
 .accesso .errore { color: var(--crisi); min-height: 1.2em; font-size: 14px; }
 
+/* ------------------------------------------------------------- area riservata */
+body.bloccato .monitor { display: none; }
+body:not(.bloccato) .lucchetto { display: none; }
+.lucchetto { min-height: 100vh; display: grid; place-items: center; padding: 16px; }
+.lucchetto-scheda {
+  width: min(420px, 100%); display: grid; gap: 10px;
+  background: var(--superficie); border: 1px solid var(--bordo); border-radius: 12px;
+  padding: 24px; box-shadow: var(--ombra);
+}
+.lucchetto-scheda h1 { font-size: 22px; }
+.lucchetto-scheda p { color: var(--testo-2); }
+.lucchetto-scheda label { font-size: 13px; font-weight: 600; }
+.lucchetto-scheda input { border: 1px solid var(--bordo); border-radius: 8px; padding: 10px; background: var(--superficie-2); min-height: 44px; }
+.lucchetto-scheda .errore { color: var(--crisi); min-height: 1.2em; font-size: 14px; }
+
 /* ------------------------------------------------------------- adattamento */
 @media (max-width: 1080px) {
   .griglia { grid-template-columns: 1fr; }

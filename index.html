@@ -120,7 +120,7 @@ button,a{-webkit-tap-highlight-color:transparent}
 .marchio .ruolo{font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--testo-3);display:block}
 
 .voci{display:flex;align-items:center;gap:var(--s1);margin-left:auto}
-.voci a{display:inline-flex;align-items:center;min-height:44px;padding:0 var(--s3);border-radius:var(--r-sm);
+.voci a{display:inline-flex;align-items:center;min-height:44px;white-space:nowrap;padding:0 var(--s3);border-radius:var(--r-sm);
   color:var(--testo);text-decoration:none;font-weight:700;font-size:15px;transition:background var(--t),color var(--t)}
 .voci a:hover{background:var(--superficie-2);color:var(--blu)}
 
@@ -266,7 +266,7 @@ footer{background:var(--blu);color:var(--su-blu)}
 /* ============================================================
    SCHERMI STRETTI
    ============================================================ */
-@media(max-width:1040px){
+@media(max-width:1280px){
   .voci{display:none}
   #burger{display:inline-flex;margin-left:auto}
   .comandi .bot.contorno{display:none}
@@ -380,6 +380,7 @@ footer{background:var(--blu);color:var(--su-blu)}
       <a href="/chi-sono/">Chi sono</a>
       <a href="/truffe/">Sicurezza</a>
       <a href="/meteo/">Meteo FVG</a>
+      <a href="/sentiment-fvg/" title="Area riservata, serve la parola d'ordine">Monitor FVG 🔒</a>
     </nav>
 
     <div class="comandi">
@@ -399,6 +400,7 @@ footer{background:var(--blu);color:var(--su-blu)}
   <a href="/chi-sono/">Chi sono</a>
   <a href="/truffe/">Truffe, come riconoscerle</a>
   <a href="/meteo/">Meteo FVG</a>
+  <a href="/sentiment-fvg/">Monitor percezione FVG 🔒</a>
   <a href="/interventi-famiglia-fvg/">Il FVG per le famiglie</a>
   <a href="/vademecum-proloco/">Pro Loco del FVG</a>
   <a href="https://atlantefvg.it/">Atlante dei Comuni FVG</a>

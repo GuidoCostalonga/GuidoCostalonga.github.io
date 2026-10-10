@@ -17,7 +17,18 @@
   data-servizio: indirizzo del servizio (es. https://monitor.atlantefvg.it).
   Se resta vuoto, il cruscotto parte con dati simulati.
 -->
-<body data-servizio="">
+<body data-servizio="" class="bloccato">
+<section class="lucchetto" id="lucchetto" aria-labelledby="lucchetto-titolo">
+  <form id="lucchetto-modulo" class="lucchetto-scheda">
+    <p class="occhiello">Friuli Venezia Giulia</p>
+    <h1 id="lucchetto-titolo">Monitor della percezione pubblica</h1>
+    <p>Area riservata. Inserisci la parola d'ordine per entrare.</p>
+    <label for="lucchetto-parola">Parola d'ordine</label>
+    <input type="password" id="lucchetto-parola" autocomplete="current-password" required autofocus>
+    <p class="errore" id="lucchetto-errore" role="alert"></p>
+    <button type="submit" class="tasto tasto-pieno">Entra</button>
+  </form>
+</section>
 <div class="monitor" id="monitor">
 
   <header class="testata">
