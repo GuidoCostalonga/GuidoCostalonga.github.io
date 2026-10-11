@@ -28,12 +28,12 @@ reali, e permette di fotografare le schermate.
 
 ## Prove automatiche
 
-44 prove, tutte superate:
+46 prove, tutte superate:
 
 | Gruppo | Prove | Contenuto |
 | --- | --- | --- |
 | `raccolta` · ConnettoriTest | 7 | Lettura dei campioni reali di ogni fonte (`raccolta/src/test/resources/campioni/`) |
-| `raccolta` · LogicaTest | 19 | Orari e ora legale, partecipanti, nomi di squadra, sport, rubriche, tipo di trasmissione, unione, identificativi, fonti guaste |
+| `raccolta` · LogicaTest | 21 | Orari e ora legale, partecipanti, nomi di squadra, sport, rubriche, tipo di trasmissione, unione, identificativi, fonti guaste, integrazione fra servizio e telefono |
 | `app` · AppLogicaTest | 10 | Filtri, preferiti, «in corso», formati, promemoria |
 | `app` · PianificatoreTest | 2 | Allarmi Android: sostituzione, cancellazione, eventi passati |
 | `app` · AppVeraTest | 5 | App completa con dati reali: programma, ricerca, dettaglio, promemoria, sezione da confermare, impostazioni, informazioni, schermo piccolo, modalità scura |
@@ -53,11 +53,11 @@ Comando: `./gradlew :raccolta:test :app:testDebugUnitTest`.
 3. **Il servizio online non è ancora attivo**: GitHub esegue i flussi
    programmati solo dal ramo principale. Fino ad allora l'app legge direttamente
    le fonti (provenienza «Automatica»). Istruzioni nel README.
-4. **Risposta delle fonti ai server di GitHub non verificata**: Rai,
-   Mediaset, DAZN e SuperTennis hanno risposto da questo ambiente; non è
-   verificato che rispondano anche agli indirizzi dei server di GitHub
-   Actions. Se una fonte li rifiutasse, il servizio la segna come non
-   raggiungibile e l'app, in modalità «Automatica», la legge dal telefono.
+4. **DAZN rifiuta i server di GitHub**: verificato alla prima esecuzione del
+   servizio (4 ottobre 2026, ore 22:03): Rai, Mediaset, SuperTennis e i due
+   calendari rispondono, DAZN no. Il servizio la segna «non raggiungibile» con
+   il motivo; l'app, in provenienza «Automatica», legge DAZN dal telefono e la
+   unisce ai dati del servizio (prova `integra_fonteMancanteDalServizioAggiuntaDalTelefono`).
 5. **Copertura incompleta per limiti delle fonti**: Sky Sport, NOW, TV8, Cielo,
    Prime Video, Eurosport fuori da DAZN, HBO Max e Sportitalia non hanno un
    palinsesto pubblico accessibile senza aggirare protezioni (dettagli in
