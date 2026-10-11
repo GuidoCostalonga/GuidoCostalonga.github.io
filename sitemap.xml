@@ -34,11 +34,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://costalonga.org/meteo/</loc>
-    <changefreq>daily</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://costalonga.org/english-quest/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
@@ -54,11 +49,6 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://costalonga.org/catasto-map/</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://costalonga.org/giacomo/caccia-urbana/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
@@ -67,5 +57,15 @@
     <loc>https://costalonga.org/giacomo/citta-libera/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://costalonga.org/bus/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://costalonga.org/bandiai-fvg/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
   </url>
 </urlset>
