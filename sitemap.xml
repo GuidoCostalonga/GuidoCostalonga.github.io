@@ -2,13 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://costalonga.org/</loc>
-    <lastmod>2026-08-20</lastmod>
+    <lastmod>2026-10-10</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
     <loc>https://costalonga.org/chi-sono/</loc>
-    <lastmod>2026-08-20</lastmod>
+    <lastmod>2026-09-09</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
@@ -29,12 +29,8 @@
   </url>
   <url>
     <loc>https://costalonga.org/roveredo-in-piano/</loc>
+    <lastmod>2026-10-11</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://costalonga.org/meteo/</loc>
-    <changefreq>daily</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
@@ -53,11 +49,6 @@
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://costalonga.org/catasto-map/</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://costalonga.org/giacomo/caccia-urbana/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
@@ -66,5 +57,15 @@
     <loc>https://costalonga.org/giacomo/citta-libera/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://costalonga.org/bus/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://costalonga.org/bandiai-fvg/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
   </url>
 </urlset>
