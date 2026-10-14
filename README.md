@@ -22,3 +22,9 @@ Per collegare un dominio personalizzato basta aggiungere un file `CNAME` con
 dentro il dominio, e impostarlo in Settings → Pages.
 
 @ginopizza
+
+In `database-fvg/` c'è il **cruscotto del Database Friuli Venezia Giulia**
+([costalonga.org/database-fvg](https://costalonga.org/database-fvg/)): 102 fogli
+di dati pubblici con filtri per ogni colonna, scheda per comune, turismo,
+amministratori, rifiuti, redditi e mappa. I dati stanno in `database-fvg/dati/`,
+un file JSON per foglio, caricato solo quando serve.
