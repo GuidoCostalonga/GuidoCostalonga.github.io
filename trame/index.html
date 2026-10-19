@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="it" data-theme="auto">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Trame: le strade come disegno</title>
+  <meta name="description" content="Scegli un luogo e trasforma la sua rete stradale in una mappa da personalizzare: colori, livelli, filtri, statistiche, percorsi evidenziati ed esportazione in PNG, SVG, GPX e GeoJSON. Dati OpenStreetMap." />
+  <link rel="canonical" href="https://costalonga.org/trame/" />
+  <meta name="theme-color" content="#0f172a" />
+  <meta property="og:type" content="website" />
+  <meta property="og:locale" content="it_IT" />
+  <meta property="og:site_name" content="Guido Costalonga" />
+  <meta property="og:url" content="https://costalonga.org/trame/" />
+  <meta property="og:title" content="Trame: le strade come disegno" />
+  <meta property="og:description" content="La rete stradale di qualsiasi luogo trasformata in una mappa da personalizzare, analizzare ed esportare, con il calcolo dei percorsi." />
+  <meta property="og:image" content="https://costalonga.org/anteprima.jpg" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230f172a'/%3E%3Cpath d='M4 22 L12 10 L20 18 L28 6 M6 28 L16 16 L26 26' stroke='%23ff3d71' stroke-width='2.4' fill='none' stroke-linecap='round'/%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" />
+  <link rel="stylesheet" href="app.css" />
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-cerca" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></symbol>
+    <symbol id="i-piu" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-meno" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+    <symbol id="i-inquadra" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></symbol>
+    <symbol id="i-nord" viewBox="0 0 24 24"><path d="M12 3l5 16-5-4-5 4z" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-annulla" viewBox="0 0 24 24"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 010 12h-3"/></symbol>
+    <symbol id="i-ripristina" viewBox="0 0 24 24"><path d="M15 14l5-5-5-5"/><path d="M20 9H10a6 6 0 000 12h3"/></symbol>
+    <symbol id="i-posizione" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></symbol>
+    <symbol id="i-pannello" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/></symbol>
+    <symbol id="i-legenda" viewBox="0 0 24 24"><path d="M4 6h3M4 12h3M4 18h3M10 6h10M10 12h10M10 18h10"/></symbol>
+    <symbol id="i-etichette" viewBox="0 0 24 24"><path d="M4 7V5h16v2M12 5v14M9 19h6"/></symbol>
+    <symbol id="i-mappa" viewBox="0 0 24 24"><path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2z"/><path d="M9 4v14M15 6v14"/></symbol>
+    <symbol id="i-tema" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 000 16z" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-inverti" viewBox="0 0 24 24"><path d="M7 4v16M3 16l4 4 4-4M17 20V4M13 8l4-4 4 4"/></symbol>
+    <symbol id="i-chiudi" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+    <symbol id="i-occhio" viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+    <symbol id="i-cestino" viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></symbol>
+    <symbol id="i-scarica" viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></symbol>
+    <symbol id="i-matita" viewBox="0 0 24 24"><path d="M4 20l4-1L19 8l-3-3L5 16z"/></symbol>
+    <symbol id="i-punto" viewBox="0 0 24 24"><path d="M12 21s-7-6.5-7-12a7 7 0 0114 0c0 5.5-7 12-7 12z"/><circle cx="12" cy="9" r="2.5"/></symbol>
+    <symbol id="i-collegamento" viewBox="0 0 24 24"><path d="M10 14a4 4 0 006 0l3-3a4 4 0 00-6-6l-1 1"/><path d="M14 10a4 4 0 00-6 0l-3 3a4 4 0 006 6l1-1"/></symbol>
+  </defs>
+</svg>
+
+<a class="salta" href="#pannello">Vai ai comandi</a>
+
+<header class="testata">
+  <a class="marchio" href="/" title="Torna a costalonga.org">
+    <svg viewBox="0 0 32 32" width="28" height="28" aria-hidden="true"><rect width="32" height="32" rx="7" fill="#0f172a"/><path d="M4 22 L12 10 L20 18 L28 6 M6 28 L16 16 L26 26" stroke="#ff3d71" stroke-width="2.4" fill="none" stroke-linecap="round"/></svg>
+    <span><strong>Trame</strong><small>le strade come disegno</small></span>
+  </a>
+
+  <form class="ricerca" id="form-cerca" role="search" autocomplete="off">
+    <label for="campo-cerca" class="vh">Cerca un luogo</label>
+    <input id="campo-cerca" type="search" placeholder="Città, comune, indirizzo o luogo" aria-describedby="aiuto-cerca" aria-controls="risultati" aria-expanded="false" />
+    <button type="submit" class="btn primario"><svg class="ic"><use href="#i-cerca"/></svg><span>Cerca</span></button>
+    <p id="aiuto-cerca" class="vh">Premi Invio per cercare. Con più risultati scegli quello giusto dall'elenco.</p>
+    <div id="risultati" class="risultati" hidden></div>
+  </form>
+
+  <div class="modalita" role="radiogroup" aria-label="Modalità di lavoro">
+    <button type="button" role="radio" aria-checked="true" data-modalita="arte">Mappa<span class="lungo"> artistica</span></button>
+    <button type="button" role="radio" aria-checked="false" data-modalita="percorsi">Percorsi</button>
+  </div>
+
+  <div class="interruttori" role="group" aria-label="Mostra o nascondi">
+    <button type="button" class="btn icona" id="t-pannello" aria-pressed="true" data-tip="Pannello dei comandi"><svg class="ic"><use href="#i-pannello"/></svg><span class="vh-stretto">Pannello</span></button>
+    <button type="button" class="btn icona" id="t-legenda" aria-pressed="true" data-tip="Legenda"><svg class="ic"><use href="#i-legenda"/></svg><span class="vh-stretto">Legenda</span></button>
+    <button type="button" class="btn icona" id="t-etichette" aria-pressed="false" data-tip="Nomi delle strade"><svg class="ic"><use href="#i-etichette"/></svg><span class="vh-stretto">Etichette</span></button>
+    <button type="button" class="btn icona" id="t-base" aria-pressed="false" data-tip="Mappa di base"><svg class="ic"><use href="#i-mappa"/></svg><span class="vh-stretto">Mappa di base</span></button>
+    <button type="button" class="btn icona" id="t-tema" data-tip="Tema chiaro o scuro dell'interfaccia"><svg class="ic"><use href="#i-tema"/></svg><span class="vh-stretto">Tema</span></button>
+  </div>
+</header>
+
+<main class="corpo">
+  <aside id="pannello" class="pannello" aria-label="Comandi" tabindex="-1">
+    <div class="maniglia" aria-hidden="true"></div>
+    <div class="schede" role="tablist" aria-label="Sezioni">
+      <button role="tab" id="tab-mappa" aria-controls="sez-mappa" aria-selected="true">Mappa</button>
+      <button role="tab" id="tab-percorso" aria-controls="sez-percorso" aria-selected="false" tabindex="-1">Percorso</button>
+      <button role="tab" id="tab-filtri" aria-controls="sez-filtri" aria-selected="false" tabindex="-1">Filtri</button>
+      <button role="tab" id="tab-analisi" aria-controls="sez-analisi" aria-selected="false" tabindex="-1">Analisi</button>
+      <button role="tab" id="tab-esporta" aria-controls="sez-esporta" aria-selected="false" tabindex="-1">Esporta</button>
+    </div>
+
+    <!-- ============ MAPPA ============ -->
+    <section role="tabpanel" id="sez-mappa" aria-labelledby="tab-mappa" class="sezione">
+      <details open class="gruppo">
+        <summary>Area</summary>
+        <div id="area-info" class="area-info">Nessuna area scelta. Cerca un luogo qui sopra oppure usa uno dei comandi seguenti.</div>
+        <div class="riga-btn">
+          <button type="button" class="btn" id="b-area-vista" data-tip="Usa il rettangolo visibile sullo schermo">Usa la vista attuale</button>
+          <button type="button" class="btn" id="b-area-riquadro" data-tip="Trascina sulla mappa per disegnare un rettangolo">Disegna un riquadro</button>
+          <button type="button" class="btn" id="b-area-poligono" data-tip="Clic per aggiungere vertici, doppio clic o Fine per chiudere">Disegna un'area</button>
+          <button type="button" class="btn" id="b-posizione-area"><svg class="ic"><use href="#i-posizione"/></svg>Usa la mia posizione</button>
+        </div>
+        <label class="campo" id="campo-raggio" hidden>Raggio attorno al punto
+          <select id="raggio"><option value="500">500 m</option><option value="1000">1 km</option><option value="2000" selected>2 km</option><option value="4000">4 km</option><option value="8000">8 km</option></select>
+        </label>
+        <div class="riga-btn">
+          <button type="button" class="btn primario" id="b-carica" disabled>Carica la rete stradale</button>
+        </div>
+        <div id="recenti" class="recenti"></div>
+      </details>
+
+      <details open class="gruppo">
+        <summary>Livelli</summary>
+        <p class="nota">I livelli aggiuntivi vengono scaricati solo quando li attivi.</p>
+        <ul id="lista-livelli" class="livelli"></ul>
+      </details>
+
+      <details open class="gruppo">
+        <summary>Stile</summary>
+        <div class="etichetta-gruppo" id="et-preset">Stili pronti</div>
+        <div id="preset" class="preset" role="group" aria-labelledby="et-preset"></div>
+
+        <label class="campo">Colori delle strade
+          <select data-bind="style.colorMode" id="modo-colore">
+            <option value="class">Un colore per ogni tipo di strada</option>
+            <option value="uniform">Colore unico</option>
+            <option value="orientation">Per orientamento</option>
+            <option value="density">Per densità della rete</option>
+            <option value="elevation">Per altimetria (richiede le quote)</option>
+          </select>
+        </label>
+        <p class="nota" id="nota-colore" hidden></p>
+
+        <div class="colori">
+          <label>Sfondo <input type="color" data-bind="style.bg" /></label>
+          <label id="lab-colore-unico">Strade <input type="color" data-bind="style.roadColor" /></label>
+          <label>Percorso <input type="color" data-bind="style.routeColor" /></label>
+          <label>Partenza <input type="color" data-bind="style.startColor" /></label>
+          <label>Arrivo <input type="color" data-bind="style.endColor" /></label>
+        </div>
+        <details class="sotto">
+          <summary>Colori per tipo di strada</summary>
+          <div id="colori-classi" class="colori"></div>
+        </details>
+        <details class="sotto">
+          <summary>Colori dei livelli aggiuntivi</summary>
+          <div id="colori-livelli" class="colori"></div>
+        </details>
+
+        <label class="cursore">Spessore delle linee <output data-out="style.width"></output>
+          <input type="range" min="0.2" max="4" step="0.1" data-bind="style.width" />
+        </label>
+        <label class="cursore">Opacità delle strade <output data-out="style.opacity"></output>
+          <input type="range" min="0.05" max="1" step="0.05" data-bind="style.opacity" />
+        </label>
+        <label class="cursore">Luminosità dei colori <output data-out="style.brightness"></output>
+          <input type="range" min="0.4" max="1.8" step="0.05" data-bind="style.brightness" />
+        </label>
+        <label class="spunta"><input type="checkbox" data-bind="style.glow" /> Bagliore attorno alle linee</label>
+
+        <fieldset class="scelte">
+          <legend>Sfondo della mappa</legend>
+          <label><input type="radio" name="sfondo" value="solid" data-bind="style.backdrop" /> Solo rete stradale (sfondo pieno)</label>
+          <label><input type="radio" name="sfondo" value="basemap" data-bind="style.backdrop" /> Rete sopra la mappa di base</label>
+          <label><input type="radio" name="sfondo" value="dimmed" data-bind="style.backdrop" /> Mappa di base attenuata</label>
+        </fieldset>
+        <label class="campo">Mappa di base
+          <select data-bind="style.basemap">
+            <option value="carto-light">Chiara (CARTO)</option>
+            <option value="carto-dark">Scura (CARTO)</option>
+            <option value="osm">OpenStreetMap standard</option>
+          </select>
+        </label>
+        <label class="spunta"><input type="checkbox" data-bind="style.labels" /> Nomi delle strade e dei luoghi</label>
+
+        <div class="riga-btn">
+          <button type="button" class="btn" id="b-ripristina-stile">Ripristina lo stile</button>
+          <button type="button" class="btn" id="b-salva-stile">Salva come stile personale</button>
+        </div>
+        <div id="stili-personali" class="stili-personali"></div>
+      </details>
+    </section>
+
+    <!-- ============ PERCORSO ============ -->
+    <section role="tabpanel" id="sez-percorso" aria-labelledby="tab-percorso" class="sezione" hidden>
+      <div class="gruppo">
+        <div class="etichetta-gruppo" id="et-mezzo">Mezzo</div>
+        <div class="mezzi" role="radiogroup" aria-labelledby="et-mezzo" id="mezzi"></div>
+        <p class="nota" id="nota-mezzo" hidden></p>
+
+        <ol id="tappe" class="tappe" aria-label="Partenza, tappe e arrivo"></ol>
+        <div class="riga-btn">
+          <button type="button" class="btn" id="b-aggiungi-tappa"><svg class="ic"><use href="#i-piu"/></svg>Aggiungi tappa</button>
+          <button type="button" class="btn" id="b-inverti"><svg class="ic"><use href="#i-inverti"/></svg>Inverti</button>
+          <button type="button" class="btn" id="b-svuota-tappe">Svuota</button>
+        </div>
+        <p class="nota">Suggerimento: in modalità Percorsi il primo clic sulla mappa fissa la partenza, il secondo l'arrivo. I segnaposto si possono trascinare.</p>
+
+        <details class="sotto" id="opzioni-percorso">
+          <summary>Preferenze di calcolo</summary>
+          <div id="opzioni" class="opzioni"></div>
+          <label class="spunta"><input type="checkbox" id="alternative" checked /> Cerca percorsi alternativi (solo con partenza e arrivo, senza tappe)</label>
+          <p class="nota" id="nota-motore"></p>
+        </details>
+
+        <div class="riga-btn">
+          <button type="button" class="btn primario largo" id="b-calcola">Calcola il percorso</button>
+        </div>
+        <div id="esito-percorso" class="esito" role="status"></div>
+      </div>
+
+      <details open class="gruppo">
+        <summary>Percorsi sulla mappa</summary>
+        <div id="lista-percorsi" class="lista-percorsi"><p class="nota">Nessun percorso ancora.</p></div>
+        <div class="riga-btn">
+          <button type="button" class="btn" id="b-disegna-percorso"><svg class="ic"><use href="#i-matita"/></svg>Traccia a mano</button>
+          <label class="btn file">Importa GPX o GeoJSON<input type="file" id="importa-traccia" accept=".gpx,.geojson,.json,application/gpx+xml,application/geo+json,application/json" /></label>
+        </div>
+      </details>
+
+      <details class="gruppo">
+        <summary>Aspetto del percorso</summary>
+        <label class="spunta"><input type="checkbox" data-bind="style.dimOthers" /> Attenua le strade fuori dal percorso</label>
+        <label class="spunta"><input type="checkbox" data-bind="style.arrows" /> Frecce di direzione</label>
+        <label class="spunta"><input type="checkbox" data-bind="style.animate" /> Animazione lungo il percorso</label>
+        <p class="nota" id="nota-movimento" hidden>Il sistema chiede movimento ridotto: l'animazione resta spenta finché non la attivi tu.</p>
+      </details>
+
+      <details class="gruppo">
+        <summary>Motore di calcolo</summary>
+        <label class="campo">Servizio
+          <select id="motore">
+            <option value="valhalla">Valhalla, server FOSSGIS (gratuito, senza chiave)</option>
+            <option value="osrm">OSRM, server FOSSGIS (gratuito, senza esclusioni)</option>
+            <option value="graphhopper">GraphHopper (serve una chiave personale)</option>
+            <option value="local">Motore locale sulla rete caricata</option>
+          </select>
+        </label>
+        <label class="campo" id="campo-url">Indirizzo di un server compatibile (facoltativo)
+          <input type="url" id="motore-url" placeholder="Lascia vuoto per il server pubblico" />
+        </label>
+        <label class="campo" id="campo-chiave" hidden>Chiave GraphHopper
+          <input type="password" id="motore-chiave" autocomplete="off" />
+          <span class="nota">La chiave resta solo in questo browser e viene inviata soltanto a GraphHopper.</span>
+        </label>
+        <p class="nota" id="nota-servizio"></p>
+      </details>
+    </section>
+
+    <!-- ============ FILTRI ============ -->
+    <section role="tabpanel" id="sez-filtri" aria-labelledby="tab-filtri" class="sezione" hidden>
+      <div class="gruppo">
+        <p id="riepilogo-filtri" class="riepilogo" role="status">Carica un'area per usare i filtri.</p>
+        <div class="etichetta-gruppo">Tipi di strada</div>
+        <ul id="filtri-classi" class="filtri-classi"></ul>
+        <div class="riga-btn">
+          <button type="button" class="btn" id="b-tutte-classi">Tutte</button>
+          <button type="button" class="btn" id="b-solo-carrabili">Solo carrabili</button>
+          <button type="button" class="btn" id="b-solo-lente">Solo pedonali e ciclabili</button>
+        </div>
+      </div>
+      <div class="gruppo">
+        <div class="etichetta-gruppo">Attributi OpenStreetMap</div>
+        <p class="nota">Compaiono solo gli attributi presenti nei dati caricati. Le strade senza il dato non vengono mai classificate per ipotesi.</p>
+        <div id="filtri-attributi"></div>
+        <label class="spunta"><input type="checkbox" data-bind="filters.includeMissing" /> Mostra anche le strade prive del dato filtrato</label>
+      </div>
+      <div class="riga-btn">
+        <button type="button" class="btn" id="b-ripristina-filtri">Ripristina i filtri</button>
+      </div>
+    </section>
+
+    <!-- ============ ANALISI ============ -->
+    <section role="tabpanel" id="sez-analisi" aria-labelledby="tab-analisi" class="sezione" hidden>
+      <div class="gruppo">
+        <fieldset class="scelte in-linea">
+          <legend>Calcola su</legend>
+          <label><input type="radio" name="ambito" value="area" checked /> Tutta l'area caricata</label>
+          <label><input type="radio" name="ambito" value="vista" /> Solo la vista attuale</label>
+        </fieldset>
+        <div id="statistiche" class="statistiche"><p class="nota">Carica un'area per vedere le statistiche.</p></div>
+      </div>
+      <details open class="gruppo">
+        <summary>Orientamento delle strade</summary>
+        <div id="rosa" class="rosa"></div>
+        <div class="riga-btn"><button type="button" class="btn" id="b-colora-orientamento">Colora la mappa per orientamento</button></div>
+      </details>
+      <details class="gruppo">
+        <summary>Densità della rete</summary>
+        <p class="nota">Lunghezza di strade per superficie, su celle di circa 250 metri: evidenzia centri e zone rade.</p>
+        <div class="riga-btn"><button type="button" class="btn" id="b-colora-densita">Colora la mappa per densità</button></div>
+      </details>
+      <details class="gruppo">
+        <summary>Altimetria</summary>
+        <p class="nota">Le quote si leggono dal modello altimetrico del servizio Valhalla (FOSSGIS) nel punto centrale di ogni strada, fino a un massimo di strade per non sovraccaricare il servizio. Il risultato è un campione, non una misura.</p>
+        <label class="campo">Strade da campionare
+          <select id="quota-max"><option value="400">400</option><option value="1200" selected>1.200</option><option value="2400">2.400</option></select>
+        </label>
+        <div class="riga-btn">
+          <button type="button" class="btn" id="b-quote">Leggi le quote</button>
+          <button type="button" class="btn" id="b-colora-quote" disabled>Colora per altimetria</button>
+        </div>
+        <div id="esito-quote" class="esito" role="status"></div>
+      </details>
+      <details open class="gruppo">
+        <summary>Percorsi generati</summary>
+        <p class="nota">Molti percorsi brevi calcolati nel browser sulla rete caricata: un modo creativo di vedere come si muove la città.</p>
+        <label class="campo">Mezzo
+          <select id="gen-mezzo"><option value="foot">A piedi</option><option value="bike">In bicicletta</option><option value="car">In auto</option></select>
+        </label>
+        <label class="cursore">Quanti percorsi <output id="out-gen-n">150</output>
+          <input type="range" id="gen-n" min="10" max="600" step="10" value="150" />
+        </label>
+        <fieldset class="scelte">
+          <legend>Da dove partono</legend>
+          <label><input type="radio" name="gen-origine" value="casuale" checked /> Tra punti casuali</label>
+          <label><input type="radio" name="gen-origine" value="punto" /> Da un punto scelto verso destinazioni varie</label>
+        </fieldset>
+        <p class="nota" id="gen-punto-info" hidden>Clic sulla mappa per scegliere il punto di partenza.</p>
+        <div class="riga-btn">
+          <button type="button" class="btn primario" id="b-genera">Genera</button>
+          <button type="button" class="btn" id="b-cancella-generati">Cancella</button>
+        </div>
+        <div id="esito-genera" class="esito" role="status"></div>
+      </details>
+    </section>
+
+    <!-- ============ ESPORTA ============ -->
+    <section role="tabpanel" id="sez-esporta" aria-labelledby="tab-esporta" class="sezione" hidden>
+      <div class="gruppo">
+        <fieldset class="scelte" id="formati">
+          <legend>Formato</legend>
+          <label><input type="radio" name="formato" value="png" checked /> Immagine PNG ad alta risoluzione</label>
+          <label><input type="radio" name="formato" value="svg" /> Disegno vettoriale SVG</label>
+          <label><input type="radio" name="formato" value="vista" /> Istantanea della vista con mappa di base (PNG)</label>
+          <label><input type="radio" name="formato" value="geojson" /> Dati geografici GeoJSON</label>
+          <label><input type="radio" name="formato" value="gpx" /> Percorso GPX</label>
+          <label><input type="radio" name="formato" value="rgeojson" /> Percorso GeoJSON</label>
+        </fieldset>
+        <p class="nota" id="nota-formato"></p>
+      </div>
+      <div class="gruppo" id="opzioni-immagine">
+        <label class="campo">Dimensioni
+          <select id="exp-dim"></select>
+        </label>
+        <div class="due" id="exp-pers" hidden>
+          <label class="campo">Larghezza (px)<input type="number" id="exp-w" min="200" max="10000" value="2000" /></label>
+          <label class="campo">Altezza (px)<input type="number" id="exp-h" min="200" max="10000" value="2000" /></label>
+        </div>
+        <label class="campo">Orientamento
+          <select id="exp-orient"><option value="libero">Come le dimensioni scelte</option><option value="verticale">Verticale</option><option value="orizzontale">Orizzontale</option><option value="quadrato">Quadrato</option></select>
+        </label>
+        <label class="campo">Sfondo
+          <select id="exp-sfondo"><option value="stile">Colore dello stile</option><option value="bianco">Bianco</option><option value="trasparente">Trasparente</option></select>
+        </label>
+        <label class="campo">Contenuto
+          <select id="exp-estensione"><option value="area">Tutta l'area caricata</option><option value="vista">La vista attuale</option></select>
+        </label>
+        <label class="cursore">Spessore delle linee nell'immagine <output id="out-exp-linee">1</output>
+          <input type="range" id="exp-linee" min="0.3" max="4" step="0.1" value="1" />
+        </label>
+        <label class="spunta"><input type="checkbox" id="exp-cornice" checked /> Cornice da manifesto</label>
+        <label class="campo">Titolo<input type="text" id="exp-titolo" maxlength="60" /></label>
+        <label class="campo">Sottotitolo<input type="text" id="exp-sottotitolo" maxlength="90" /></label>
+        <label class="spunta"><input type="checkbox" id="exp-data" checked /> Data</label>
+        <label class="spunta"><input type="checkbox" id="exp-legenda" checked /> Legenda</label>
+        <div class="etichetta-gruppo">Anteprima</div>
+        <div class="anteprima"><canvas id="anteprima" width="300" height="300" aria-label="Anteprima dell'esportazione" role="img"></canvas></div>
+      </div>
+      <div class="riga-btn">
+        <button type="button" class="btn primario largo" id="b-esporta"><svg class="ic"><use href="#i-scarica"/></svg>Scarica</button>
+        <button type="button" class="btn" id="b-stampa">Stampa il manifesto</button>
+      </div>
+      <div id="esito-esporta" class="esito" role="status"></div>
+
+      <details open class="gruppo">
+        <summary>Condividi e conserva</summary>
+        <p class="nota">Il collegamento ricrea luogo, livelli, filtri e stile. Non contiene la tua posizione né i punti del percorso.</p>
+        <div class="riga-btn">
+          <button type="button" class="btn" id="b-collegamento"><svg class="ic"><use href="#i-collegamento"/></svg>Copia il collegamento</button>
+          <button type="button" class="btn" id="b-salva-config">Salva la configurazione</button>
+          <label class="btn file">Apri una configurazione<input type="file" id="apri-config" accept=".json,application/json" /></label>
+        </div>
+      </details>
+    </section>
+  </aside>
+
+  <div class="mappa-area">
+    <div id="mappa" class="mappa" aria-label="Mappa interattiva. Con il fuoco sulla mappa usa le frecce per spostarti e più e meno per ingrandire." role="region"></div>
+
+    <div class="comandi-mappa" role="toolbar" aria-label="Comandi della mappa" aria-orientation="vertical">
+      <button type="button" class="btn icona" id="m-piu" data-tip="Ingrandisci" aria-label="Ingrandisci"><svg class="ic"><use href="#i-piu"/></svg></button>
+      <button type="button" class="btn icona" id="m-meno" data-tip="Riduci" aria-label="Riduci"><svg class="ic"><use href="#i-meno"/></svg></button>
+      <button type="button" class="btn icona" id="m-inquadra" data-tip="Inquadra l'area" aria-label="Inquadra l'area"><svg class="ic"><use href="#i-inquadra"/></svg></button>
+      <button type="button" class="btn icona" id="m-nord" data-tip="Orienta a nord" aria-label="Orienta a nord"><svg class="ic bussola"><use href="#i-nord"/></svg></button>
+      <button type="button" class="btn icona" id="m-annulla" data-tip="Annulla (Ctrl+Z)" aria-label="Annulla l'ultima modifica" disabled><svg class="ic"><use href="#i-annulla"/></svg></button>
+      <button type="button" class="btn icona" id="m-ripristina" data-tip="Ripristina (Ctrl+Y)" aria-label="Ripristina la modifica annullata" disabled><svg class="ic"><use href="#i-ripristina"/></svg></button>
+      <button type="button" class="btn icona" id="m-posizione" data-tip="Usa la mia posizione" aria-label="Centra sulla mia posizione"><svg class="ic"><use href="#i-posizione"/></svg></button>
+    </div>
+
+    <div id="legenda" class="legenda" aria-label="Legenda"></div>
+    <div id="scheda" class="scheda" hidden role="dialog" aria-labelledby="scheda-titolo"></div>
+
+    <div id="barra-disegno" class="barra-disegno" hidden role="status">
+      <span id="testo-disegno"></span>
+      <button type="button" class="btn primario" id="b-fine-disegno">Fine</button>
+      <button type="button" class="btn" id="b-annulla-disegno">Annulla</button>
+    </div>
+
+    <div id="avanzamento" class="avanzamento" hidden role="status" aria-live="polite">
+      <div class="spinner" aria-hidden="true"></div>
+      <div class="testi"><strong id="av-titolo">Caricamento</strong><span id="av-dettaglio"></span></div>
+      <button type="button" class="btn" id="b-annulla-carico">Annulla</button>
+    </div>
+
+    <div id="benvenuto" class="benvenuto">
+      <h1>La rete stradale come disegno</h1>
+      <p>Cerca un luogo, carica le sue strade e trasformale in una mappa da personalizzare, analizzare ed esportare. Nella modalità Percorsi puoi calcolare e mettere in evidenza un itinerario.</p>
+      <p>Prova con:</p>
+      <div class="riga-btn" id="esempi"></div>
+    </div>
+  </div>
+</main>
+
+<footer class="stato">
+  <span id="stato-area">Nessuna area</span>
+  <span id="stato-zoom">Ingrandimento non disponibile</span>
+  <span id="stato-fonte">Dati © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">contributori OpenStreetMap</a></span>
+</footer>
+
+<div id="avvisi" class="avvisi" aria-live="polite" aria-atomic="false"></div>
+
+<dialog id="dialogo" class="dialogo" aria-labelledby="dialogo-titolo">
+  <form method="dialog">
+    <h2 id="dialogo-titolo"></h2>
+    <div id="dialogo-testo"></div>
+    <div class="riga-btn fine">
+      <button value="annulla" class="btn" id="dialogo-no">Annulla</button>
+      <button value="ok" class="btn primario" id="dialogo-si">Procedi</button>
+    </div>
+  </form>
+</dialog>
+
+<div id="stampa" class="area-stampa" aria-hidden="true"><img id="img-stampa" alt="" /></div>
+
+<noscript><p class="noscript">Questa pagina ha bisogno di JavaScript per funzionare.</p></noscript>
+
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
