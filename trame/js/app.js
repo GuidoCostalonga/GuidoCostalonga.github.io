@@ -573,13 +573,13 @@ function cancelJobs() {
   jobCtrl?.abort();
 }
 
-async function fetchLayer(layer, area, label) {
+async function fetchLayer(layer, area, label, force = false) {
   const ctrl = new AbortController();
   jobCtrl = ctrl;
   const p = showProgress(label);
   try {
     const q = buildQuery(layer, area);
-    const json = await runOverpass(q, { signal: ctrl.signal, onProgress: p.bytes, onStatus: p.status });
+    const json = await runOverpass(q, { signal: ctrl.signal, onProgress: p.bytes, onStatus: p.status, force });
     p.status('Elaborazione dei dati');
     await new Promise((r) => setTimeout(r, 0));
     return json;
@@ -589,7 +589,7 @@ async function fetchLayer(layer, area, label) {
   }
 }
 
-async function loadArea() {
+async function loadArea({ force = false } = {}) {
   const a = S.area;
   if (!a) return;
   const w = areaWarning(a);
@@ -599,7 +599,7 @@ async function loadArea() {
     if (!ok) return;
   }
   enqueue(async () => {
-    const json = await fetchLayer('roads', a, `Scarico le strade di ${a.name}`);
+    const json = await fetchLayer('roads', a, `Scarico le strade di ${a.name}`, force);
     if (areaKey(S.area) !== areaKey(a)) return;
     const roads = parseRoads(json);
     roads._version = (S.roads._version || 0) + 1;
@@ -614,7 +614,7 @@ async function loadArea() {
       toast(a.kind === 'relation' ? 'Nessuna strada trovata in quest\'area. Il server potrebbe non avere ancora l\'area amministrativa indicizzata: prova con «Usa la vista attuale».' : 'Nessuna strada trovata in quest\'area.', 'attenzione', 10000);
     } else {
       const total = roads.reduce((s, r) => s + r.len, 0);
-      toast(`Caricate ${fmt.int(roads.length)} strade, ${fmt.km(total)} di rete.`, 'ok', 4000);
+      toast(`Caricate ${fmt.int(roads.length)} strade, ${fmt.km(total)} di rete.${json.__daMemoria ? ' Dati ripresi dalla memoria del browser: «Ricarica la rete stradale» li scarica di nuovo.' : ''}`, 'ok', json.__daMemoria ? 6000 : 4000);
       if (roads.length > CONFIG.heavyFeatureCount) toast('Rete molto ampia: sui dispositivi meno potenti il disegno e le esportazioni possono rallentare. Usa i filtri per alleggerire.', 'attenzione', 9000);
     }
     if (S.style.colorMode === 'density') S.density = densityByRoad(roads);
@@ -2088,7 +2088,8 @@ function setupControls() {
   };
   $('#b-area-riquadro').onclick = () => startDraw('bbox');
   $('#b-area-poligono').onclick = () => startDraw('polygon');
-  $('#b-carica').onclick = loadArea;
+  // Se l'area è già caricata, «Ricarica» scarica di nuovo ignorando la memoria locale.
+  $('#b-carica').onclick = () => loadArea({ force: !!S.area && S.loadedFor.roads === areaKey(S.area) });
   $('#raggio').addEventListener('change', () => {
     const a = S.area;
     if (a?.source !== 'punto' || !a.center) return;

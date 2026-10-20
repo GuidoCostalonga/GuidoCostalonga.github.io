@@ -29,9 +29,14 @@ export const CONFIG = {
       'https://maps.mail.ru/osm/tools/overpass/api/interpreter',
       'https://overpass.kumi.systems/api/interpreter',
     ],
-    timeout: 120, // secondi, lato server
-    maxsize: 256 * 1024 * 1024, // byte, lato server
-    retries: 2,
+    // Tempo massimo (secondi) e memoria dichiarati al server in base alla superficie:
+    // richieste piccole e "leggere" vengono servite prima quando il server è affollato.
+    budget: [
+      { km2: 30, timeout: 45, maxsize: 64 * 1024 * 1024 },
+      { km2: 250, timeout: 90, maxsize: 256 * 1024 * 1024 },
+      { km2: Infinity, timeout: 180, maxsize: 512 * 1024 * 1024 },
+    ],
+    cacheHours: 24, // i dati già scaricati restano nel browser per un giorno
   },
 
   routing: {
