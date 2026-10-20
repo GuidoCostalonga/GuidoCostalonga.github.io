@@ -4,8 +4,9 @@ Homepage-vetrina che raccoglie guide, mappe e strumenti pubblicati su GitHub Pag
 
 Ogni progetto vive nel suo repository e viene servito in una sottocartella del
 dominio (`/english-quest/`, `/interventi-famiglia-fvg/`, ...). Qui dentro stanno
-solo la homepage, `roveredo-in-piano/` e `riunione-pc/`, che non hanno un
-repository proprio.
+solo la homepage, `roveredo-in-piano/`, `riunione-pc/` e `trame/`, che non hanno
+un repository proprio. Le istruzioni di `trame/` (fornitori di dati e di
+percorso, limiti, verifiche) stanno in `trame/README.md`.
 
 In `meteo-android/` c'è invece l'app Android della pagina
 [costalonga.org/meteo](https://costalonga.org/meteo/), con il widget animato per
