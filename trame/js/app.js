@@ -616,7 +616,6 @@ async function loadArea() {
       const total = roads.reduce((s, r) => s + r.len, 0);
       toast(`Caricate ${fmt.int(roads.length)} strade, ${fmt.km(total)} di rete.`, 'ok', 4000);
       if (roads.length > CONFIG.heavyFeatureCount) toast('Rete molto ampia: sui dispositivi meno potenti il disegno e le esportazioni possono rallentare. Usa i filtri per alleggerire.', 'attenzione', 9000);
-      $('#benvenuto').hidden = true;
     }
     if (S.style.colorMode === 'density') S.density = densityByRoad(roads);
     rememberArea(a);
@@ -2106,20 +2105,6 @@ function setupControls() {
   $('#b-annulla-disegno').onclick = () => { endDraw(); toast('Disegno annullato.', 'info', 2000); };
   $('#b-annulla-carico').onclick = cancelJobs;
 
-  const examples = [
-    { name: 'Roveredo in Piano', q: 'Roveredo in Piano' },
-    { name: 'Pordenone', q: 'Pordenone, Friuli Venezia Giulia' },
-    { name: 'Palmanova', q: 'Palmanova' },
-    { name: 'Trieste centro', q: 'Trieste' },
-  ];
-  $('#esempi').innerHTML = examples.map((x, i) => `<button type="button" class="btn" data-esempio="${i}">${esc(x.name)}</button>`).join('');
-  $('#esempi').addEventListener('click', (e) => {
-    const b = e.target.closest('[data-esempio]');
-    if (!b) return;
-    const x = examples[+b.dataset.esempio];
-    $('#campo-cerca').value = x.q;
-    doSearch(x.q);
-  });
 
   document.addEventListener('keydown', (e) => {
     const typing = /INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName) && document.activeElement.type !== 'checkbox' && document.activeElement.type !== 'radio' && document.activeElement.type !== 'range';
