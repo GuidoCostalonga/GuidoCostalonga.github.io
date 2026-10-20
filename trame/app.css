@@ -302,12 +302,6 @@ details.sotto > summary { font-weight: 600; font-size: 14px; }
 .avanzamento .testi span { color: var(--testo-2); font-variant-numeric: tabular-nums; }
 .spinner { width: 22px; height: 22px; border-radius: 50%; border: 3px solid var(--bordo); border-top-color: var(--accento); animation: gira 0.9s linear infinite; flex: none; }
 @keyframes gira { to { transform: rotate(360deg); } }
-.benvenuto {
-  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 12; width: min(520px, calc(100% - 32px));
-  background: var(--superficie); border: 1px solid var(--bordo); border-radius: 14px; box-shadow: var(--ombra); padding: 18px 20px;
-}
-.benvenuto h1 { margin: 0 0 6px; font-size: 22px; }
-.benvenuto p { margin: 6px 0; color: var(--testo-2); }
 .marcatore {
   width: 30px; height: 30px; border-radius: 50%; border: 3px solid #fff; background: var(--c); color: #fff;
   font-weight: 800; font-size: 13px; display: grid; place-items: center; cursor: grab; padding: 0;
@@ -358,8 +352,6 @@ details.sotto > summary { font-weight: 600; font-size: 14px; }
   .modalita button { padding: 6px 9px; font-size: 13px; }
   .interruttori { margin-left: auto; }
   .interruttori .btn.icona { min-width: 34px; min-height: 34px; padding: 4px; }
-  .benvenuto { top: 12px; left: 12px; right: 60px; width: auto; transform: none; padding: 14px 16px; }
-  .benvenuto h1 { font-size: 19px; }
   .pannello {
     position: absolute; left: 0; right: 0; bottom: 0; width: auto; max-height: 58%; height: 58%;
     border-right: 0; border-top: 1px solid var(--bordo); border-radius: 16px 16px 0 0; box-shadow: var(--ombra);
@@ -379,7 +371,6 @@ details.sotto > summary { font-weight: 600; font-size: 14px; }
 }
 @media (max-width: 480px) {
   .modalita .lungo { display: none; }
-  .benvenuto p:first-of-type { display: none; }
 }
 @media (max-width: 420px) {
   .cifre { grid-template-columns: 1fr 1fr; }
