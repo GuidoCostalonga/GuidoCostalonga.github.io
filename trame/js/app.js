@@ -63,6 +63,8 @@ const S = {
   position: null,
   selection: null,
 };
+// Impostazioni salvate con le vecchie mappe CARTO, che ora richiedono una chiave.
+if (!CONFIG.basemaps[S.style.basemap]) S.style.basemap = /dark/.test(S.style.basemap) ? 'osm-scura' : 'osm-chiara';
 S.style.animate = S.style.animate && !reducedMotion.matches;
 S.creative.color = creativeColor(S.style.routeColor);
 
@@ -168,7 +170,7 @@ function baseAttribution() {
   const parts = [ATTRIBUTION_OSM];
   if (S.style.backdrop !== 'solid') {
     const bm = CONFIG.basemaps[S.style.basemap];
-    if (bm && S.style.basemap !== 'osm') parts.push('Mappa di base: ' + bm.attribution);
+    if (bm) parts.push('Mappa di base: tessere © OpenStreetMap');
   }
   if (S.routes.some((r) => r.kind === 'computed' || r.kind === 'alt')) parts.push(esc(S.routes.find((r) => r.source)?.source || ''));
   return parts.filter(Boolean).join(' · ');
@@ -184,7 +186,7 @@ function initView() {
         onReady: () => { renderAll(true); afterViewReady(); },
         onError: (e) => {
           const msg = String(e?.message || e);
-          if (/tile|basemap|Failed to fetch|404|cartocdn|openstreetmap/i.test(msg)) {
+          if (/tile|basemap|Failed to fetch|404|openstreetmap/i.test(msg)) {
             if (!S._basemapWarned) { S._basemapWarned = true; toast('La mappa di base non risponde: la rete stradale resta visibile su sfondo pieno.', 'attenzione'); }
           } else if (/glyph|font/i.test(msg)) {
             if (!S._glyphWarned) { S._glyphWarned = true; toast('I caratteri per le etichette non sono disponibili: i nomi delle strade non possono essere mostrati.', 'attenzione'); }
@@ -305,7 +307,7 @@ function doRender(withData) {
     }
     renderRoutesGL();
     // Il colore delle etichette segue lo sfondo della mappa, non il tema dell'interfaccia.
-    const darkMap = S.style.backdrop === 'solid' ? relLuminance(S.style.bg) < 0.3 : S.style.basemap === 'carto-dark';
+    const darkMap = S.style.backdrop === 'solid' ? relLuminance(S.style.bg) < 0.3 : S.style.basemap === 'osm-scura';
     view.applyStyle(S.style, S.layers, { dimRoads: dim, labelsOn: S.style.labels, routeArrows: S.style.arrows && S.routes.some((r) => r.visible), darkUi: darkMap });
     view.paint('creative-line', 'line-color', S.creative.color);
     view.setRouteAnimation(S.style.animate && S.routes.some((r) => r.visible && r.main));
@@ -573,13 +575,13 @@ function cancelJobs() {
   jobCtrl?.abort();
 }
 
-async function fetchLayer(layer, area, label) {
+async function fetchLayer(layer, area, label, force = false) {
   const ctrl = new AbortController();
   jobCtrl = ctrl;
   const p = showProgress(label);
   try {
     const q = buildQuery(layer, area);
-    const json = await runOverpass(q, { signal: ctrl.signal, onProgress: p.bytes, onStatus: p.status });
+    const json = await runOverpass(q, { signal: ctrl.signal, onProgress: p.bytes, onStatus: p.status, force });
     p.status('Elaborazione dei dati');
     await new Promise((r) => setTimeout(r, 0));
     return json;
@@ -589,7 +591,7 @@ async function fetchLayer(layer, area, label) {
   }
 }
 
-async function loadArea() {
+async function loadArea({ force = false } = {}) {
   const a = S.area;
   if (!a) return;
   const w = areaWarning(a);
@@ -599,7 +601,7 @@ async function loadArea() {
     if (!ok) return;
   }
   enqueue(async () => {
-    const json = await fetchLayer('roads', a, `Scarico le strade di ${a.name}`);
+    const json = await fetchLayer('roads', a, `Scarico le strade di ${a.name}`, force);
     if (areaKey(S.area) !== areaKey(a)) return;
     const roads = parseRoads(json);
     roads._version = (S.roads._version || 0) + 1;
@@ -614,7 +616,7 @@ async function loadArea() {
       toast(a.kind === 'relation' ? 'Nessuna strada trovata in quest\'area. Il server potrebbe non avere ancora l\'area amministrativa indicizzata: prova con «Usa la vista attuale».' : 'Nessuna strada trovata in quest\'area.', 'attenzione', 10000);
     } else {
       const total = roads.reduce((s, r) => s + r.len, 0);
-      toast(`Caricate ${fmt.int(roads.length)} strade, ${fmt.km(total)} di rete.`, 'ok', 4000);
+      toast(`Caricate ${fmt.int(roads.length)} strade, ${fmt.km(total)} di rete.${json.__daMemoria ? ' Dati ripresi dalla memoria del browser: «Ricarica la rete stradale» li scarica di nuovo.' : ''}`, 'ok', json.__daMemoria ? 6000 : 4000);
       if (roads.length > CONFIG.heavyFeatureCount) toast('Rete molto ampia: sui dispositivi meno potenti il disegno e le esportazioni possono rallentare. Usa i filtri per alleggerire.', 'attenzione', 9000);
     }
     if (S.style.colorMode === 'density') S.density = densityByRoad(roads);
@@ -2088,7 +2090,8 @@ function setupControls() {
   };
   $('#b-area-riquadro').onclick = () => startDraw('bbox');
   $('#b-area-poligono').onclick = () => startDraw('polygon');
-  $('#b-carica').onclick = loadArea;
+  // Se l'area è già caricata, «Ricarica» scarica di nuovo ignorando la memoria locale.
+  $('#b-carica').onclick = () => loadArea({ force: !!S.area && S.loadedFor.roads === areaKey(S.area) });
   $('#raggio').addEventListener('change', () => {
     const a = S.area;
     if (a?.source !== 'punto' || !a.center) return;

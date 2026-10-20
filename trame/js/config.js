@@ -29,9 +29,14 @@ export const CONFIG = {
       'https://maps.mail.ru/osm/tools/overpass/api/interpreter',
       'https://overpass.kumi.systems/api/interpreter',
     ],
-    timeout: 120, // secondi, lato server
-    maxsize: 256 * 1024 * 1024, // byte, lato server
-    retries: 2,
+    // Tempo massimo (secondi) e memoria dichiarati al server in base alla superficie:
+    // richieste piccole e "leggere" vengono servite prima quando il server è affollato.
+    budget: [
+      { km2: 30, timeout: 45, maxsize: 64 * 1024 * 1024 },
+      { km2: 250, timeout: 90, maxsize: 256 * 1024 * 1024 },
+      { km2: Infinity, timeout: 180, maxsize: 512 * 1024 * 1024 },
+    ],
+    cacheHours: 24, // i dati già scaricati restano nel browser per un giorno
   },
 
   routing: {
@@ -62,24 +67,29 @@ export const CONFIG = {
     },
   },
 
+  // Tutte le varianti usano le tessere standard di OpenStreetMap, che non richiedono chiavi
+  // (CARTO dal 2026 le chiede). Chiara e scura sono ricavate nel browser regolando i colori.
   basemaps: {
-    osm: {
-      name: 'OpenStreetMap',
+    'osm-chiara': {
+      name: 'Chiara (OpenStreetMap attenuata)',
       tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
       maxzoom: 19,
+      paint: { 'raster-saturation': -0.75, 'raster-brightness-min': 0.2, 'raster-contrast': -0.1 },
       attribution: '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">contributori OpenStreetMap</a>',
     },
-    'carto-light': {
-      name: 'CARTO chiara',
-      tiles: ['a', 'b', 'c'].map((s) => `https://${s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}@2x.png`),
-      maxzoom: 20,
-      attribution: '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">contributori OpenStreetMap</a>, © <a href="https://carto.com/attributions" target="_blank" rel="noopener">CARTO</a>',
+    'osm-scura': {
+      name: 'Scura (OpenStreetMap invertita)',
+      tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+      maxzoom: 19,
+      paint: { 'raster-saturation': -1, 'raster-brightness-min': 0.92, 'raster-brightness-max': 0.08, 'raster-contrast': 0.15 },
+      attribution: '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">contributori OpenStreetMap</a>',
     },
-    'carto-dark': {
-      name: 'CARTO scura',
-      tiles: ['a', 'b', 'c'].map((s) => `https://${s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png`),
-      maxzoom: 20,
-      attribution: '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">contributori OpenStreetMap</a>, © <a href="https://carto.com/attributions" target="_blank" rel="noopener">CARTO</a>',
+    osm: {
+      name: 'OpenStreetMap standard',
+      tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+      maxzoom: 19,
+      paint: {},
+      attribution: '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">contributori OpenStreetMap</a>',
     },
   },
 

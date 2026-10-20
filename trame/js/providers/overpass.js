@@ -51,55 +51,103 @@ const QUERIES = {
   );out center tags qt 4000;`,
 };
 
+function budgetFor(area) {
+  return CONFIG.overpass.budget.find((b) => (area.km2 || 0) <= b.km2);
+}
+
 export function buildQuery(layer, area) {
   const { pre, f } = areaFilter(area);
   const clip = clipBox(area);
-  const cfg = CONFIG.overpass;
-  return `[out:json][timeout:${cfg.timeout}][maxsize:${cfg.maxsize}];${pre}${QUERIES[layer]({ f, clip })}`;
+  const { timeout, maxsize } = budgetFor(area);
+  return `[out:json][timeout:${timeout}][maxsize:${maxsize}];${pre}${QUERIES[layer]({ f, clip })}`;
 }
 
-// Esegue una richiesta Overpass con ritentativi e cambio di server.
-export async function runOverpass(query, { signal, onProgress, onStatus } = {}) {
-  const { endpoints, retries } = CONFIG.overpass;
+/* ---------- memoria locale dei dati scaricati (Cache API) ---------- */
+
+const CACHE_NAME = 'trame-osm-v1';
+
+async function cacheKey(query) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(query));
+  const hex = [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, '0')).join('');
+  return `${location.origin}/__trame_cache__/${hex}`;
+}
+
+async function cacheGet(query) {
+  try {
+    const cache = await caches.open(CACHE_NAME);
+    const res = await cache.match(await cacheKey(query));
+    if (!res) return null;
+    const saved = Number(res.headers.get('x-salvato') || 0);
+    if (Date.now() - saved > CONFIG.overpass.cacheHours * 3600e3) return null;
+    return { json: await res.json(), saved };
+  } catch {
+    return null; // memoria non disponibile (navigazione privata, spazio esaurito)
+  }
+}
+
+async function cachePut(query, text) {
+  try {
+    const cache = await caches.open(CACHE_NAME);
+    await cache.put(await cacheKey(query), new Response(text, { headers: { 'Content-Type': 'application/json', 'x-salvato': String(Date.now()) } }));
+  } catch { /* memoria non disponibile: si continua senza */ }
+}
+
+function parseOverpassText(text) {
+  let json;
+  try { json = JSON.parse(text); } catch {
+    // Overpass a volte risponde in HTML con il motivo del rifiuto.
+    if (/rate_limited|Too Many/i.test(text)) throw new HttpError(429, 'Troppe richieste');
+    if (/timeout|runtime error/i.test(text)) throw new HttpError(504, 'Richiesta troppo pesante');
+    throw new HttpError(502, 'Risposta non leggibile');
+  }
+  if (json.remark && /runtime error|timed out|out of memory/i.test(json.remark)) throw new HttpError(413, json.remark);
+  return json;
+}
+
+// Esegue una richiesta Overpass. Un server che non risponde o è occupato viene
+// lasciato subito per il successivo; solo se tutti sono occupati si attende e si riprova.
+export async function runOverpass(query, { signal, onProgress, onStatus, force = false } = {}) {
+  if (!force) {
+    const hit = await cacheGet(query);
+    if (hit) {
+      const h = Math.max(1, Math.round((Date.now() - hit.saved) / 3600e3));
+      onStatus?.(`Dati già scaricati (meno di ${h} ${h === 1 ? 'ora' : 'ore'} fa)`);
+      hit.json.__daMemoria = hit.saved;
+      return hit.json;
+    }
+  }
+  const { endpoints } = CONFIG.overpass;
+  const declared = Number(/\[timeout:(\d+)\]/.exec(query)?.[1] || 90);
   let lastErr;
-  for (let ei = 0; ei < endpoints.length; ei++) {
-    const url = endpoints[ei];
-    const host = new URL(url).host;
-    for (let attempt = 0; attempt <= retries; attempt++) {
+  for (let round = 0; round < 2; round++) {
+    let allBusy = true;
+    for (let ei = 0; ei < endpoints.length; ei++) {
+      const url = endpoints[ei];
+      const host = new URL(url).host;
       try {
-        onStatus?.(attempt === 0 ? `Richiesta a ${host}` : `Nuovo tentativo su ${host} (${attempt + 1})`);
+        onStatus?.(`Il server ${host} sta preparando i dati`);
         const text = await fetchWithProgress(url, {
           method: 'POST',
           headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
           body: 'data=' + encodeURIComponent(query),
           signal,
-          timeout: (CONFIG.overpass.timeout + 30) * 1000,
-          onProgress,
+          timeout: (declared + 15) * 1000,
+          onProgress: (b) => { onStatus?.(`Ricezione da ${host}`); onProgress?.(b); },
         });
-        let json;
-        try { json = JSON.parse(text); } catch {
-          // Overpass a volte risponde in HTML con il motivo del rifiuto.
-          if (/rate_limited|Too Many/i.test(text)) throw new HttpError(429, 'Troppe richieste');
-          if (/timeout|runtime error/i.test(text)) throw new HttpError(504, 'Richiesta troppo pesante');
-          throw new HttpError(502, 'Risposta non leggibile');
-        }
-        if (json.remark && /runtime error|timed out|out of memory/i.test(json.remark)) {
-          throw new HttpError(413, json.remark);
-        }
+        const json = parseOverpassText(text);
+        cachePut(query, text);
         return json;
       } catch (e) {
         if (isAbort(e)) throw e;
         lastErr = e;
-        if (e instanceof HttpError && e.status === 413) throw e; // area troppo pesante: inutile insistere
-        if (e instanceof HttpError && (e.status === 400)) throw e; // richiesta errata
-        const wait = e instanceof HttpError && e.status === 429 ? 6000 * (attempt + 1) : 1500 * (attempt + 1);
-        if (attempt < retries) {
-          onStatus?.(`Server occupato, nuovo tentativo tra ${Math.round(wait / 1000)} s`);
-          await sleep(wait, signal);
-        }
+        if (e instanceof HttpError && (e.status === 413 || e.status === 400)) throw e; // inutile insistere altrove
+        if (!(e instanceof HttpError && e.status === 429)) allBusy = false;
+        if (ei < endpoints.length - 1) onStatus?.(`${host} non disponibile, passo a un server di riserva`);
       }
     }
-    if (ei < endpoints.length - 1) onStatus?.('Passo a un server di riserva');
+    if (!allBusy || round === 1) break;
+    onStatus?.('Tutti i server sono occupati, nuovo tentativo tra 10 s');
+    await sleep(10000, signal);
   }
   throw lastErr || new Error('Nessun server Overpass disponibile');
 }
