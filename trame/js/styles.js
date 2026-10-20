@@ -105,36 +105,36 @@ export const PRESETS = {
   classico: {
     label: 'Classico', bg: '#f7f5f0', colorMode: 'class', roadColor: '#2b2b2b', classColors: CLASS_LIGHT,
     layerColors: BASE_LAYER_COLORS_LIGHT, routeColor: '#ff3d71', startColor: '#1b8a3a', endColor: '#c62828',
-    glow: false, backdrop: 'solid', basemap: 'carto-light', opacity: 0.95, brightness: 1,
+    glow: false, backdrop: 'solid', basemap: 'osm-chiara', opacity: 0.95, brightness: 1,
   },
   notte: {
     label: 'Notte', bg: '#0b1021', colorMode: 'class', roadColor: '#e0e6f5', classColors: CLASS_DARK,
     layerColors: BASE_LAYER_COLORS_DARK, routeColor: '#ffd43b', startColor: '#51cf66', endColor: '#ff6b6b',
-    glow: true, backdrop: 'solid', basemap: 'carto-dark', opacity: 0.9, brightness: 1,
+    glow: true, backdrop: 'solid', basemap: 'osm-scura', opacity: 0.9, brightness: 1,
   },
   essenziale: {
     label: 'Essenziale', bg: '#ffffff', colorMode: 'uniform', roadColor: '#1d1d1f', classColors: mono('#1d1d1f'),
     layerColors: { ...BASE_LAYER_COLORS_LIGHT, buildings: '#ececec', green: '#e3efe0', water: '#dceaf5' },
     routeColor: '#e03131', startColor: '#1d1d1f', endColor: '#e03131',
-    glow: false, backdrop: 'solid', basemap: 'carto-light', opacity: 0.9, brightness: 1,
+    glow: false, backdrop: 'solid', basemap: 'osm-chiara', opacity: 0.9, brightness: 1,
   },
   neon: {
     label: 'Neon', bg: '#0d0221', colorMode: 'class', roadColor: '#01cdfe', classColors: CLASS_NEON,
     layerColors: { ...BASE_LAYER_COLORS_DARK, buildings: '#1a0b3b', green: '#0b2f2a', water: '#0a1f4d' },
     routeColor: '#fffb96', startColor: '#05ffa1', endColor: '#ff2e88',
-    glow: true, backdrop: 'solid', basemap: 'carto-dark', opacity: 1, brightness: 1.1,
+    glow: true, backdrop: 'solid', basemap: 'osm-scura', opacity: 1, brightness: 1.1,
   },
   carta: {
     label: 'Carta', bg: '#efe6d2', colorMode: 'uniform', roadColor: '#4a3b2a', classColors: mono('#4a3b2a'),
     layerColors: { ...BASE_LAYER_COLORS_LIGHT, buildings: '#d8c9ad', green: '#cfd8b0', water: '#aac4c9' },
     routeColor: '#b23a2f', startColor: '#2f5d3a', endColor: '#b23a2f',
-    glow: false, backdrop: 'solid', basemap: 'carto-light', opacity: 0.85, brightness: 1,
+    glow: false, backdrop: 'solid', basemap: 'osm-chiara', opacity: 0.85, brightness: 1,
   },
   monocromatico: {
     label: 'Monocromatico', bg: '#161616', colorMode: 'uniform', roadColor: '#f2f2f2', classColors: mono('#f2f2f2'),
     layerColors: { ...BASE_LAYER_COLORS_DARK, buildings: '#262626', green: '#222', water: '#2e2e2e' },
     routeColor: '#ffffff', startColor: '#ffffff', endColor: '#ffffff',
-    glow: false, backdrop: 'solid', basemap: 'carto-dark', opacity: 0.85, brightness: 1,
+    glow: false, backdrop: 'solid', basemap: 'osm-scura', opacity: 0.85, brightness: 1,
   },
   manifesto: {
     label: 'Manifesto', bg: '#f4efe6', colorMode: 'class',
@@ -142,7 +142,7 @@ export const PRESETS = {
     classColors: { motorway: '#9b2226', primary: '#ae2012', secondary: '#bb3e03', tertiary: '#ca6702', residential: '#1b263b', service: '#415a77', track: '#6b705c', pedestrian: '#0a9396', path: '#386641', cycleway: '#005f73', other: '#778da9' },
     layerColors: { ...BASE_LAYER_COLORS_LIGHT, buildings: '#e2d9c8', green: '#d5e2c5', water: '#a8c5d6' },
     routeColor: '#e63946', startColor: '#2a9d8f', endColor: '#e63946',
-    glow: false, backdrop: 'solid', basemap: 'carto-light', opacity: 1, brightness: 1,
+    glow: false, backdrop: 'solid', basemap: 'osm-chiara', opacity: 1, brightness: 1,
   },
 };
 

@@ -40,7 +40,7 @@ export class MapView {
       version: 8,
       glyphs: CONFIG.glyphs,
       sources: {
-        basemap: { type: 'raster', tiles: CONFIG.basemaps['carto-light'].tiles, tileSize: 256, maxzoom: 19 },
+        basemap: { type: 'raster', tiles: CONFIG.basemaps['osm-chiara'].tiles, tileSize: 256, maxzoom: 19 },
       },
       layers: [{ id: 'bg', type: 'background', paint: { 'background-color': '#f7f5f0' } }],
     };
@@ -145,14 +145,21 @@ export class MapView {
     if (this.map.getLayer(layerId)) this.map.setPaintProperty(layerId, prop, value);
   }
 
-  setBasemap(key) {
-    const bm = CONFIG.basemaps[key];
-    if (!bm) { this.setVisible('basemap', false); return; }
+  setBasemap(key, dimmed = false) {
+    // Chiavi vecchie (stili o collegamenti salvati con CARTO) vanno sulla variante equivalente.
+    const bm = CONFIG.basemaps[key] || CONFIG.basemaps[/dark|scura/.test(key || '') ? 'osm-scura' : 'osm-chiara'];
     const src = this.map.getSource('basemap');
-    if (this._basemapKey !== key) {
+    if (this._basemapTiles !== bm.tiles[0]) {
       src.setTiles(bm.tiles);
-      this._basemapKey = key;
+      this._basemapTiles = bm.tiles[0];
     }
+    // Colori della variante, più l'attenuazione se richiesta.
+    const p = bm.paint || {};
+    this.paint('basemap', 'raster-saturation', dimmed ? -0.85 : p['raster-saturation'] ?? 0);
+    this.paint('basemap', 'raster-brightness-min', p['raster-brightness-min'] ?? 0);
+    this.paint('basemap', 'raster-brightness-max', p['raster-brightness-max'] ?? 1);
+    this.paint('basemap', 'raster-contrast', p['raster-contrast'] ?? 0);
+    this.paint('basemap', 'raster-opacity', dimmed ? 0.35 : 1);
     this.setVisible('basemap', true);
   }
 
@@ -163,9 +170,7 @@ export class MapView {
     const backdrop = style.backdrop;
     if (backdrop === 'solid') this.setVisible('basemap', false);
     else {
-      this.setBasemap(style.basemap);
-      this.paint('basemap', 'raster-opacity', backdrop === 'dimmed' ? 0.35 : 1);
-      this.paint('basemap', 'raster-saturation', backdrop === 'dimmed' ? -0.8 : 0);
+      this.setBasemap(style.basemap, backdrop === 'dimmed');
     }
     const L = (k) => layers[k];
     const vis = (k, ids) => ids.forEach((id) => this.setVisible(id, !!L(k)?.on));

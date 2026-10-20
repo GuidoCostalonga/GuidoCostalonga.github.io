@@ -54,7 +54,7 @@ Tutti gli indirizzi stanno in `js/config.js`. Nessuna chiave segreta è nel codi
 | Dati della mappa | Overpass API (overpass-api.de) | private.coffee, mail.ru, kumi.systems, provati in ordine | una richiesta alla volta; un server che non risponde o è occupato viene lasciato subito per il successivo; tempo massimo dichiarato in base alla superficie (45 s fino a 30 km², 90 s fino a 250 km², poi 180 s); dati conservati nel browser per 24 ore |
 | Percorsi | Valhalla, server FOSSGIS | OSRM FOSSGIS, GraphHopper con chiave dell'utente, motore locale, server compatibile indicato dall'utente | uso moderato, attribuzione visibile |
 | Quote | Valhalla `/height`, server FOSSGIS | | campione limitato e dichiarato |
-| Mappa di base | CARTO chiara e scura | OpenStreetMap standard | attribuzione sempre visibile |
+| Mappa di base | tessere OpenStreetMap, in tre varianti (chiara attenuata, scura invertita, standard) ricavate nel browser | | nessuna chiave; attribuzione sempre visibile. CARTO non si usa più perché dal 2026 richiede una chiave |
 | Caratteri delle etichette | OpenFreeMap | | |
 
 Capacità dei motori di percorso, come le dichiara l'interfaccia:
