@@ -1,0 +1,175 @@
+[
+  {
+    "id": "terremoto-friuli-1976",
+    "titolo": "Il terremoto del Friuli",
+    "testo": "Alle 21 del 6 maggio 1976 una scossa di magnitudo 6.5, con epicentro a pochi chilometri a est di Gemona del Friuli, colpisce oltre 100 comuni delle province di Udine e Pordenone. Secondo il Dipartimento della Protezione Civile le scosse di maggio e di settembre causano in tutto 965 vittime; i Vigili del Fuoco contano per la sola scossa del 6 maggio 990 morti e oltre 45.000 senzatetto. Da quell'emergenza nasce il sistema italiano di protezione civile.",
+    "giorno": 6,
+    "mese": 5,
+    "anno": 1976,
+    "categoria": "EVENTO",
+    "collegamento": "AVVENUTO",
+    "area": "FVG",
+    "fonti": [
+      {"nome": "Dipartimento della Protezione Civile: Il terremoto del Friuli", "url": "https://servizio-nazionale.protezionecivile.gov.it/en/pagina-base/friuli-earthquake/", "consultataIl": "2026-10-22"},
+      {"nome": "Vigili del Fuoco: Il terremoto del Friuli del maggio 1976", "url": "https://www.vigilfuoco.it/chi-siamo/memoria-storica/notizie-storiche/il-terremoto-del-friuli-del-maggio-1976", "consultataIl": "2026-10-22"}
+    ],
+    "note": ["Le due fonti istituzionali riportano conteggi diversi delle vittime: nel testo sono indicati entrambi con la rispettiva fonte"]
+  },
+  {
+    "id": "scosse-friuli-settembre-1976",
+    "titolo": "Le nuove scosse del 15 settembre 1976 in Friuli",
+    "testo": "Il 15 settembre 1976, quattro mesi dopo il sisma del 6 maggio, una nuova scossa di magnitudo 5.9 colpisce il Friuli e provoca ulteriori distruzioni nei paesi già feriti. Il bilancio complessivo dei due terremoti, secondo il Dipartimento della Protezione Civile, è di 965 vittime.",
+    "giorno": 15,
+    "mese": 9,
+    "anno": 1976,
+    "categoria": "EVENTO",
+    "collegamento": "AVVENUTO",
+    "area": "FVG",
+    "fonti": [
+      {"nome": "Dipartimento della Protezione Civile: Il terremoto del Friuli", "url": "https://servizio-nazionale.protezionecivile.gov.it/en/pagina-base/friuli-earthquake/", "consultataIl": "2026-10-22"}
+    ]
+  },
+  {
+    "id": "vajont-1963",
+    "titolo": "La catastrofe del Vajont",
+    "testo": "La notte del 9 ottobre 1963 un'immensa frana si stacca dal monte Toc e precipita nel lago artificiale del Vajont, nel comune di Erto e Casso. L'acqua scavalca la diga e travolge Longarone e i paesi vicini: le vittime sono circa 2000. Il Centro visite del Parco Naturale delle Dolomiti Friulane, a Erto, conserva la documentazione del disastro.",
+    "giorno": 9,
+    "mese": 10,
+    "anno": 1963,
+    "categoria": "EVENTO",
+    "collegamento": "AVVENUTO",
+    "area": "FVG",
+    "fonti": [
+      {"nome": "Parco Naturale Dolomiti Friulane: Vajont, storia e rinascita", "url": "https://www.parcodolomitifriulane.it/wp-content/uploads/2018/07/VAJONT_STORIA_E_RINASCITA.pdf", "consultataIl": "2026-10-22"}
+    ]
+  },
+  {
+    "id": "patria-del-friuli-1077",
+    "titolo": "Fieste de Patrie dal Friûl: la nascita dello Stato patriarcale",
+    "testo": "Il 3 aprile 1077 nasce lo Stato patriarcale friulano, l'istituzione che fino al XV secolo riunì il Friuli e molti altri territori in un unico organismo statuale, con forme di organizzazione civile molto avanzate per l'epoca. Per questo il 3 aprile si celebra ogni anno la Fieste de Patrie dal Friûl, sostenuta dall'ARLeF (Agjenzie Regjonâl pe Lenghe Furlane) e dagli enti locali.",
+    "giorno": 3,
+    "mese": 4,
+    "anno": 1077,
+    "categoria": "RICORRENZA",
+    "collegamento": "RICORRENZA",
+    "area": "FVG",
+    "fonti": [
+      {"nome": "ARLeF: Festa della Patria del Friuli", "url": "https://arlef.it/it/fieste-de-patrie-dal-friul/", "consultataIl": "2026-10-22"},
+      {"nome": "ARLeF, comunicato: bando per i Comuni sulla Fieste de Patrie dal Friûl", "url": "https://arlef.it/it/comunicati-stampa/fieste-de-patrie-dal-friul-bant-arlef-pai-comuns/", "consultataIl": "2026-10-22"}
+    ]
+  },
+  {
+    "id": "trieste-italia-1954",
+    "titolo": "Trieste torna all'amministrazione italiana",
+    "testo": "Il 5 ottobre 1954 la firma del Memorandum di Londra chiude la vicenda del Territorio Libero di Trieste; il 26 ottobre 1954 le truppe italiane entrano in città e piazza Unità si riempie di folla. È la data che Trieste ricorda ogni anno come il ritorno all'Italia.",
+    "giorno": 26,
+    "mese": 10,
+    "anno": 1954,
+    "categoria": "EVENTO",
+    "collegamento": "AVVENUTO",
+    "area": "FVG",
+    "fonti": [
+      {"nome": "Università degli Studi di Trieste e Circolo della Cultura e delle Arti: Trieste italiana, settant'anni", "url": "https://portale.units.it/sites/default/files/2024-10/TRIESTE_ITALIANA.pdf", "consultataIl": "2026-10-22"}
+    ]
+  },
+  {
+    "id": "statuto-fvg-1963",
+    "titolo": "Lo Statuto speciale del Friuli Venezia Giulia",
+    "testo": "Con la legge costituzionale 31 gennaio 1963, n. 1, pubblicata sulla Gazzetta Ufficiale n. 29 del 1 febbraio 1963, viene adottato lo Statuto speciale della Regione Friuli-Venezia Giulia: la carta fondamentale che fissa i principi e le competenze legislative e amministrative della Regione autonoma.",
+    "giorno": 31,
+    "mese": 1,
+    "anno": 1963,
+    "categoria": "EVENTO",
+    "collegamento": "AVVENUTO",
+    "area": "FVG",
+    "fonti": [
+      {"nome": "Normattiva: legge costituzionale 31 gennaio 1963, n. 1", "url": "https://www.normattiva.it/uri-res/N2Ls?urn:nir:stato:legge.costituzionale:1963-01-31;1", "consultataIl": "2026-10-22"},
+      {"nome": "Regione Friuli Venezia Giulia: statuto e norme di attuazione", "url": "https://www.regione.fvg.it/rafvg/cms/RAFVG/GEN/statuto/", "consultataIl": "2026-10-22"}
+    ]
+  },
+  {
+    "id": "tina-modotti-nascita",
+    "titolo": "Tina Modotti",
+    "testo": "Assunta Adelaide Luigia Saltarini Modotti, detta Tina, nasce a Udine il 17 agosto 1896 in una famiglia numerosa e di condizioni modeste. Fotografa e attivista, emigra negli Stati Uniti e vive poi in Messico, dove muore il 5 gennaio 1942. Il suo atto di nascita è conservato all'Archivio di Stato di Udine.",
+    "giorno": 17,
+    "mese": 8,
+    "anno": 1896,
+    "categoria": "NASCITA",
+    "collegamento": "NATO",
+    "area": "FVG",
+    "fonti": [
+      {"nome": "Portale Antenati (Ministero della Cultura): Tina Modotti (1896-1942)", "url": "https://antenati.cultura.gov.it/storie/tina-modotti-1896-1942/", "consultataIl": "2026-10-22"}
+    ]
+  },
+  {
+    "id": "tina-modotti-morte",
+    "titolo": "Tina Modotti",
+    "testo": "La fotografa e attivista Tina Modotti, nata a Udine il 17 agosto 1896, muore a Città del Messico il 5 gennaio 1942. È sepolta nel cimitero Panteón de Dolores della capitale messicana.",
+    "giorno": 5,
+    "mese": 1,
+    "anno": 1942,
+    "categoria": "SCOMPARSA",
+    "collegamento": "MORTO",
+    "area": "FVG",
+    "fonti": [
+      {"nome": "Portale Antenati (Ministero della Cultura): Tina Modotti (1896-1942)", "url": "https://antenati.cultura.gov.it/storie/tina-modotti-1896-1942/", "consultataIl": "2026-10-22"}
+    ],
+    "note": ["Scomparsa all'estero: la scheda è nell'area Friuli Venezia Giulia perché Tina Modotti è nata a Udine"]
+  },
+  {
+    "id": "cividale-unesco-2011",
+    "titolo": "Cividale del Friuli entra nel patrimonio mondiale UNESCO",
+    "testo": "Dal 25 giugno 2011 l'area della Gastaldaga di Cividale del Friuli, con il Tempietto Longobardo e il monastero di Santa Maria in Valle, è patrimonio mondiale dell'umanità come parte del sito seriale \"I Longobardi in Italia. I luoghi del potere (568-774 d.C.)\", gestito dall'associazione Italia Langobardorum.",
+    "giorno": 25,
+    "mese": 6,
+    "anno": 2011,
+    "categoria": "CULTURA",
+    "collegamento": "AVVENUTO",
+    "area": "FVG",
+    "fonti": [
+      {"nome": "Tempietto Longobardo di Cividale del Friuli: il sito UNESCO", "url": "https://www.tempiettolongobardo.it/uk/unesco", "consultataIl": "2026-10-22"}
+    ]
+  },
+  {
+    "id": "giorno-del-ricordo",
+    "titolo": "Giorno del ricordo",
+    "testo": "La legge 30 marzo 2004, n. 92 riconosce il 10 febbraio quale \"Giorno del ricordo\", per conservare e rinnovare la memoria della tragedia degli italiani e di tutte le vittime delle foibe, dell'esodo dalle loro terre degli istriani, fiumani e dalmati nel secondo dopoguerra e della più complessa vicenda del confine orientale.",
+    "giorno": 10,
+    "mese": 2,
+    "categoria": "RICORRENZA",
+    "collegamento": "RICORRENZA",
+    "area": "FVG",
+    "fonti": [
+      {"nome": "Normattiva: legge 30 marzo 2004, n. 92", "url": "https://www.normattiva.it/uri-res/N2Ls?urn:nir:stato:legge:2004-03-30;92", "consultataIl": "2026-10-22"}
+    ],
+    "note": ["Ricorrenza nazionale: è nell'area Friuli Venezia Giulia perché riguarda le vicende del confine orientale"]
+  },
+  {
+    "id": "giornata-unita-nazionale",
+    "titolo": "Giornata dell'Unità nazionale, della Costituzione, dell'inno e della bandiera",
+    "testo": "La legge 23 novembre 2012, n. 222 riconosce il 17 marzo, data della proclamazione a Torino, nell'anno 1861, dell'Unità d'Italia, quale \"Giornata dell'Unità nazionale, della Costituzione, dell'inno e della bandiera\".",
+    "giorno": 17,
+    "mese": 3,
+    "anno": 1861,
+    "categoria": "RICORRENZA",
+    "collegamento": "RICORRENZA",
+    "area": "ITALIA",
+    "fonti": [
+      {"nome": "Normattiva: legge 23 novembre 2012, n. 222", "url": "https://www.normattiva.it/uri-res/N2Ls?urn:nir:stato:legge:2012-11-23;222", "consultataIl": "2026-10-22"}
+    ]
+  },
+  {
+    "id": "festa-della-repubblica",
+    "titolo": "Festa della Repubblica",
+    "testo": "La legge 27 maggio 1949, n. 260 dichiara festa nazionale il giorno 2 giugno, data di fondazione della Repubblica.",
+    "giorno": 2,
+    "mese": 6,
+    "anno": 1946,
+    "categoria": "RICORRENZA",
+    "collegamento": "RICORRENZA",
+    "area": "ITALIA",
+    "fonti": [
+      {"nome": "Normattiva: legge 27 maggio 1949, n. 260, Disposizioni in materia di ricorrenze festive", "url": "https://www.normattiva.it/uri-res/N2Ls?urn:nir:stato:legge:1949-05-27;260", "consultataIl": "2026-10-22"}
+    ]
+  }
+]

@@ -1,0 +1,80 @@
+{
+ "selected": [
+  {
+   "text": "A sword-wielding man attacked students and teachers at a high school in Trollhättan, killing three people in Sweden's deadliest school attack.",
+   "pages": [
+    {
+     "title": "2015_Trollhättan_school_attack",
+     "titles": {
+      "canonical": "2015_Trollhättan_school_attack",
+      "normalized": "2015 Trollhättan school attack",
+      "display": "<span lang=\"en\" dir=\"ltr\"><span class=\"mw-page-title-main\">2015 Trollhättan school attack</span></span>"
+     },
+     "description": "School attack in Trollhättan, Sweden",
+     "extract": "On 22 October 2015, a mass stabbing occurred at Kronan Primary School in Trollhättan, Sweden. 21-year-old Anton Lundin Pettersson killed three people and wounded another two with a sword, later dying from gunshot wounds sustained after charging police.",
+     "wikibase_item": "Q21171141",
+     "content_urls": {
+      "desktop": {
+       "page": "https://en.wikipedia.org/wiki/2015_Trollh%C3%A4ttan_school_attack"
+      }
+     }
+    },
+    {
+     "title": "Trollhättan",
+     "titles": {
+      "canonical": "Trollhättan",
+      "normalized": "Trollhättan",
+      "display": "<span lang=\"en\" dir=\"ltr\"><span class=\"mw-page-title-main\">Trollhättan</span></span>"
+     },
+     "description": "City in Västergötland, Sweden",
+     "extract": "Trollhättan is the 23rd-largest city in Sweden, the seat of Trollhättan Municipality, Västra Götaland County. It is situated by Göta älv, near the lake Vänern, and has a population of approximately 50,000 in the city proper. It is located 75 km (46 mi) north of Sweden's second-largest city, Gothenburg.",
+     "wikibase_item": "Q54339",
+     "content_urls": {
+      "desktop": {
+       "page": "https://en.wikipedia.org/wiki/Trollh%C3%A4ttan"
+      }
+     }
+    }
+   ],
+   "year": 2015
+  },
+  {
+   "text": "In Ottawa, Canada, the downtown core was placed on lockdown after a series of shootings at Parliament Hill.",
+   "pages": [
+    {
+     "title": "Ottawa",
+     "titles": {
+      "canonical": "Ottawa",
+      "normalized": "Ottawa",
+      "display": "<span lang=\"en\" dir=\"ltr\"><span class=\"mw-page-title-main\">Ottawa</span></span>"
+     },
+     "description": "Capital city of Canada",
+     "extract": "Ottawa is the capital city of Canada. It is located in the southeastern portion of the province of Ontario, at the confluence of the Ottawa River and the Rideau River. Ottawa borders Gatineau, Quebec, and forms the core of the Ottawa–Gatineau census metropolitan area (CMA) and the National Capital Region (NCR). As of 2021, Ottawa had a city population of 1,017,449 and a metropolitan population of 1,488,307, making it the second-largest city and second most-populous metropolitan area in Ontario, and the fourth-largest city and fourth-largest metropolitan area in Canada.",
+     "wikibase_item": "Q1930",
+     "content_urls": {
+      "desktop": {
+       "page": "https://en.wikipedia.org/wiki/Ottawa"
+      }
+     }
+    },
+    {
+     "title": "Downtown_Ottawa",
+     "titles": {
+      "canonical": "Downtown_Ottawa",
+      "normalized": "Downtown Ottawa",
+      "display": "<span lang=\"en\" dir=\"ltr\"><span class=\"mw-page-title-main\">Downtown Ottawa</span></span>"
+     },
+     "description": "Neighbourhood in Ottawa, Ontario, Canada",
+     "extract": "Downtown Ottawa is a neighbourhood located in the central area of Ottawa, Ontario, Canada. It is sometimes referred to as the central business district and contains Ottawa's financial district. It is bordered by the Ottawa River to the north, the Rideau Canal to the east, Gloucester Street to the south and Bronson Avenue to the west. This area and the residential neighbourhood to the south are also known locally as 'Centretown'. The total population of the area is 5,501.",
+     "wikibase_item": "Q5303535",
+     "content_urls": {
+      "desktop": {
+       "page": "https://en.wikipedia.org/wiki/Downtown_Ottawa"
+      }
+     }
+    }
+   ],
+   "year": 2014
+  }
+ ]
+}

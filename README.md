@@ -14,6 +14,14 @@ la schermata iniziale del telefono: non è una pagina del sito, è codice che
 GitHub compila da solo e da cui esce l'APK da installare. Le istruzioni stanno
 in `meteo-android/README.md`.
 
+In `fatti-del-giorno/` c'è **Fatti del Giorno**, l'app Android che per la data
+di oggi, o per qualunque data scelta dal calendario, propone fatti, ricorrenze e
+anniversari verificabili del Friuli Venezia Giulia, dell'Italia e del mondo, con
+le fonti, e li trasforma in bozze per i social e in prompt per l'intelligenza
+artificiale. Istruzioni, fonti e verifiche stanno in `fatti-del-giorno/README.md`,
+`fatti-del-giorno/FONTI.md` e `fatti-del-giorno/VERIFICHE.md`; l'APK sta in
+`fatti-del-giorno/apk/`.
+
 In `sport-tv/` c'è **Sport in TV Italia**, l'app Android che mostra gli eventi
 sportivi trasmessi legalmente in Italia oggi e nei 14 giorni successivi, con il
 suo servizio dati gratuito su GitHub Actions. Istruzioni, fonti e verifiche
