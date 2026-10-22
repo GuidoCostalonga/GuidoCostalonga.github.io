@@ -3,10 +3,6 @@ package org.costalonga.meteofvg.ui
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.graphics.Color as ColorAndroid
-import android.net.Uri
-import android.os.Handler
-import android.os.Looper
-import android.webkit.JavascriptInterface
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
@@ -27,85 +23,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import org.costalonga.meteofvg.R
+import org.costalonga.meteofvg.allerte.INDIRIZZO_REGIONE
+import org.costalonga.meteofvg.allerte.PonteAllerte
+import org.costalonga.meteofvg.allerte.StatoAllerte
+import org.costalonga.meteofvg.allerte.paginaAllerte
 import org.costalonga.meteofvg.data.Comune
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
-
-/**
- * I tre casi che il riquadro della Protezione Civile puo' presentare.
- * Il terzo non viene mai spacciato per assenza di allerta.
- */
-enum class StatoAllerte { ATTESA, PIENO, VUOTO, NON_RAGGIUNGIBILE }
-
-/**
- * Il ponte fra il riquadro della Regione e l'app: il JavaScript della pagina
- * dice se l'avviso c'e', se non c'e' o se il riquadro non si carica, e quanto
- * spazio occupa. I nomi dei metodi non vanno cambiati: li chiama la pagina.
- */
-class PonteAllerte(private val esito: (StatoAllerte, Int) -> Unit) {
-
-    private val mano = Handler(Looper.getMainLooper())
-
-    @JavascriptInterface
-    fun stato(stato: String, altezza: Int) {
-        val tradotto = when (stato) {
-            "pieno" -> StatoAllerte.PIENO
-            "vuoto" -> StatoAllerte.VUOTO
-            else -> StatoAllerte.NON_RAGGIUNGIBILE
-        }
-        mano.post { esito(tradotto, altezza) }
-    }
-}
-
-private const val INDIRIZZO_REGIONE = "https://www.protezionecivile.fvg.it/"
-private const val SCRIPT_REGIONE = "https://www.protezionecivile.fvg.it/widgets/pcrfvgit_alert.js"
-
-/**
- * La pagina che ospita il riquadro ufficiale.
- *
- * L'ordine e' quello della pagina costalonga.org/meteo/ : prima lo script
- * della Regione, poi il contenitore con il codice ISTAT del Comune. Il
- * controllo ogni mezzo secondo distingue i tre casi.
- */
-private fun paginaAllerte(istat: String): String = """
-<!doctype html>
-<html lang="it">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<style>
-  html,body{margin:0;padding:0;background:transparent;color:#1f1c17;
-    font:15px/1.55 sans-serif;-webkit-text-size-adjust:100%}
-  #misura{overflow:hidden}
-  a{color:#1a6098}
-  img{max-width:100%;height:auto}
-</style>
-<script>var caricato = null, giri = 0;</script>
-<script src="$SCRIPT_REGIONE" onload="caricato=true" onerror="caricato=false"></script>
-</head>
-<body>
-<div id="misura"><div class="pcrfvgit_alert_widget" data-istatcode="$istat"></div></div>
-<script>
-  function misura(){
-    var m = document.getElementById('misura');
-    return m ? Math.ceil(m.getBoundingClientRect().height) : 0;
-  }
-  function guarda(){
-    giri++;
-    var w = document.querySelector('.pcrfvgit_alert_widget');
-    if (w && (w.children.length || w.textContent.trim().length)) {
-      Ponte.stato('pieno', misura()); return;
-    }
-    if (caricato === false) { Ponte.stato('ko', 0); return; }
-    if (caricato === true && giri > 6) { Ponte.stato('vuoto', 0); return; }
-    if (giri > 24) { Ponte.stato('ko', 0); }
-  }
-  setInterval(guarda, 500);
-  guarda();
-</script>
-</body>
-</html>
-"""
 
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
@@ -129,7 +53,7 @@ fun RiquadroAllerte(comune: Comune, modifier: Modifier = Modifier) {
                     settings.domStorageEnabled = false
                     settings.setSupportMultipleWindows(false)
                     addJavascriptInterface(
-                        PonteAllerte { nuovo, nuovaAltezza ->
+                        PonteAllerte { nuovo, nuovaAltezza, _ ->
                             stato = nuovo
                             if (nuovo == StatoAllerte.PIENO && nuovaAltezza > 20) {
                                 altezza = nuovaAltezza.coerceAtMost(1200)
