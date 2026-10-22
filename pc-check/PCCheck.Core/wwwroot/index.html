@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <title>PC Check</title>
+  <link rel="stylesheet" href="app.css">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+</head>
+<body>
+  <div id="auth-error" class="auth-error" hidden>
+    <div class="auth-card">
+      <h1>Sessione non valida</h1>
+      <p>Questa pagina è stata aperta senza il token di sessione oppure PC Check è stato riavviato.</p>
+      <p>Torna alla finestra di PC Check e usa il collegamento stampato in console, oppure riavvia l'applicazione.</p>
+    </div>
+  </div>
+
+  <div id="app" class="app" hidden>
+    <aside class="sidebar">
+      <div class="brand">
+        <span class="brand-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="28" height="28"><path fill="currentColor" d="M12 2 4 5v6c0 5.25 3.4 10.15 8 11.35C16.6 21.15 20 16.25 20 11V5l-8-3zm-1.2 14.6-3.4-3.4 1.4-1.4 2 2 4.6-4.6 1.4 1.4-6 6z"/></svg>
+        </span>
+        <div>
+          <div class="brand-name">PC Check</div>
+          <div class="brand-sub" id="brand-sub">Diagnostica locale</div>
+        </div>
+      </div>
+      <nav class="nav" aria-label="Sezioni">
+        <a href="#panoramica" data-section="panoramica" class="nav-link">
+          <span class="nav-icon">◉</span><span>Panoramica</span>
+        </a>
+        <a href="#scansione" data-section="scansione" class="nav-link">
+          <span class="nav-icon">⛨</span><span>Scansione</span>
+        </a>
+        <a href="#prestazioni" data-section="prestazioni" class="nav-link">
+          <span class="nav-icon">◔</span><span>Prestazioni</span>
+        </a>
+        <a href="#avvio" data-section="avvio" class="nav-link">
+          <span class="nav-icon">▶</span><span>Avvio e App</span>
+        </a>
+        <a href="#interventi" data-section="interventi" class="nav-link">
+          <span class="nav-icon">✎</span><span>Interventi</span>
+        </a>
+        <a href="#report" data-section="report" class="nav-link">
+          <span class="nav-icon">▤</span><span>Report</span>
+        </a>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="sys-line" id="sys-machine">—</div>
+        <div class="sys-line small" id="sys-os">—</div>
+        <div class="sys-line small" id="sys-user">—</div>
+        <button type="button" id="btn-shutdown" class="btn btn-ghost btn-block">Chiudi PC Check</button>
+        <div class="privacy-note">Funziona completamente offline. Nessun dato lascia questo computer.</div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <h1 id="section-title">Panoramica</h1>
+        <div class="topbar-right">
+          <span id="demo-badge" class="badge badge-demo" hidden>Modalità dimostrativa: dati fittizi</span>
+          <span id="admin-badge" class="badge badge-neutral" hidden>Permessi di amministratore</span>
+          <button type="button" id="btn-refresh" class="btn btn-secondary">Aggiorna</button>
+        </div>
+      </header>
+
+      <div id="global-error" class="alert alert-error" hidden></div>
+
+      <!-- ===================== PANORAMICA ===================== -->
+      <section id="section-panoramica" class="section" data-title="Panoramica">
+        <div class="disclaimer">
+          <strong>Nota importante.</strong> Nessun software può garantire la totale assenza di malware.
+          PC Check distingue sempre tra <strong>minacce certe</strong> rilevate da Microsoft Defender,
+          <strong>programmi sconosciuti</strong> da verificare e <strong>software ad alto impatto</strong> di risorse.
+        </div>
+
+        <div class="cards" id="overview-cards">
+          <article class="card stat" id="card-protection">
+            <div class="stat-label">Protezione</div>
+            <div class="stat-value">—</div>
+            <div class="stat-detail">Lettura in corso…</div>
+          </article>
+          <article class="card stat" id="card-threats">
+            <div class="stat-label">Minacce certe</div>
+            <div class="stat-value">—</div>
+            <div class="stat-detail">Lettura in corso…</div>
+          </article>
+          <article class="card stat" id="card-cpu">
+            <div class="stat-label">CPU</div>
+            <div class="stat-value">—</div>
+            <div class="stat-detail">Campionamento…</div>
+          </article>
+          <article class="card stat" id="card-memory">
+            <div class="stat-label">Memoria</div>
+            <div class="stat-value">—</div>
+            <div class="stat-detail">Campionamento…</div>
+          </article>
+          <article class="card stat" id="card-disk">
+            <div class="stat-label">Disco di sistema</div>
+            <div class="stat-value">—</div>
+            <div class="stat-detail">Lettura…</div>
+          </article>
+          <article class="card stat" id="card-temp">
+            <div class="stat-label">File temporanei</div>
+            <div class="stat-value">—</div>
+            <div class="stat-detail">Analisi…</div>
+          </article>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <h2>Segnalazioni</h2>
+            <span class="muted" id="overview-time"></span>
+          </div>
+          <ul id="findings-list" class="findings">
+            <li class="muted">Analisi in corso…</li>
+          </ul>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <h2>Classificazione trasparente</h2>
+            <table class="table compact">
+              <thead><tr><th>Tipo</th><th>Cosa significa</th><th>Conteggio</th></tr></thead>
+              <tbody>
+                <tr><td><span class="pill pill-critical">Minaccia certa</span></td><td>Rilevazione di Microsoft Defender ancora attiva.</td><td id="count-threats">—</td></tr>
+                <tr><td><span class="pill pill-warn">Programma sconosciuto</span></td><td>Editore non dichiarato, cartella insolita o nome tipico di software indesiderato. Da verificare, non è una diagnosi.</td><td id="count-unknown">—</td></tr>
+                <tr><td><span class="pill pill-info">Alto impatto</span></td><td>Consuma molta CPU o memoria in questo momento. Può essere del tutto legittimo.</td><td id="count-high">—</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="card">
+            <h2>Come funziona PC Check</h2>
+            <ul class="bullets">
+              <li>Legge lo stato di Microsoft Defender tramite WMI e avvia le scansioni con l'eseguibile ufficiale <code>MpCmdRun.exe</code>.</li>
+              <li>Misura CPU e memoria con un campionamento di uno o due secondi, non con valori istantanei.</li>
+              <li>Ogni intervento chiede conferma, spiega l'impatto e indica se è reversibile.</li>
+              <li>Parte con i permessi normali: se serve l'amministratore, chiede l'autorizzazione (UAC) solo per quel singolo comando.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================== SCANSIONE ===================== -->
+      <section id="section-scansione" class="section" data-title="Scansione con Microsoft Defender" hidden>
+        <div class="grid-2">
+          <div class="card">
+            <h2>Stato di Microsoft Defender</h2>
+            <div id="defender-status" class="kv"></div>
+            <div id="defender-warnings"></div>
+          </div>
+          <div class="card">
+            <h2>Avvia una scansione</h2>
+            <p class="muted">La scansione viene eseguita da Microsoft Defender stesso. PC Check avvia <code>MpCmdRun.exe -Scan -ScanType 1</code> (rapida) oppure <code>-ScanType 2</code> (completa) e mostra l'esito.</p>
+            <div class="btn-row">
+              <button type="button" class="btn btn-primary" id="btn-scan-quick">Scansione rapida</button>
+              <button type="button" class="btn btn-secondary" id="btn-scan-full">Scansione completa</button>
+              <button type="button" class="btn btn-danger" id="btn-scan-cancel" hidden>Interrompi</button>
+            </div>
+            <div id="scan-status" class="scan-status"></div>
+            <pre id="scan-output" class="output" hidden></pre>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-head">
+            <h2>Minacce rilevate da Defender</h2>
+            <span class="muted">Cronologia completa: attive e già gestite</span>
+          </div>
+          <div id="threats-table"></div>
+        </div>
+      </section>
+
+      <!-- ===================== PRESTAZIONI ===================== -->
+      <section id="section-prestazioni" class="section" data-title="Prestazioni" hidden>
+        <div class="cards" id="perf-cards"></div>
+        <div class="card">
+          <div class="card-head">
+            <h2>Dischi</h2>
+          </div>
+          <div id="disks-table"></div>
+        </div>
+        <div class="card">
+          <div class="card-head">
+            <h2>Processi con maggior consumo</h2>
+            <label class="inline">
+              Campione
+              <select id="sample-select">
+                <option value="1000">1 secondo</option>
+                <option value="2000" selected>2 secondi</option>
+                <option value="3000">3 secondi</option>
+              </select>
+            </label>
+          </div>
+          <p class="muted">La percentuale di CPU è la media sull'intervallo scelto, normalizzata su tutti i core. I processi di Windows sono contrassegnati e non possono essere terminati da qui.</p>
+          <div id="processes-table"></div>
+        </div>
+      </section>
+
+      <!-- ===================== AVVIO E APP ===================== -->
+      <section id="section-avvio" class="section" data-title="Avvio e App" hidden>
+        <div class="card">
+          <div class="card-head">
+            <h2>Programmi all'avvio</h2>
+            <span class="muted" id="startup-summary"></span>
+          </div>
+          <p class="muted">Letti da <code>HKCU</code> e <code>HKLM\Software\Microsoft\Windows\CurrentVersion\Run</code> e dalle cartelle Esecuzione automatica. Disattivare una voce è reversibile e usa lo stesso meccanismo di Gestione attività.</p>
+          <div id="startup-table"></div>
+        </div>
+        <div class="card">
+          <div class="card-head">
+            <h2>Programmi installati</h2>
+            <div class="inline-controls">
+              <input type="search" id="apps-filter" placeholder="Cerca per nome o editore" aria-label="Cerca programmi">
+              <label class="inline"><input type="checkbox" id="apps-only-flagged"> Solo da verificare</label>
+            </div>
+          </div>
+          <p class="muted">Dalle chiavi <code>Uninstall</code> del registro. La disinstallazione guidata usa <code>winget</code> se presente, altrimenti Windows Installer o le Impostazioni di Windows: nessuna stringa del registro viene eseguita.</p>
+          <div id="apps-table"></div>
+        </div>
+      </section>
+
+      <!-- ===================== INTERVENTI ===================== -->
+      <section id="section-interventi" class="section" data-title="Interventi guidati" hidden>
+        <div class="alert alert-info">
+          Ogni intervento richiede una conferma esplicita. Prima di confermare viene spiegato <strong>cosa succede</strong>, <strong>quali effetti ha</strong> e <strong>se è reversibile</strong>.
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <h2>Pulizia file temporanei</h2>
+            <button type="button" class="btn btn-secondary" id="btn-temp-refresh">Ricalcola</button>
+          </div>
+          <p class="muted">Analizza solo <code>%TEMP%</code> e <code>C:\Windows\Temp</code>. Nessuna pulizia automatica: qui sotto vedi l'anteprima dello spazio recuperabile.</p>
+          <div id="temp-targets"></div>
+          <div class="form-row">
+            <label class="inline">
+              Elimina solo file più vecchi di
+              <select id="temp-older">
+                <option value="0">qualsiasi età (tutto)</option>
+                <option value="1">1 giorno</option>
+                <option value="7" selected>7 giorni</option>
+                <option value="30">30 giorni</option>
+              </select>
+            </label>
+            <label class="inline"><input type="checkbox" id="temp-elevate"> Usa i permessi di amministratore per C:\Windows\Temp (richiesta UAC)</label>
+            <button type="button" class="btn btn-primary" id="btn-temp-clean">Pulisci le cartelle selezionate…</button>
+          </div>
+          <div id="temp-result"></div>
+        </div>
+
+        <div class="card">
+          <h2>Programmi ad alto impatto in questo momento</h2>
+          <p class="muted">Terminare un processo chiude il programma senza salvare: usalo solo se il programma è bloccato o non lo riconosci.</p>
+          <div id="actions-processes"></div>
+        </div>
+
+        <div class="card">
+          <h2>Voci di avvio da verificare</h2>
+          <p class="muted">Voci attive il cui eseguibile si trova in cartelle insolite (temporanee, profilo utente, download). Disattivarle non cancella nulla.</p>
+          <div id="actions-startup"></div>
+        </div>
+
+        <div class="card">
+          <h2>Programmi da verificare</h2>
+          <p class="muted">Programmi con editore non dichiarato, nome tipico di software indesiderato o installati in cartelle temporanee. Se non li riconosci, disinstallali con la procedura guidata.</p>
+          <div id="actions-apps"></div>
+        </div>
+      </section>
+
+      <!-- ===================== REPORT ===================== -->
+      <section id="section-report" class="section" data-title="Report" hidden>
+        <div class="card">
+          <div class="card-head">
+            <h2>Rapporto completo</h2>
+            <div class="btn-row">
+              <button type="button" class="btn btn-primary" id="btn-report-generate">Genera rapporto</button>
+              <button type="button" class="btn btn-secondary" id="btn-report-html" disabled>Scarica HTML</button>
+              <button type="button" class="btn btn-secondary" id="btn-report-json" disabled>Scarica JSON</button>
+              <button type="button" class="btn btn-secondary" id="btn-report-save" disabled>Salva in Documenti</button>
+            </div>
+          </div>
+          <p class="muted">Il rapporto raccoglie stato di Defender, minacce, prestazioni, avvio, programmi e file temporanei. Resta sul tuo computer: utile da conservare o da mostrare a chi ti assiste.</p>
+          <div id="report-status" class="muted"></div>
+          <div id="report-summary"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Finestra di conferma -->
+  <div id="modal" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal-card">
+      <h2 id="modal-title">Conferma</h2>
+      <div id="modal-body" class="modal-body"></div>
+      <div class="modal-meta">
+        <div><span class="meta-label">Impatto:</span> <span id="modal-impact"></span></div>
+        <div><span class="meta-label">Reversibile:</span> <span id="modal-reversible"></span></div>
+      </div>
+      <div class="btn-row right">
+        <button type="button" class="btn btn-secondary" id="modal-cancel">Annulla</button>
+        <button type="button" class="btn btn-danger" id="modal-confirm">Conferma</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toasts" class="toasts" aria-live="polite"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
