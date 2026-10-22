@@ -1,0 +1,184 @@
+{
+ "head": {
+  "vars": [
+   "p",
+   "pLabel",
+   "descr",
+   "quando",
+   "luogoLabel",
+   "itwiki",
+   "nlink"
+  ]
+ },
+ "results": {
+  "bindings": [
+   {
+    "p": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q84183"
+    },
+    "descr": {
+     "xml:lang": "it",
+     "type": "literal",
+     "value": "imprenditore e banchiere italiano (1879-1957)"
+    },
+    "nlink": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#integer",
+     "type": "literal",
+     "value": "13"
+    },
+    "pLabel": {
+     "xml:lang": "it",
+     "type": "literal",
+     "value": "Camillo Castiglioni"
+    },
+    "luogoLabel": {
+     "xml:lang": "it",
+     "type": "literal",
+     "value": "Trieste"
+    },
+    "itwiki": {
+     "type": "uri",
+     "value": "https://it.wikipedia.org/wiki/Camillo_Castiglioni"
+    },
+    "quando": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#dateTime",
+     "type": "literal",
+     "value": "1879-10-22T00:00:00Z"
+    }
+   },
+   {
+    "p": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q15402993"
+    },
+    "descr": {
+     "xml:lang": "it",
+     "type": "literal",
+     "value": "nuotatore italiano"
+    },
+    "nlink": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#integer",
+     "type": "literal",
+     "value": "13"
+    },
+    "pLabel": {
+     "xml:lang": "it",
+     "type": "literal",
+     "value": "Piero Codia"
+    },
+    "luogoLabel": {
+     "xml:lang": "it",
+     "type": "literal",
+     "value": "Trieste"
+    },
+    "itwiki": {
+     "type": "uri",
+     "value": "https://it.wikipedia.org/wiki/Piero_Codia"
+    },
+    "quando": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#dateTime",
+     "type": "literal",
+     "value": "1989-10-22T00:00:00Z"
+    }
+   },
+   {
+    "p": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q97379196"
+    },
+    "descr": {
+     "xml:lang": "it",
+     "type": "literal",
+     "value": "calciatore italiano"
+    },
+    "nlink": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#integer",
+     "type": "literal",
+     "value": "2"
+    },
+    "pLabel": {
+     "xml:lang": "it",
+     "type": "literal",
+     "value": "Denis Franchi"
+    },
+    "luogoLabel": {
+     "xml:lang": "it",
+     "type": "literal",
+     "value": "San Vito al Tagliamento"
+    },
+    "quando": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#dateTime",
+     "type": "literal",
+     "value": "2002-10-22T00:00:00Z"
+    }
+   },
+   {
+    "p": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q999999999"
+    },
+    "descr": {
+     "type": "literal",
+     "xml:lang": "it",
+     "value": "attrice italiana (1965-)"
+    },
+    "nlink": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#integer",
+     "type": "literal",
+     "value": "13"
+    },
+    "pLabel": {
+     "xml:lang": "it",
+     "type": "literal",
+     "value": "Persona Di Prova"
+    },
+    "luogoLabel": {
+     "xml:lang": "it",
+     "type": "literal",
+     "value": "Trieste"
+    },
+    "quando": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#dateTime",
+     "type": "literal",
+     "value": "1966-10-22T00:00:00Z"
+    }
+   },
+   {
+    "p": {
+     "type": "uri",
+     "value": "http://www.wikidata.org/entity/Q84183"
+    },
+    "descr": {
+     "xml:lang": "it",
+     "type": "literal",
+     "value": "imprenditore e banchiere italiano (1879-1957)"
+    },
+    "nlink": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#integer",
+     "type": "literal",
+     "value": "13"
+    },
+    "pLabel": {
+     "xml:lang": "it",
+     "type": "literal",
+     "value": "Camillo Castiglioni"
+    },
+    "luogoLabel": {
+     "xml:lang": "it",
+     "type": "literal",
+     "value": "Trieste"
+    },
+    "itwiki": {
+     "type": "uri",
+     "value": "https://it.wikipedia.org/wiki/Camillo_Castiglioni"
+    },
+    "quando": {
+     "datatype": "http://www.w3.org/2001/XMLSchema#dateTime",
+     "type": "literal",
+     "value": "1879-10-22T00:00:00Z"
+    }
+   }
+  ]
+ }
+}

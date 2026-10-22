@@ -1,0 +1,269 @@
+{
+ "holidays": [
+  {
+   "text": "Giornata internazionale di sensibilizzazione sulla balbuzie",
+   "pages": [
+    {
+     "title": "Balbuzie",
+     "titles": {
+      "canonical": "Balbuzie",
+      "normalized": "Balbuzie",
+      "display": "<span lang=\"it\" dir=\"ltr\"><span class=\"mw-page-title-main\">Balbuzie</span></span>"
+     },
+     "description": "disturbo del linguaggio caratterizzato dalla fluenza interrotta e da involontarie ripetizioni e prolungamenti di suoni, sillabe, parole o frasi",
+     "extract": "La balbuzie detta anche balbettamento, dislalia, disfemia o disartria funzionale è un disturbo del linguaggio caratterizzato dalla fluenza interrotta e da involontarie ripetizioni e prolungamenti di suoni, sillabe, parole o frasi, con frequenti pause o blocchi in cui la persona che balbetta non è in grado di esprimere verbalmente, in modo continuo, un pensiero o un concetto, nonostante lo abbia già formulato mentalmente. La locuzione utilizzata per questi blocchi è disfluenze verbali.",
+     "wikibase_item": "Q186676",
+     "content_urls": {
+      "desktop": {
+       "page": "https://it.wikipedia.org/wiki/Balbuzie"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "text": "Italia - Giornata del teatro",
+   "pages": [
+    {
+     "title": "Italia",
+     "titles": {
+      "canonical": "Italia",
+      "normalized": "Italia",
+      "display": "<span lang=\"it\" dir=\"ltr\"><span class=\"mw-page-title-main\">Italia</span></span>"
+     },
+     "description": "stato dell'Europa meridionale, membro dell'Unione Europea",
+     "extract": "L'Italia, ufficialmente Repubblica Italiana, è un paese dell'Europa meridionale e occidentale, il cui territorio coincide in gran parte con l'omonima regione geografica; Stato membro dell'Unione europea, l'Italia conta una popolazione di circa 59 milioni di abitanti, che ne fanno il terzo Stato dell'Unione per numero di abitanti dopo Germania e Francia.",
+     "wikibase_item": "Q38",
+     "content_urls": {
+      "desktop": {
+       "page": "https://it.wikipedia.org/wiki/Italia"
+      }
+     }
+    }
+   ]
+  }
+ ],
+ "selected": [
+  {
+   "text": "Inizia il pontificato di Papa Giovanni Paolo II.",
+   "pages": [
+    {
+     "title": "Papa_Giovanni_Paolo_II",
+     "titles": {
+      "canonical": "Papa_Giovanni_Paolo_II",
+      "normalized": "Papa Giovanni Paolo II",
+      "display": "<span lang=\"it\" dir=\"ltr\"><span class=\"mw-page-title-main\">Papa Giovanni Paolo II</span></span>"
+     },
+     "description": "264º vescovo di Roma e papa della Chiesa cattolica dal 1978 al 2005",
+     "extract": "Papa Giovanni Paolo II è stato il 264º papa della Chiesa cattolica e vescovo di Roma, 6º sovrano dello Stato della Città del Vaticano, oltre agli altri titoli propri del romano pontefice, dal 16 ottobre 1978 fino alla morte.",
+     "wikibase_item": "Q989",
+     "content_urls": {
+      "desktop": {
+       "page": "https://it.wikipedia.org/wiki/Papa_Giovanni_Paolo_II"
+      }
+     }
+    }
+   ],
+   "year": 1978
+  }
+ ],
+ "events": [
+  {
+   "text": "Giorgia Meloni diventa ufficialmente la prima donna Presidente del Consiglio nella storia d'Italia.",
+   "pages": [
+    {
+     "title": "Giorgia_Meloni",
+     "titles": {
+      "canonical": "Giorgia_Meloni",
+      "normalized": "Giorgia Meloni",
+      "display": "<span lang=\"it\" dir=\"ltr\"><span class=\"mw-page-title-main\">Giorgia Meloni</span></span>"
+     },
+     "description": "politica italiana, Presidente del Consiglio dei ministri della Repubblica Italiana (1977-)",
+     "extract": "Giorgia Meloni è una politica italiana, presidente del Consiglio dei ministri dal 22 ottobre 2022. Prima donna a capo del governo nella storia d'Italia, ha ricoperto precedentemente gli incarichi di vicepresidente della Camera dei deputati dal 2006 al 2008 e di ministro per la gioventù nel quarto governo Berlusconi dal 2008 al 2011.",
+     "wikibase_item": "Q451791",
+     "content_urls": {
+      "desktop": {
+       "page": "https://it.wikipedia.org/wiki/Giorgia_Meloni"
+      }
+     }
+    },
+    {
+     "title": "Elezioni_politiche_in_Italia_del_2022",
+     "titles": {
+      "canonical": "Elezioni_politiche_in_Italia_del_2022",
+      "normalized": "Elezioni politiche in Italia del 2022",
+      "display": "<span lang=\"it\" dir=\"ltr\"><span class=\"mw-page-title-main\">Elezioni politiche in Italia del 2022</span></span>"
+     },
+     "description": "19ª elezione del Parlamento della Repubblica Italiana",
+     "extract": "Le elezioni politiche in Italia del 2022 per il rinnovo di entrambi i rami del Parlamento italiano – il Senato della Repubblica e la Camera dei deputati – si sono tenute domenica 25 settembre 2022, a seguito dello scioglimento anticipato delle Camere decretato dal Presidente della Repubblica Sergio Mattarella il 21 luglio, provocato dalla crisi del governo Draghi. Nella stessa data si sono svolte anche le elezioni regionali in Sicilia.",
+     "wikibase_item": "Q50379923",
+     "content_urls": {
+      "desktop": {
+       "page": "https://it.wikipedia.org/wiki/Elezioni_politiche_in_Italia_del_2022"
+      }
+     }
+    }
+   ],
+   "year": 2022
+  },
+  {
+   "text": "Microsoft presenta il suo nuovo sistema operativo, Windows 7.",
+   "pages": [
+    {
+     "title": "Microsoft",
+     "titles": {
+      "canonical": "Microsoft",
+      "normalized": "Microsoft",
+      "display": "<span lang=\"it\" dir=\"ltr\"><span class=\"mw-page-title-main\">Microsoft</span></span>"
+     },
+     "description": "azienda multinazionale statunitense operante nel settore informatico",
+     "extract": "Microsoft Corporation è un'azienda multinazionale statunitense attiva nel settore dell'informatica, con sede a Redmond, nello Stato di Washington. Fondata nel 1975 da Bill Gates e Paul Allen, è una delle principali aziende mondiali nel settore del software e dei servizi informatici. Ha contribuito in modo significativo alla diffusione dei personal computer grazie al sistema operativo MS-DOS e alla famiglia di sistemi operativi Windows, affermandosi successivamente anche nei settori dell'hardware e dei videogiochi.",
+     "wikibase_item": "Q2283",
+     "content_urls": {
+      "desktop": {
+       "page": "https://it.wikipedia.org/wiki/Microsoft"
+      }
+     }
+    },
+    {
+     "title": "Windows_7",
+     "titles": {
+      "canonical": "Windows_7",
+      "normalized": "Windows 7",
+      "display": "<span lang=\"it\" dir=\"ltr\"><span class=\"mw-page-title-main\">Windows 7</span></span>"
+     },
+     "description": "sistema operativo per personal computer sviluppato da Microsoft e rilasciato nel 2009",
+     "extract": "Windows 7 è un sistema operativo per personal computer prodotto da Microsoft come parte della famiglia di sistemi operativi Windows NT: pubblicato per la produzione il 22 luglio 2009, è diventato generalmente disponibile il 22 ottobre 2009, meno di tre anni dopo l'uscita del suo predecessore, Windows Vista.",
+     "wikibase_item": "Q11215",
+     "content_urls": {
+      "desktop": {
+       "page": "https://it.wikipedia.org/wiki/Windows_7"
+      }
+     }
+    }
+   ],
+   "year": 2009
+  },
+  {
+   "text": "Il telefono HTC Dream, primo dispositivo a montare un sistema operativo Android, viene messo in commercio negli Stati Uniti",
+   "pages": [
+    {
+     "title": "Telefono_cellulare",
+     "titles": {
+      "canonical": "Telefono_cellulare",
+      "normalized": "Telefono cellulare",
+      "display": "<span lang=\"it\" dir=\"ltr\"><span class=\"mw-page-title-main\">Telefono cellulare</span></span>"
+     },
+     "description": "dispositivo portatile che permette di effettuare telefonate",
+     "extract": "Un telefono cellulare è un terminale ricetrasmittente per comunicazioni radiotelefoniche su una rete cellulare.\nNei primi decenni del terzo millennio l'offerta di cellulari si amplia significativamente, tanto da coniare termini specifici per descrivere in modo più puntuale i prodotti, come appunto: telefono cellulare basico e smartphone.",
+     "wikibase_item": "Q17517",
+     "content_urls": {
+      "desktop": {
+       "page": "https://it.wikipedia.org/wiki/Telefono_cellulare"
+      }
+     }
+    },
+    {
+     "title": "HTC_Dream",
+     "titles": {
+      "canonical": "HTC_Dream",
+      "normalized": "HTC Dream",
+      "display": "<span lang=\"it\" dir=\"ltr\"><span class=\"mw-page-title-main\">HTC Dream</span></span>"
+     },
+     "description": "primo smartphone con sistema operativo Android",
+     "extract": "HTC Dream è uno smartphone prodotto dalla compagnia HTC, e progettato insieme a Google.",
+     "wikibase_item": "Q727665",
+     "content_urls": {
+      "desktop": {
+       "page": "https://it.wikipedia.org/wiki/HTC_Dream"
+      }
+     }
+    }
+   ],
+   "year": 2008
+  },
+  {
+   "text": "A Trieste viene inaugurato il nuovo molo del porto, alla presenza delle autorità cittadine.",
+   "year": 1901,
+   "pages": [
+    {
+     "title": "Trieste",
+     "titles": {
+      "canonical": "Trieste",
+      "normalized": "Trieste"
+     },
+     "description": "comune italiano, capoluogo del Friuli-Venezia Giulia",
+     "extract": "Trieste è un comune italiano di circa 200 000 abitanti, capoluogo della regione Friuli-Venezia Giulia.",
+     "wikibase_item": "Q546",
+     "content_urls": {
+      "desktop": {
+       "page": "https://it.wikipedia.org/wiki/Trieste"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "text": "Giorgia Meloni diventa ufficialmente la prima donna Presidente del Consiglio nella storia d'Italia.",
+   "pages": [
+    {
+     "title": "Giorgia_Meloni",
+     "titles": {
+      "canonical": "Giorgia_Meloni",
+      "normalized": "Giorgia Meloni",
+      "display": "<span lang=\"it\" dir=\"ltr\"><span class=\"mw-page-title-main\">Giorgia Meloni</span></span>"
+     },
+     "description": "politica italiana, Presidente del Consiglio dei ministri della Repubblica Italiana (1977-)",
+     "extract": "Giorgia Meloni è una politica italiana, presidente del Consiglio dei ministri dal 22 ottobre 2022. Prima donna a capo del governo nella storia d'Italia, ha ricoperto precedentemente gli incarichi di vicepresidente della Camera dei deputati dal 2006 al 2008 e di ministro per la gioventù nel quarto governo Berlusconi dal 2008 al 2011.",
+     "wikibase_item": "Q451791",
+     "content_urls": {
+      "desktop": {
+       "page": "https://it.wikipedia.org/wiki/Giorgia_Meloni"
+      }
+     }
+    },
+    {
+     "title": "Elezioni_politiche_in_Italia_del_2022",
+     "titles": {
+      "canonical": "Elezioni_politiche_in_Italia_del_2022",
+      "normalized": "Elezioni politiche in Italia del 2022",
+      "display": "<span lang=\"it\" dir=\"ltr\"><span class=\"mw-page-title-main\">Elezioni politiche in Italia del 2022</span></span>"
+     },
+     "description": "19ª elezione del Parlamento della Repubblica Italiana",
+     "extract": "Le elezioni politiche in Italia del 2022 per il rinnovo di entrambi i rami del Parlamento italiano – il Senato della Repubblica e la Camera dei deputati – si sono tenute domenica 25 settembre 2022, a seguito dello scioglimento anticipato delle Camere decretato dal Presidente della Repubblica Sergio Mattarella il 21 luglio, provocato dalla crisi del governo Draghi. Nella stessa data si sono svolte anche le elezioni regionali in Sicilia.",
+     "wikibase_item": "Q50379923",
+     "content_urls": {
+      "desktop": {
+       "page": "https://it.wikipedia.org/wiki/Elezioni_politiche_in_Italia_del_2022"
+      }
+     }
+    }
+   ],
+   "year": 2022
+  }
+ ],
+ "births": [
+  {
+   "text": "Camillo Castiglioni, imprenditore e banchiere italiano (m. 1957)",
+   "year": 1879,
+   "pages": [
+    {
+     "title": "Camillo_Castiglioni",
+     "titles": {
+      "canonical": "Camillo_Castiglioni",
+      "normalized": "Camillo Castiglioni"
+     },
+     "description": "imprenditore e banchiere italiano",
+     "extract": "Camillo Castiglioni è stato un imprenditore e banchiere italiano, nato a Trieste.",
+     "wikibase_item": "Q84183",
+     "content_urls": {
+      "desktop": {
+       "page": "https://it.wikipedia.org/wiki/Camillo_Castiglioni"
+      }
+     }
+    }
+   ]
+  }
+ ],
+ "deaths": []
+}

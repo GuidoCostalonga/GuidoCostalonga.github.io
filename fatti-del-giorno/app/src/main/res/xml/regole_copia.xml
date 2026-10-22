@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Si salvano solo le impostazioni (filtri, piattaforma preferita).
+    La chiave personale cifrata (segreti.xml) resta sul telefono: è legata
+    alla chiave hardware del dispositivo e su un altro non si potrebbe leggere.
+-->
+<data-extraction-rules>
+    <cloud-backup>
+        <include domain="sharedpref" path="impostazioni.xml" />
+    </cloud-backup>
+    <device-transfer>
+        <include domain="sharedpref" path="impostazioni.xml" />
+    </device-transfer>
+</data-extraction-rules>
