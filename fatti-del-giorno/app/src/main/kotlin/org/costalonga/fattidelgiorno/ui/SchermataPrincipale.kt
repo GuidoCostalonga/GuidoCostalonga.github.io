@@ -20,6 +20,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Error
@@ -38,6 +39,7 @@ import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -189,7 +191,7 @@ private fun Filtri(stato: StatoSchermata, vista: VistaModello) {
         Text("Area geografica", style = MaterialTheme.typography.labelMedium)
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Area.entries.forEach { area ->
-                FilterChip(selected = area in stato.areeAttive, onClick = { vista.alternaArea(area) }, label = { Text(area.etichetta) })
+                Scelta(selected = area in stato.areeAttive, onClick = { vista.alternaArea(area) }, label = { Text(area.etichetta) })
             }
         }
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -201,7 +203,7 @@ private fun Filtri(stato: StatoSchermata, vista: VistaModello) {
         }
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Categoria.entries.forEach { c ->
-                FilterChip(selected = c in stato.categorieAttive, onClick = { vista.alternaCategoria(c) }, label = { Text(c.etichetta) })
+                Scelta(selected = c in stato.categorieAttive, onClick = { vista.alternaCategoria(c) }, label = { Text(c.etichetta) })
             }
         }
     }
@@ -349,20 +351,20 @@ private fun SezioneContenuti(stato: StatoSchermata, vista: VistaModello) {
             Text("Piattaforma", style = MaterialTheme.typography.labelMedium)
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Piattaforma.entries.forEach { p ->
-                    FilterChip(selected = o.piattaforma == p, onClick = { vista.aggiornaOpzioni { it.copy(piattaforma = p) } }, label = { Text(p.etichetta) })
+                    Scelta(selected = o.piattaforma == p, onClick = { vista.aggiornaOpzioni { it.copy(piattaforma = p) } }, label = { Text(p.etichetta) })
                 }
             }
             Text("Formato", style = MaterialTheme.typography.labelMedium)
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 o.piattaforma.formati.forEach { f ->
-                    FilterChip(selected = o.formato == f, onClick = { vista.aggiornaOpzioni { it.copy(formato = f) } }, label = { Text(f.etichetta) })
+                    Scelta(selected = o.formato == f, onClick = { vista.aggiornaOpzioni { it.copy(formato = f) } }, label = { Text(f.etichetta) })
                 }
             }
             Text(o.formato.descrizione, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Text("Tono", style = MaterialTheme.typography.labelMedium)
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Tono.entries.forEach { t ->
-                    FilterChip(selected = o.tono == t, onClick = { vista.aggiornaOpzioni { it.copy(tono = t) } }, label = { Text(t.etichetta) })
+                    Scelta(selected = o.tono == t, onClick = { vista.aggiornaOpzioni { it.copy(tono = t) } }, label = { Text(t.etichetta) })
                 }
             }
             TextButton(onClick = { opzioniAvanzate = !opzioniAvanzate }, contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp)) {
@@ -380,7 +382,7 @@ private fun SezioneContenuti(stato: StatoSchermata, vista: VistaModello) {
                 Text("Lunghezza", style = MaterialTheme.typography.labelMedium)
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Lunghezza.entries.forEach { l ->
-                        FilterChip(selected = o.lunghezza == l, onClick = { vista.aggiornaOpzioni { it.copy(lunghezza = l) } }, label = { Text(l.etichetta) })
+                        Scelta(selected = o.lunghezza == l, onClick = { vista.aggiornaOpzioni { it.copy(lunghezza = l) } }, label = { Text(l.etichetta) })
                     }
                 }
                 OutlinedTextField(
@@ -454,4 +456,30 @@ private fun BloccoTesto(titolo: String, valore: String, cambia: (String) -> Unit
             AssistChip(onClick = condividi, label = { Text("Condividi") }, leadingIcon = { Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(16.dp)) })
         }
     }
+}
+
+/**
+ * Selettore a scelta singola o multipla: la voce attiva ha sfondo pieno,
+ * testo chiaro e segno di spunta, così si distingue a colpo d'occhio.
+ */
+@Composable
+fun Scelta(selected: Boolean, onClick: () -> Unit, label: @Composable () -> Unit) {
+    FilterChip(
+        selected = selected,
+        onClick = onClick,
+        label = label,
+        leadingIcon = if (selected) {
+            { Icon(Icons.Default.Check, contentDescription = "Attivo", modifier = Modifier.size(16.dp)) }
+        } else null,
+        colors = FilterChipDefaults.filterChipColors(
+            selectedContainerColor = MaterialTheme.colorScheme.primary,
+            selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
+            selectedLeadingIconColor = MaterialTheme.colorScheme.onPrimary,
+        ),
+        border = FilterChipDefaults.filterChipBorder(
+            enabled = true,
+            selected = selected,
+            borderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
+        ),
+    )
 }
