@@ -1,0 +1,67 @@
+# Compila PC Check, esegue i test e lascia il pacchetto portatile fra i file dell'esecuzione.
+#
+# Si avvia a ogni modifica della cartella pc-check e si puo' avviare a mano da
+# GitHub, nella scheda Actions, con il pulsante "Run workflow".
+name: PC Check (Windows)
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "pc-check/**"
+      - ".github/workflows/pc-check.yml"
+  pull_request:
+    paths:
+      - "pc-check/**"
+      - ".github/workflows/pc-check.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_NOLOGO: "1"
+  DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+
+jobs:
+  build:
+    name: Compila, testa e pubblica
+    runs-on: windows-latest
+
+    steps:
+      - name: Scarica il codice
+        uses: actions/checkout@v4
+
+      - name: Prepara .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Ripristina i pacchetti
+        run: dotnet restore pc-check/PCCheck.sln
+
+      - name: Compila
+        run: dotnet build pc-check/PCCheck.sln -c Release --no-restore
+
+      - name: Esegui i test
+        run: dotnet test pc-check/PCCheck.sln -c Release --no-build --logger "trx;LogFileName=pc-check.trx"
+
+      - name: Crea il pacchetto portatile
+        shell: pwsh
+        run: powershell -ExecutionPolicy Bypass -File pc-check/scripts/build-portable.ps1 -SkipTests
+
+      - name: Conserva il pacchetto portatile
+        uses: actions/upload-artifact@v4
+        with:
+          name: PCCheck-portable-win-x64
+          path: pc-check/dist/*.zip
+          if-no-files-found: error
+
+      - name: Conserva i risultati dei test
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: risultati-test
+          path: pc-check/PCCheck.Tests/TestResults/*.trx
+          if-no-files-found: ignore

@@ -27,6 +27,11 @@ sportivi trasmessi legalmente in Italia oggi e nei 14 giorni successivi, con il
 suo servizio dati gratuito su GitHub Actions. Istruzioni, fonti e verifiche
 stanno in `sport-tv/README.md`, `sport-tv/FONTI.md` e `sport-tv/VERIFICHE.md`.
 
+In `pc-check/` c'è **PC Check**, il programma per Windows 10 e 11 che controlla
+Microsoft Defender, prestazioni, programmi all'avvio e file temporanei, spiegando
+ogni intervento prima di farlo. È codice C# (.NET 8) che GitHub compila da solo e
+da cui esce l'eseguibile portatile. Le istruzioni stanno in `pc-check/README.md`.
+
 Per collegare un dominio personalizzato basta aggiungere un file `CNAME` con
 dentro il dominio, e impostarlo in Settings → Pages.
 
