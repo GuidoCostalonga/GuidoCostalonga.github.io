@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Atlante dei dati</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<meta name="description" content="150 indicatori della Banca Mondiale per 217 paesi e 49 aggregati, dal 1960 a oggi: mappa, bolle, linee, barre e tabella.">
+<meta name="description" content="Tutti i dati del repository open data: 150 indicatori della Banca Mondiale per 217 paesi, 24 indicatori Eurostat per le regioni europee, archivi FAOSTAT e OCSE. Mappe per continente e confronti fra paesi e regioni.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&display=swap">
@@ -19,7 +19,7 @@
     <svg class="testata__logo" viewBox="0 0 32 32" aria-hidden="true"><circle cx="11" cy="19" r="7" fill="var(--r1)"/><circle cx="21" cy="12" r="5" fill="var(--r2)"/><circle cx="23" cy="23" r="3.5" fill="var(--r4)"/></svg>
     <div>
       <h1>Atlante dei dati</h1>
-      <p class="testata__sotto">150 indicatori della Banca Mondiale, 217 paesi, dal 1960 a oggi</p>
+      <p class="testata__sotto">Banca Mondiale, Eurostat, FAOSTAT e OCSE: 217 paesi e oltre 2.000 regioni europee, dal 1960 a oggi</p>
     </div>
   </div>
   <button class="pulsante pulsante--testo" id="apri-metodo" type="button" aria-haspopup="dialog">Fonti e metodo</button>
@@ -33,6 +33,7 @@
       <button role="tab" id="tab-linee" data-vista="linee" aria-controls="scena" type="button"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M2 15l5-5 4 3 7-8"/></svg>Linee</button>
       <button role="tab" id="tab-barre" data-vista="barre" aria-controls="scena" type="button"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 4h13 M3 8h9 M3 12h11 M3 16h6"/></svg>Barre</button>
       <button role="tab" id="tab-tabella" data-vista="tabella" aria-controls="scena" type="button"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M2 4h16v12H2z M2 8h16 M2 12h16 M8 4v12"/></svg>Tabella</button>
+      <button role="tab" id="tab-confronta" data-vista="confronta" aria-controls="scena" type="button"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 16V8 M8 16V4 M12 16V10 M17 16V6 M2 17h16"/></svg>Confronta</button>
     </div>
 
     <div class="intestazione-vista">
@@ -78,13 +79,24 @@
       <ul class="selezionati" id="selezionati" aria-label="Territori selezionati"></ul>
       <div class="selezionati__azioni">
         <button class="pulsante pulsante--testo" id="svuota-selezione" type="button">Svuota selezione</button>
-        <span class="nota-piccola">Tocca un paese nel grafico per aggiungerlo</span>
+        <span class="nota-piccola">Tocca un territorio nel grafico per aggiungerlo</span>
+      </div>
+      <div class="preset" aria-label="Confronti pronti">
+        <span class="nota-piccola">Confronti pronti:</span>
+        <button class="pulsante pulsante--chip" type="button" data-preset="EU:ITH4,EU:ITH3,EU:AT21,EU:SI04,EU:IT">Friuli Venezia Giulia e vicini</button>
+        <button class="pulsante pulsante--chip" type="button" data-preset="EU:ITH41,EU:ITH42,EU:ITH43,EU:ITH44,EU:ITH4">Province del Friuli Venezia Giulia</button>
+        <button class="pulsante pulsante--chip" type="button" data-preset="ITA,DEU,FRA,ESP,EUU">Italia e grandi paesi europei</button>
+        <button class="pulsante pulsante--chip" type="button" data-preset="SSF,ECS,SAS,EAS,LCN,NAC,MEA,WLD">Regioni del mondo</button>
       </div>
     </section>
 
     <section class="blocco" aria-labelledby="t-indicatori">
       <h2 class="blocco__titolo" id="t-indicatori">Indicatori</h2>
-      <div class="campo">
+      <div class="campo campo--confronta">
+        <label for="tema-confronto">Gruppo di indicatori da confrontare</label>
+        <select id="tema-confronto"></select>
+      </div>
+      <div class="campo campo--principale">
         <label for="ind-principale" id="etichetta-principale">Indicatore</label>
         <select id="ind-principale"></select>
       </div>
@@ -96,12 +108,42 @@
         <label for="ind-r">Dimensione delle bolle</label>
         <select id="ind-r"></select>
       </div>
+      <div class="campo" id="campo-area">
+        <label for="area-mappa">Area della mappa</label>
+        <select id="area-mappa"></select>
+      </div>
+      <div class="campi-nuts" id="campi-nuts">
+        <div class="campo">
+          <label for="livello-nuts">Livello territoriale</label>
+          <select id="livello-nuts"></select>
+        </div>
+        <div class="campo">
+          <label for="paese-nuts">Paese</label>
+          <select id="paese-nuts"></select>
+        </div>
+      </div>
       <fieldset class="opzioni">
         <legend class="visivo-nascosto">Opzioni di lettura</legend>
         <label class="interruttore" id="riga-log"><input type="checkbox" id="opt-log"><span>Scala logaritmica</span></label>
         <label class="interruttore"><input type="checkbox" id="opt-ultimo"><span>Usa l’ultimo dato disponibile, fino a 10 anni prima</span></label>
         <label class="interruttore" id="riga-aggregati"><input type="checkbox" id="opt-aggregati"><span>Mostra gli aggregati in tabella</span></label>
       </fieldset>
+    </section>
+
+    <section class="blocco" id="blocco-archivi" aria-labelledby="t-archivi">
+      <h2 class="blocco__titolo" id="t-archivi">Archivi parziali del repository</h2>
+      <p class="nota-piccola">FAOSTAT e OCSE: nel repository c’è solo una parte di questi archivi, quindi solo alcuni paesi. Scegli un insieme di dati, poi una serie.</p>
+      <div class="campo">
+        <label for="archivio-dataset">Insieme di dati</label>
+        <select id="archivio-dataset"></select>
+      </div>
+      <p class="nota-piccola" id="archivio-info"></p>
+      <div class="cerca">
+        <label class="visivo-nascosto" for="archivio-cerca">Cerca una serie</label>
+        <svg class="cerca__icona" viewBox="0 0 20 20" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5"/><path d="M13 13l4.5 4.5"/></svg>
+        <input id="archivio-cerca" type="search" placeholder="Cerca una serie, es. nitrogen" autocomplete="off" disabled>
+      </div>
+      <ul class="archivio-serie" id="archivio-serie" aria-label="Serie dell’insieme scelto"></ul>
     </section>
 
     <section class="blocco" aria-labelledby="t-legenda">
@@ -144,21 +186,44 @@
     <button class="pulsante pulsante--icona" id="chiudi-metodo" type="button" aria-label="Chiudi"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 5l10 10 M15 5L5 15"/></svg></button>
   </div>
   <div class="metodo__corpo">
-    <p>L’Atlante legge i dati del repository <strong>open data</strong>: i fogli <em>DATI_NAZIONALI_WB</em> dei lotti 1 e 2, cioè 150 indicatori degli Indicatori di sviluppo mondiale (WDI, World Development Indicators) della Banca Mondiale per 217 paesi ed economie e 49 aggregati. Acquisizione dei lotti: 24 ottobre 2026. Aggiornamento dichiarato dalla fonte: 8 ottobre 2026.</p>
+    <p>L’Atlante mostra tutti i <strong>valori</strong> contenuti nel repository <strong>open data</strong>. I file che contengono solo indici, registri o guide descrivono dati che nel repository non ci sono, e sono elencati qui sotto come tali.</p>
+    <h3>Cosa contiene il repository, lotto per lotto</h3>
+    <div class="metodo__tabella">
+      <table>
+        <thead><tr><th scope="col">Lotto</th><th scope="col">Fonte e contenuto</th><th scope="col">Nel repository</th><th scope="col">Nell’Atlante</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>Banca Mondiale, 50 indicatori; Eurostat, densità e popolazione per età e sesso nelle regioni</td><td>completo</td><td>sì</td></tr>
+          <tr><td>2</td><td>Banca Mondiale, 100 indicatori; Eurostat, nati, decessi e fecondità nelle regioni</td><td>completo</td><td>sì</td></tr>
+          <tr><td>3</td><td>OMS, 20 indicatori; Eurostat, lavoro e altri dati regionali</td><td>solo indice, senza valori</td><td>no</td></tr>
+          <tr><td>4</td><td>FAOSTAT, 12 insiemi di dati</td><td>solo guida</td><td>no</td></tr>
+          <tr><td>5</td><td>OCSE, 3 flussi su istruzione</td><td>archivio 9 di 11: 6 paesi</td><td>sì, parziale</td></tr>
+          <tr><td>6, 7, 8</td><td>ONU, comune di Karlsruhe, FMI (Fondo monetario internazionale)</td><td>solo citati nei riepiloghi</td><td>no</td></tr>
+          <tr><td>9</td><td>FAOSTAT, 7 insiemi di dati</td><td>archivio 1 di 6: da Afghanistan a Cina</td><td>sì, parziale</td></tr>
+          <tr><td>10, 12</td><td>FAOSTAT</td><td>solo guide</td><td>no</td></tr>
+          <tr><td>11</td><td>FAOSTAT, 3 insiemi di dati</td><td>archivio 1 di 5: da Afghanistan a Comore</td><td>sì, parziale</td></tr>
+          <tr><td>13, 14</td><td>FAOSTAT</td><td>indice, guida e parti 8, 9 e 10 del registro: solo identità delle serie</td><td>no</td></tr>
+          <tr><td>15</td><td>FAOSTAT, 3 insiemi di dati</td><td>archivio 2 di 9: 23 paesi</td><td>sì, parziale</td></tr>
+          <tr><td>16, 17</td><td>FAOSTAT</td><td>guide, indice del lotto 17 e documento PDF di chiusura</td><td>no</td></tr>
+          <tr><td>18</td><td>FAOSTAT, 2 insiemi di dati</td><td>archivio 2 di 22: 10 paesi</td><td>sì, parziale</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>Per completare l’Atlante servono gli archivi mancanti dei lotti 3, 4, 5 e da 9 a 18: appena caricati nel repository possono essere aggiunti con gli stessi strumenti.</p>
     <h3>Come leggere i valori</h3>
     <ul>
-      <li>Nessun valore è stimato o interpolato dall’Atlante. Gli anni senza dato restano vuoti: tratteggio sulla mappa, interruzioni nelle linee, “n.d.” (non disponibile) in tabella.</li>
+      <li>Nessun valore è stimato o interpolato dall’Atlante. Gli anni senza dato restano vuoti: tratteggio sulla mappa, interruzioni nelle linee, “n.d.” (non disponibile) in tabella e nel confronto.</li>
+      <li>Archivi parziali: un paese assente non è un dato mancante della fonte, è un file che non è nel repository. La mappa lo mostra in grigio come “non nel repository”.</li>
+      <li>Le tre quote di popolazione per età Eurostat sono calcolate dall’Atlante: popolazione della classe d’età divisa per la popolazione totale, stesso territorio e stesso anno, per 100. Tutti gli altri valori sono quelli della fonte.</li>
       <li>L’opzione “ultimo dato disponibile” riporta il valore più recente dei 10 anni precedenti e mostra sempre l’anno effettivo del dato.</li>
       <li>Per la visualizzazione i valori decimali sono arrotondati a 6 cifre significative; i conteggi interi restano esatti. Il valore originale è negli Excel del repository.</li>
       <li>Le percentuali sono nella scala della fonte: 35 significa 35%.</li>
-      <li>Gli aggregati (Mondo, Unione europea, fasce di reddito) sono calcolati dalla Banca Mondiale e non vanno sommati ai paesi. Compaiono in linee e tabella, non in mappa, bolle e barre.</li>
+      <li>Gli aggregati (Mondo, Unione europea, fasce di reddito) sono calcolati dalle fonti e non vanno sommati ai paesi.</li>
+      <li>Nel confronto, un paese mostra anche i dati Eurostat nazionali (NUTS 0); una regione mostra solo i dati Eurostat, perché la Banca Mondiale pubblica solo dati nazionali.</li>
     </ul>
-    <h3>Mappa e regioni</h3>
-    <p>Confini e regioni dei colori: Natural Earth, scala 1:50 milioni, versione 5.1.2, campo <em>REGION_WB</em>. I confini sono semplificati e non implicano alcuna posizione sullo status dei territori. Gibilterra non ha geometria a questa scala e resta senza regione; Kosovo è collegato al codice XKX della Banca Mondiale.</p>
-    <h3>Cosa non è incluso</h3>
-    <p>I dati territoriali Eurostat (NUTS, Nomenclatura delle unità territoriali statistiche) dei lotti 1 e 2 e i lotti FAOSTAT, OCSE, ONU e FMI successivi non sono ancora rappresentati nell’Atlante.</p>
+    <h3>Mappe</h3>
+    <p>Paesi e regioni del mondo: Natural Earth, scala 1:50 milioni, versione 5.1.2, campi <em>REGION_WB</em> e <em>CONTINENT</em>. Regioni europee: GISCO (Sistema d’informazione geografica della Commissione europea), NUTS (Nomenclatura delle unità territoriali statistiche) versione 2024, scala 1:10 milioni; © EuroGeographics per i confini amministrativi. I codici NUTS storici restano visibili in tabella ma non sulla mappa. I confini sono semplificati e non implicano alcuna posizione sullo status dei territori.</p>
     <h3>Sigle</h3>
-    <p>OMS: Organizzazione mondiale della sanità. OCSE: Organizzazione per la cooperazione e lo sviluppo economico. BIRS: Banca internazionale per la ricostruzione e lo sviluppo. AIS: Associazione internazionale per lo sviluppo. PM2,5: particolato fine con diametro fino a 2,5 micrometri.</p>
+    <p>WDI: Indicatori di sviluppo mondiale della Banca Mondiale. OMS: Organizzazione mondiale della sanità. OCSE: Organizzazione per la cooperazione e lo sviluppo economico. FAOSTAT: banca dati statistica dell’Organizzazione delle Nazioni Unite per l’alimentazione e l’agricoltura. PAM: Programma alimentare mondiale. BIRS: Banca internazionale per la ricostruzione e lo sviluppo. AIS: Associazione internazionale per lo sviluppo. PM2,5: particolato fine con diametro fino a 2,5 micrometri.</p>
   </div>
 </dialog>
 
