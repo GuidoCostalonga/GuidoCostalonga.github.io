@@ -5,7 +5,8 @@
   document.documentElement.lang = 'it';
 
   const $ = (s) => document.querySelector(s);
-  const VISTE = ['mappa', 'bolle', 'linee', 'barre', 'tabella', 'confronta'];
+  const VISTE = ['mappa', 'bolle', 'linee', 'barre', 'sciame', 'pendenza', 'composizione', 'tabella', 'confronta'];
+  const MULTI = ['confronta', 'composizione']; // viste che non usano un solo indicatore
   const RITARDO_MAX = 10;
   const PREDEFINITI = {
     ind: 'SP.DYN.LE00.IN', indX: 'SP.DYN.TFRT.IN', indR: 'SP.POP.TOTL', sel: ['ITA', 'CHN', 'IND', 'USA', 'NGA', 'BRA'],
@@ -20,14 +21,24 @@
     nordamerica: { n: 'America settentrionale e centrale', b: [-168, 7, -52, 72] },
     sudamerica: { n: 'America meridionale', b: [-92, -56, -33, 13] },
     oceania: { n: 'Oceania', b: [110, -48, 180, 0] },
+    regioni_eu: { n: 'Europa: regioni e province (Eurostat)' },
   };
+  // gruppi di indicatori che sommati descrivono un insieme (per la vista Composizione)
+  const COMPOSIZIONI = {
+    eta: { n: 'Popolazione per età', ind: ['SP.POP.0014.TO.ZS', 'SP.POP.1564.TO.ZS', 'SP.POP.65UP.TO.ZS'], et: ['da 0 a 14 anni', 'da 15 a 64 anni', '65 anni e oltre'] },
+    eta_eu: { n: 'Popolazione per età, regioni europee', ind: ['EU_QUOTA_Y_LT15', 'EU_QUOTA_Y1564', 'EU_QUOTA_Y_GE65'], et: ['sotto i 15 anni', 'da 15 a 64 anni', '65 anni e oltre'] },
+    elettricita: { n: 'Elettricità prodotta per fonte', ind: ['EG.ELC.COAL.ZS', 'EG.ELC.NGAS.ZS', 'EG.ELC.PETR.ZS', 'EG.ELC.NUCL.ZS', 'EG.ELC.HYRO.ZS', 'EG.ELC.RNWX.ZS'], et: ['carbone', 'gas naturale', 'petrolio', 'nucleare', 'idroelettrico', 'altre rinnovabili'], nota: 'Le sei fonti possono non arrivare a 100: altre fonti minori non sono pubblicate in queste serie.' },
+    acqua: { n: 'Prelievi di acqua dolce per uso', ind: ['ER.H2O.FWAG.ZS', 'ER.H2O.FWDM.ZS', 'ER.H2O.FWIN.ZS'], et: ['agricoltura', 'uso domestico', 'industria'] },
+  };
+  // colori delle componenti: tavolozza categoriale validata, in ordine fisso
+  const COLORI_COMP = ['--c1', '--c2', '--c3', '--c4', '--c5', '--c6'];
   const MESI = ['gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno', 'luglio', 'agosto', 'settembre', 'ottobre', 'novembre', 'dicembre'];
   const movimentoRidotto = matchMedia('(prefers-reduced-motion: reduce)');
 
   const S = {
     vista: 'mappa', ind: PREDEFINITI.ind, indX: PREDEFINITI.indX, indR: PREDEFINITI.indR,
     anno: 2024, sel: PREDEFINITI.sel.slice(), regione: null, ultimo: false, aggregati: false,
-    area: 'mondo', livello: 2, paeseEU: '', temaConf: 'sal',
+    area: 'mondo', livello: 2, paeseEU: '', temaConf: 'sal', comp: 'eta', annoDa: null,
     log: {}, ordineBarre: 'desc', tutteBarre: false, ordTab: { col: 'v', dir: 'desc' }, inRiproduzione: false,
   };
 
@@ -36,7 +47,7 @@
   let vista = null;
 
   /* ---------- memoria locale (facoltativa) ---------- */
-  const CHIAVI = ['ind', 'indX', 'indR', 'sel', 'ultimo', 'aggregati', 'area', 'livello', 'paeseEU', 'temaConf'];
+  const CHIAVI = ['ind', 'indX', 'indR', 'sel', 'ultimo', 'aggregati', 'area', 'livello', 'paeseEU', 'temaConf', 'comp'];
   function leggiStato() {
     try {
       const s = JSON.parse(localStorage.getItem('atlante-dati') || 'null');
@@ -49,7 +60,7 @@
 
   /* ---------- formati ---------- */
   const nf = (o) => new Intl.NumberFormat('it-IT', o);
-  const F = { int: nf({ maximumFractionDigits: 0 }), d1: nf({ maximumFractionDigits: 1 }), d2: nf({ maximumFractionDigits: 2 }), s3: nf({ maximumSignificantDigits: 3 }) };
+  const F = { int: nf({ maximumFractionDigits: 0, useGrouping: 'always' }), d1: nf({ maximumFractionDigits: 1 }), d2: nf({ maximumFractionDigits: 2 }), s3: nf({ maximumSignificantDigits: 3 }) };
   function fmt(v) {
     if (v == null || Number.isNaN(v)) return 'n.d.';
     const a = Math.abs(v);
@@ -81,6 +92,7 @@
     const g = (n) => cs.getPropertyValue(n).trim();
     colori = { seq0: g('--seq-0'), seq1: g('--seq-1'), grafite: g('--grafite'), carta: g('--carta'), vuoto: g('--vuoto'), trama: g('--vuoto-trama'), altro: g('--carta-3'), neutro: g('--grafite-3') };
     META.regioni.forEach((r, i) => { colori[r.k] = g('--r' + (i + 1)); });
+    colori.comp = COLORI_COMP.map(g);
   }
   function coloreRegione(id) {
     const t = T[id]; if (!t) return colori.grafite;
@@ -258,7 +270,16 @@
     const area = $('#area-mappa');
     Object.entries(AREE).forEach(([k, a]) => { const o = document.createElement('option'); o.value = k; o.textContent = a.n; area.appendChild(o); });
     area.value = S.area;
-    area.addEventListener('change', () => { S.area = area.value; salvaStato(); cambia(); });
+    area.addEventListener('change', () => {
+      if (area.value === 'regioni_eu') { S.ind = PREDEFINITI.eu.ind; S.livello = 2; S.paeseEU = ''; allineaFamiglie(); salvaStato(); cambia(); return; }
+      S.area = area.value; salvaStato(); cambia();
+    });
+    // composizione
+    const cp = $('#gruppo-composizione');
+    cp.innerHTML = Object.entries(COMPOSIZIONI).map(([k, c]) => `<option value="${k}">${esc(c.n)}</option>`).join('');
+    if (!COMPOSIZIONI[S.comp]) S.comp = 'eta';
+    cp.value = S.comp;
+    cp.addEventListener('change', () => { S.comp = cp.value; salvaStato(); cambia(); });
     // livello e paese per i dati regionali
     const liv = $('#livello-nuts');
     LIVELLI.forEach((n, i) => { const o = document.createElement('option'); o.value = i; o.textContent = n; liv.appendChild(o); });
@@ -375,7 +396,7 @@
         const id = `A:${sel.value}:${b.dataset.i}`;
         await registraSerie(id);
         S.ind = id; allineaFamiglie(); riempiSelezioni(); salvaStato();
-        if (S.vista === 'confronta' || S.vista === 'bolle') S.vista = 'mappa';
+        if (MULTI.includes(S.vista) || S.vista === 'bolle') S.vista = 'mappa';
         S.area = 'mondo';
         const sd = (await carica(id)), conta = {};
         Object.values(sd.d).forEach((a) => a.forEach((v, k) => { if (v != null) conta[sd.y0 + k] = (conta[sd.y0 + k] || 0) + 1; }));
@@ -442,6 +463,7 @@
   function intervalloAnni() {
     if (S.vista === 'bolle') { const x = IND[S.indX], y = IND[S.ind]; return [Math.max(x.y0, y.y0), Math.max(Math.max(x.y0, y.y0), Math.min(x.y1, y.y1))]; }
     if (S.vista === 'confronta') { const v = Object.values(IND).filter((i) => i.t === S.temaConf); return [d3.min(v, (i) => i.y0), d3.max(v, (i) => i.y1)]; }
+    if (S.vista === 'composizione') { const v = COMPOSIZIONI[S.comp].ind.map((c) => IND[c]); return [d3.min(v, (i) => i.y0), d3.max(v, (i) => i.y1)]; }
     return [IND[S.ind].y0, IND[S.ind].y1];
   }
   function impostaAnno(y, anima) {
@@ -486,9 +508,10 @@
   function disegnaCopertura(a0, a1) {
     const svg = d3.select('#copertura');
     const w = svg.node().getBoundingClientRect().width || 300, h = 24;
-    const univ = S.vista === 'confronta' ? [] : universo(S.ind);
+    const multi = MULTI.includes(S.vista);
+    const univ = multi ? [] : universo(S.ind);
     const conteggi = [];
-    for (let y = a0; y <= a1; y++) conteggi.push({ y, n: S.vista === 'confronta' ? 0 : contaConDato(y, univ) });
+    for (let y = a0; y <= a1; y++) conteggi.push({ y, n: multi ? 0 : contaConDato(y, univ) });
     const x = d3.scaleLinear().domain([a0, a1]).range([0, w]);
     const bw = Math.max(1, Math.min(8, w / (a1 - a0 + 1) - 1.5));
     const hy = d3.scaleLinear().domain([0, Math.max(1, univ.length)]).range([0, h - 2]);
@@ -497,7 +520,7 @@
       .attr('x', (d) => (a1 === a0 ? w / 2 : x(d.y)) - bw / 2).attr('width', bw)
       .attr('y', (d) => h - Math.max(d.n ? 1.5 : 0, hy(d.n))).attr('height', (d) => Math.max(d.n ? 1.5 : 0, hy(d.n)))
       .attr('rx', 1).classed('attivo', (d) => d.y === S.anno);
-    $('.tempo__copertura-nota').textContent = S.vista === 'confronta' ? '' : `Altezza delle barrette: ${famTerr(S.ind) === 'nuts' ? 'territori' : 'paesi'} con dato in ciascun anno`;
+    $('.tempo__copertura-nota').textContent = multi ? '' : `Altezza delle barrette: ${famTerr(S.ind) === 'nuts' ? 'territori' : 'paesi'} con dato in ciascun anno`;
   }
   function contaConDato(y, univ) {
     const dy = cache[S.ind + '_r']; if (!dy) return 0;
@@ -513,6 +536,7 @@
     let caricare = [S.ind];
     if (S.vista === 'bolle') caricare.push(S.indX, S.indR);
     if (S.vista === 'confronta') caricare = Object.values(IND).filter((i) => i.t === S.temaConf).map((i) => i.c);
+    if (S.vista === 'composizione') caricare = COMPOSIZIONI[S.comp].ind.slice();
     const lento = setTimeout(() => { $('#carico').hidden = false; }, 200);
     let dati;
     try { dati = await Promise.all(caricare.map(carica)); } catch (e) {
@@ -520,8 +544,9 @@
     }
     clearTimeout(lento); $('#carico').hidden = true; $('#carico').textContent = 'Carico i dati…';
     caricare.forEach((c, i) => { cache[c + '_r'] = dati[i]; });
-    if (S.vista !== 'confronta') caricaNote(S.ind);
-    if (S.vista !== 'confronta' && !cache[S.ind + '_r']) { cache[S.ind + '_r'] = await carica(S.ind); }
+    const multi = MULTI.includes(S.vista);
+    if (!multi) caricaNote(S.ind);
+    if (!multi && !cache[S.ind + '_r']) { cache[S.ind + '_r'] = await carica(S.ind); }
 
     const [a0, a1] = intervalloAnni();
     S.anno = Math.max(a0, Math.min(a1, S.anno));
@@ -532,21 +557,22 @@
     document.querySelectorAll('.schede [role="tab"]').forEach((b) => {
       const on = b.dataset.vista === S.vista;
       b.setAttribute('aria-selected', on ? 'true' : 'false'); b.tabIndex = on ? 0 : -1;
+      if (on) { const c = b.parentElement; c.scrollLeft = Math.max(0, b.offsetLeft - c.clientWidth / 2 + b.offsetWidth / 2); }
     });
     $('#scena').setAttribute('aria-labelledby', 'tab-' + S.vista + ' titolo-vista');
     $('#etichetta-principale').textContent = S.vista === 'bolle' ? 'Asse verticale' : 'Indicatore';
     riempiSelezioni();
-    if (S.vista !== 'confronta') {
+    if (!multi) {
       const cl = codiceLog(), st = stat(cl);
       $('#opt-log').disabled = !st.positivi;
       $('#opt-log').checked = usaLog(cl);
       $('#riga-log').querySelector('span').textContent = S.vista === 'bolle' ? 'Scala logaritmica sull’asse orizzontale' : 'Scala logaritmica';
       $('#riga-log').title = st.positivi ? '' : 'Non disponibile: l’indicatore contiene valori nulli o negativi';
     }
-    $('#riga-log').hidden = !['mappa', 'bolle', 'linee'].includes(S.vista);
+    $('#riga-log').hidden = !['mappa', 'bolle', 'linee', 'sciame', 'pendenza'].includes(S.vista);
     $('#riga-aggregati').hidden = S.vista !== 'tabella';
     $('#campo-area').hidden = !(S.vista === 'mappa' && famTerr(S.ind) === 'paesi');
-    $('#campi-nuts').hidden = !(famTerr(S.ind) === 'nuts' && S.vista !== 'confronta');
+    $('#campi-nuts').hidden = !(famTerr(S.ind) === 'nuts' && !multi);
     $('#livello-nuts').value = S.livello; $('#paese-nuts').value = S.paeseEU; $('#area-mappa').value = S.area;
 
     intestazione();
@@ -567,6 +593,19 @@
   }
   function intestazione() {
     const sd = (id, html) => { $(id).innerHTML = html; };
+    if (S.vista === 'composizione') {
+      const c = COMPOSIZIONI[S.comp], v = c.ind.map((k) => IND[k]);
+      $('#titolo-vista').textContent = c.n;
+      $('#unita-vista').textContent = v[0].u;
+      sd('#sd-unita', esc(v[0].u));
+      const [a0, a1] = intervalloAnni();
+      sd('#sd-periodo', `dal ${a0} al ${a1}`);
+      sd('#sd-fonte', [...new Set(v.map((i) => (i.fam === 'eu' ? 'Eurostat, ' + i.ds : 'Banca Mondiale, WDI')))].join('<br>'));
+      sd('#sd-agg', `fonte: ${data(d3.max(v, (i) => i.agg))}<br>acquisizione: ${data(META.acquisizione['1'])}`);
+      $('#def-testo').textContent = `Componenti: ${v.map((i, k) => `${c.et[k]} (${i.c})`).join(', ')}. ${c.nota || ''}`;
+      $('#def-fonte').textContent = 'Ogni riquadro è un territorio selezionato. Le fasce sono impilate: lo spessore di ciascuna è il suo valore, l’altezza totale la somma. Gli anni senza tutte le componenti restano vuoti.';
+      return;
+    }
     if (S.vista === 'confronta') {
       $('#titolo-vista').textContent = `Confronto · ${META.temi[S.temaConf]}`;
       $('#unita-vista').textContent = 'valori nell’anno scelto';
@@ -614,9 +653,10 @@
     return out;
   }
   function aggiornaMancanti() {
-    if (S.vista === 'confronta') {
+    if (MULTI.includes(S.vista)) {
       $('#sd-mancanti').innerHTML = '<span class="campione-vuoto" aria-hidden="true"></span><span>indicati con “n.d.” nella griglia</span>';
-      $('#def-mancanti').textContent = 'Vedi le celle “n.d.” della griglia.';
+      $('#def-mancanti').textContent = S.vista === 'confronta' ? 'Vedi le celle “n.d.” della griglia.' : 'Nei riquadri gli anni senza dato restano vuoti.';
+      if (S.vista === 'composizione') $('#sd-mancanti').innerHTML = '<span class="campione-vuoto" aria-hidden="true"></span><span>anni senza tutte le componenti lasciati vuoti</span>';
       disegnaCopertura(...intervalloAnni()); return;
     }
     const m = mancanti(), tot = universo(S.ind).length, i = IND[S.ind];
@@ -629,6 +669,13 @@
   }
   function aggiornaEvidenza() {
     const el = $('#evidenza');
+    if (S.vista === 'composizione') {
+      const c = COMPOSIZIONI[S.comp], primo = S.sel.map((s) => idPer(c.ind[0], s)).find((id) => id && cache[c.ind[0] + '_r'].d[id]);
+      if (!primo) { el.textContent = 'Seleziona uno o più territori per vedere come si compone il totale nel tempo.'; return; }
+      const parti = c.ind.map((k, j) => { const r = valore(cache[k + '_r'], primo, S.anno); return r ? `${c.et[j]} <strong>${fmt(r.v)}</strong>` : null; }).filter(Boolean);
+      el.innerHTML = parti.length ? `${esc(T[primo].n)} nel <strong>${S.anno}</strong>: ${parti.join(', ')} (${esc(IND[c.ind[0]].u)}).` : `${esc(T[primo].n)}: nessun dato nel ${S.anno}.`;
+      return;
+    }
     if (S.vista === 'confronta') {
       const n = S.sel.length;
       el.innerHTML = n < 2 ? 'Seleziona almeno <strong>due territori</strong> nel pannello: paesi, aggregati o regioni europee. Oppure usa uno dei confronti pronti.' : `Nel <strong>${S.anno}</strong>: ${n} territori a confronto.`;
@@ -688,6 +735,12 @@
         svg.append('text').attr('x', maxR * 2 + 20).attr('y', cy - rr + 4).text(fmt(v));
       });
       nota.textContent = 'Colore = regione del mondo. Tocca una regione per metterla in risalto.';
+    } else if (S.vista === 'composizione') {
+      const c = COMPOSIZIONI[S.comp];
+      lv.innerHTML = '<ul class="legenda-comp">' + c.et.map((e, k) => `<li><span class="pallino" style="background:${colori.comp[k]}"></span>${esc(e)}</li>`).join('') + '</ul>';
+      nota.textContent = 'Le regioni del mondo non colorano questa vista: i colori indicano le componenti.';
+    } else if (S.vista === 'sciame') {
+      nota.textContent = 'Ogni punto è un territorio, colorato per regione del mondo. La linea verticale è la mediana dei territori con dato.';
     } else if (S.vista === 'linee') {
       const rif = fam(S.ind) === 'eu' ? 'Unione europea a 27' : fam(S.ind) === 'wb' ? 'Mondo, media della Banca Mondiale' : '';
       lv.innerHTML = `<svg viewBox="0 0 300 40" role="img" aria-label="Legenda delle linee">${rif ? `<line x1="0" x2="26" y1="10" y2="10" class="linea linea--mondo"></line><text x="34" y="14">${rif}</text>` : ''}<line x1="0" x2="26" y1="30" y2="30" style="stroke:${colori.grafite};stroke-opacity:.25"></line><text x="34" y="34">Tutti gli altri territori</text></svg>`;
@@ -1107,6 +1160,169 @@
     aggiorna();
     return { aggiorna, selezione: aggiorna };
   };
+
+  // DISTRIBUZIONE: tutti i territori come punti su un asse, per vedere dove si addensano
+  VISTE_IMPL.sciame = function (el) {
+    const cod = S.ind, d = cache[cod + '_r'], st = stat(cod), univ = universo(cod);
+    const W = el.clientWidth, H = el.clientHeight, stretto = W < 560;
+    const m = { t: 30, r: 24, b: 44, l: 24 };
+    const w = W - m.l - m.r, h = H - m.t - m.b;
+    const lg = usaLog(cod);
+    const x = (lg ? d3.scaleLog().domain([st.min / 1.05, st.max * 1.05]) : d3.scaleLinear().domain([st.min, st.max]).nice()).range([0, w]);
+    const r = univ.length > 600 ? 2.6 : univ.length > 250 ? 3.6 : 5;
+    const svg = d3.select(el).append('svg').attr('viewBox', `0 0 ${W} ${H}`).attr('role', 'img').attr('aria-label', `Distribuzione dei territori per ${IND[cod].n}`);
+    const g = svg.append('g').attr('transform', `translate(${m.l},${m.t})`);
+    const tx = lg ? x.ticks(6).filter((v) => /^[125]/.test(String(v).replace(/^0\.0*/, ''))) : x.ticks(stretto ? 5 : 9);
+    g.append('g').attr('class', 'asse').attr('transform', `translate(0,${h})`).call(d3.axisBottom(x).tickValues(tx).tickFormat(fmtAsse).tickSize(-h).tickPadding(8));
+    g.append('text').attr('class', 'etichetta-asse').attr('x', w).attr('y', h + 38).attr('text-anchor', 'end').text(`${IND[cod].n} (${IND[cod].u})${lg ? ', scala logaritmica' : ''} →`);
+    const med = g.append('g').attr('class', 'mediana');
+    med.append('line').attr('y1', -8).attr('y2', h);
+    const medT = med.append('text').attr('y', -14).attr('text-anchor', 'middle');
+    const strato = g.append('g'), etich = g.append('g');
+    // disposizione a sciame: ogni punto sale o scende finché non tocca i vicini già piazzati
+    function disponi(punti) {
+      const ord = punti.slice().sort((a, b) => a.px - b.px), messi = [], cy = h / 2, d2 = (2 * r + 0.6) ** 2;
+      for (const p of ord) {
+        let dy = 0;
+        for (let k = 0; k < 400; k++) {
+          const cand = k === 0 ? 0 : Math.ceil(k / 2) * (r * 0.9) * (k % 2 ? -1 : 1);
+          const ok = !messi.some((q) => Math.abs(q.px - p.px) < 2 * r + 1 && (q.px - p.px) ** 2 + (q.py - (cy + cand)) ** 2 < d2);
+          if (ok) { dy = cand; break; }
+        }
+        p.py = Math.max(r, Math.min(h - r, cy + dy)); messi.push(p);
+      }
+      return ord;
+    }
+    const aggiorna = (anima) => {
+      const punti = disponi(univ.map((t) => ({ id: t.id, r: valore(d, t.id, S.anno) })).filter((o) => o.r && (!lg || o.r.v > 0)).map((o) => ({ ...o, px: x(o.r.v) })));
+      const t = d3.transition().duration(anima ? durata() : 0).ease(S.inRiproduzione ? d3.easeLinear : d3.easeCubicOut);
+      const sel = strato.selectAll('circle').data(punti, (o) => o.id).join(
+        (en) => en.append('circle').attr('class', 'bolla').attr('r', 0).attr('cx', (o) => o.px).attr('cy', (o) => o.py).style('fill', (o) => coloreRegione(o.id)).style('fill-opacity', 0.88),
+        (up) => up, (ex) => ex.transition(t).attr('r', 0).remove());
+      sel.transition(t).attr('cx', (o) => o.px).attr('cy', (o) => o.py).attr('r', (o) => (selezionato(cod, o.id) ? r + 2.5 : r));
+      sel.classed('bolla--sel', (o) => selezionato(cod, o.id)).classed('bolla--spenta', (o) => spento(o.id));
+      sel.filter((o) => selezionato(cod, o.id)).raise();
+      sel.on('pointermove', (ev, o) => mostraSuggerimento(ev, intestazioneSug(o.id) + rigaValore(cod, o.id))).on('pointerleave', (ev) => { if (ev.pointerType !== 'touch') nascondiSuggerimento(); })
+        .on('click', (ev, o) => attivaDaVista(o.id));
+      const v = punti.map((o) => o.r.v).sort((a, b) => a - b);
+      if (v.length) { const mv = d3.median(v); med.style('opacity', 1); (anima ? med.transition(t) : med).attr('transform', `translate(${x(mv)},0)`); medT.text(`mediana ${fmt(mv)}`); } else med.style('opacity', 0);
+      const lab = punti.filter((o) => selezionato(cod, o.id)).sort((a, b) => a.px - b.px);
+      lab.forEach((o, k) => { o.ly = o.py - r - 6 - (k % 2) * 13; });
+      const ts = etich.selectAll('text').data(lab, (o) => o.id).join((en) => en.append('text').attr('class', 'etichetta-dato').attr('text-anchor', 'middle'));
+      ts.text((o) => T[o.id].n);
+      (anima ? ts.transition(t) : ts).attr('x', (o) => Math.max(30, Math.min(w - 30, o.px))).attr('y', (o) => o.ly);
+    };
+    aggiorna(false);
+    return { aggiorna, selezione: () => aggiorna(false) };
+  };
+
+  // PENDENZA: come cambia ogni territorio fra due anni
+  VISTE_IMPL.pendenza = function (el) {
+    const cod = S.ind, d = cache[cod + '_r'], univ = universo(cod);
+    const [a0, a1] = intervalloAnni();
+    if (S.annoDa == null || S.annoDa < a0 || S.annoDa >= a1) S.annoDa = Math.max(a0, a1 - 20);
+    const W = el.clientWidth, H = el.clientHeight, stretto = W < 560;
+    const comandi = d3.select(el).append('div').attr('class', 'pendenza__comandi');
+    comandi.append('label').attr('for', 'anno-da').text('Confronta il');
+    const selDa = comandi.append('select').attr('id', 'anno-da');
+    selDa.selectAll('option').data(d3.range(a0, a1)).join('option').attr('value', (y) => y).text((y) => y);
+    selDa.property('value', S.annoDa).on('change', function () { S.annoDa = +this.value; if (S.anno <= S.annoDa) S.anno = Math.min(a1, S.annoDa + 1); cambia(); });
+    comandi.append('span').text('con l’anno della linea del tempo');
+    const m = { t: 84, r: stretto ? 96 : 170, b: 30, l: stretto ? 96 : 170 };
+    const w = W - m.l - m.r, h = H - m.t - m.b;
+    const svg = d3.select(el).append('svg').attr('viewBox', `0 0 ${W} ${H}`).attr('role', 'img').attr('aria-label', `Variazione di ${IND[cod].n} fra due anni`);
+    const g = svg.append('g').attr('transform', `translate(${m.l},${m.t})`);
+    const rif = fam(cod) === 'wb' ? 'WLD' : fam(cod) === 'eu' ? 'EU:EU27_2020' : null;
+    const aggiorna = () => {
+      g.selectAll('*').remove();
+      const ya = S.annoDa, yb = Math.max(S.anno, ya + 1);
+      const coppie = univ.map((t) => ({ id: t.id, a: valore(d, t.id, ya), b: valore(d, t.id, yb) })).filter((o) => o.a && o.b);
+      const scelti = [...new Set(S.sel.map((s) => idPer(cod, s)))].filter((id) => id && d.d[id]);
+      if (rif && d.d[rif] && !scelti.includes(rif)) scelti.push(rif);
+      const evid = scelti.map((id) => ({ id, a: valore(d, id, ya), b: valore(d, id, yb) })).filter((o) => o.a && o.b);
+      const tutti = coppie.concat(evid);
+      if (!tutti.length) { g.append('text').attr('class', 'etichetta-asse').attr('x', w / 2).attr('y', h / 2).attr('text-anchor', 'middle').text(`Nessun territorio ha dati sia nel ${ya} sia nel ${yb}.`); return; }
+      const lg = usaLog(cod);
+      const ext = d3.extent(tutti.flatMap((o) => [o.a.v, o.b.v]));
+      const y = (lg && ext[0] > 0 ? d3.scaleLog().domain([ext[0] / 1.05, ext[1] * 1.05]) : d3.scaleLinear().domain(ext).nice()).range([h, 0]);
+      [[0, ya], [w, yb]].forEach(([xx, anno]) => {
+        g.append('line').attr('class', 'pendenza__asse').attr('x1', xx).attr('x2', xx).attr('y1', -8).attr('y2', h);
+        g.append('text').attr('class', 'pendenza__anno').attr('x', xx).attr('y', -22).attr('text-anchor', 'middle').text(anno);
+      });
+      g.append('g').selectAll('line').data(coppie.filter((o) => !scelti.includes(o.id))).join('line')
+        .attr('class', 'linea--fondo').attr('x1', 0).attr('x2', w).attr('y1', (o) => y(o.a.v)).attr('y2', (o) => y(o.b.v))
+        .style('stroke', colori.grafite).style('stroke-opacity', 0.08)
+        .on('pointermove', (ev, o) => mostraSuggerimento(ev, intestazioneSug(o.id) + `<div class="suggerimento__riga"><span>${ya}</span><strong>${fmt(o.a.v)}</strong></div><div class="suggerimento__riga"><span>${yb}</span><strong>${fmt(o.b.v)}</strong></div>`))
+        .on('pointerleave', nascondiSuggerimento).on('click', (ev, o) => attivaDaVista(o.id));
+      const colore = (id) => (eAggregato(id) ? colori.grafite : coloreRegione(id));
+      const ge = g.append('g');
+      ge.selectAll('line').data(evid).join('line').attr('class', (o) => 'linea' + (eAggregato(o.id) ? ' linea--mondo' : ''))
+        .attr('x1', 0).attr('x2', w).attr('y1', (o) => y(o.a.v)).attr('y2', (o) => y(o.b.v)).style('stroke', (o) => colore(o.id)).style('stroke-width', 2.4)
+        .style('opacity', (o) => (spento(o.id) && !eAggregato(o.id) ? 0.25 : 1));
+      ge.selectAll('circle.s').data(evid).join('circle').attr('class', 's').attr('r', 4.5).attr('cx', 0).attr('cy', (o) => y(o.a.v)).style('fill', (o) => colore(o.id)).style('stroke', colori.carta).style('stroke-width', 2);
+      ge.selectAll('circle.e').data(evid).join('circle').attr('class', 'e').attr('r', 4.5).attr('cx', w).attr('cy', (o) => y(o.b.v)).style('fill', (o) => colore(o.id)).style('stroke', colori.carta).style('stroke-width', 2);
+      // etichette distanziate sui due lati
+      const lato = (chiave, xx, anchor) => {
+        const e = evid.map((o) => ({ o, y: y(o[chiave].v) })).sort((p, q) => p.y - q.y);
+        for (let k = 1; k < e.length; k++) if (e[k].y - e[k - 1].y < 15) e[k].y = e[k - 1].y + 15;
+        ge.append('g').selectAll('text').data(e).join('text').attr('class', (p) => 'etichetta-dato' + (eAggregato(p.o.id) ? ' etichetta-dato--tenue' : ''))
+          .attr('x', xx).attr('y', (p) => p.y + 4).attr('text-anchor', anchor)
+          .text((p) => (chiave === 'a' ? `${nomeRif(p.o.id)} ${fmt(p.o.a.v)}` : `${fmt(p.o.b.v)} ${nomeRif(p.o.id)}`));
+      };
+      lato('a', -10, 'end'); lato('b', w + 10, 'start');
+    };
+    aggiorna();
+    return { aggiorna, selezione: aggiorna };
+  };
+
+  // COMPOSIZIONE: fasce impilate nel tempo, un riquadro per ogni territorio selezionato
+  VISTE_IMPL.composizione = function (el) {
+    const c = COMPOSIZIONI[S.comp], dati = c.ind.map((k) => cache[k + '_r']);
+    const terr = [...new Set(S.sel.map((s) => idPer(c.ind[0], s)))].filter((id) => id && dati.some((d) => d.d[id])).slice(0, 6);
+    const box = d3.select(el).append('div').attr('class', 'multipli');
+    if (!terr.length) {
+      box.append('p').attr('class', 'confronto__vuoto').text(`Seleziona uno o più territori con dati per “${c.n}”: ${IND[c.ind[0]].fam === 'eu' ? 'regioni o paesi europei' : 'paesi o aggregati'}.`);
+      return { aggiorna: () => {} };
+    }
+    const y0 = d3.min(dati, (d) => d.y0), y1 = d3.max(dati, (d) => d.y1);
+    const anni = d3.range(y0, y1 + 1);
+    const W = el.clientWidth, H = el.clientHeight;
+    const col = W < 560 ? 1 : terr.length <= 2 ? terr.length : terr.length <= 4 ? 2 : 3;
+    const righe = Math.ceil(terr.length / col);
+    const cw = (W - 12) / col, ch = Math.max(170, (H - 12) / righe);
+    const pannelli = [];
+    terr.forEach((id) => {
+      const serie = anni.map((anno) => {
+        const v = dati.map((d) => { const a = d.d[id]; const i = anno - d.y0; return a && i >= 0 && i < a.length ? a[i] : null; });
+        return { anno, v, ok: v.every((x) => x != null) };
+      });
+      const max = Math.max(100, d3.max(serie, (o) => (o.ok ? d3.sum(o.v) : 0)) || 0);
+      const m = { t: 26, r: 10, b: 22, l: 34 };
+      const w = cw - m.l - m.r, h = ch - m.t - m.b;
+      const svg = box.append('svg').attr('width', cw).attr('height', ch).style('width', cw + 'px').style('height', ch + 'px').attr('role', 'img').attr('aria-label', `${c.n}: ${T[id].n}`);
+      svg.append('text').attr('class', 'multipli__titolo').attr('x', m.l).attr('y', 16).text(T[id].n);
+      const g = svg.append('g').attr('transform', `translate(${m.l},${m.t})`);
+      const x = d3.scaleLinear().domain([y0, y1]).range([0, w]);
+      const y = d3.scaleLinear().domain([0, max]).range([h, 0]);
+      g.append('g').attr('class', 'asse').call(d3.axisLeft(y).ticks(4).tickSize(-w).tickPadding(4).tickFormat(fmtAsse));
+      g.append('g').attr('class', 'asse asse--base').attr('transform', `translate(0,${h})`).call(d3.axisBottom(x).ticks(Math.min(5, y1 - y0)).tickFormat(d3.format('d')).tickSizeOuter(0));
+      const pila = d3.stack().keys(c.ind.map((_, k) => k)).value((o, k) => (o.ok ? o.v[k] : 0))(serie);
+      const area = d3.area().defined((p) => p.data.ok).x((p) => x(p.data.anno)).y0((p) => y(p[0])).y1((p) => y(p[1]));
+      g.append('g').selectAll('path').data(pila).join('path').attr('d', area).style('fill', (_, k) => colori.comp[k]).style('fill-opacity', 0.9).style('stroke', colori.carta).style('stroke-width', 0.8);
+      const cur = g.append('line').attr('class', 'cursore-anno').attr('y1', 0).attr('y2', h);
+      g.append('rect').attr('width', w).attr('height', h).style('fill', 'transparent')
+        .on('pointermove', (ev) => {
+          const [px] = d3.pointer(ev, g.node()); const anno = Math.round(x.invert(px)); const o = serie.find((q) => q.anno === anno); if (!o) return;
+          mostraSuggerimento(ev, `<div class="suggerimento__nome">${esc(T[id].n)}, ${anno}</div>` + c.et.map((e, k) => `<div class="suggerimento__riga"><span><span class="pallino" style="background:${colori.comp[k]}"></span>${esc(e)}</span><strong>${o.v[k] == null ? 'n.d.' : fmt(o.v[k])}</strong></div>`).join('') + `<div class="suggerimento__nota">${esc(IND[c.ind[0]].u)}</div>`);
+        }).on('pointerleave', nascondiSuggerimento)
+        .on('click', (ev) => { const [px] = d3.pointer(ev, g.node()); ferma(); impostaAnno(Math.round(x.invert(px)), true); });
+      pannelli.push({ cur, x });
+    });
+    const aggiorna = (anima) => pannelli.forEach((p) => { const cx = p.x(S.anno); (anima && durata() ? p.cur.transition().duration(durata()).ease(d3.easeLinear) : p.cur).attr('x1', cx).attr('x2', cx); });
+    aggiorna(false);
+    return { aggiorna, selezione: () => cambia() };
+  };
+
   const PRESET = [
     { n: 'Friuli Venezia Giulia e vicini', ids: ['EU:ITH4', 'EU:ITH3', 'EU:AT21', 'EU:SI04', 'EU:IT'] },
     { n: 'Province del Friuli Venezia Giulia', ids: ['EU:ITH41', 'EU:ITH42', 'EU:ITH43', 'EU:ITH44', 'EU:ITH4'] },

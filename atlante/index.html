@@ -22,7 +22,10 @@
       <p class="testata__sotto">Banca Mondiale, Eurostat, FAOSTAT e OCSE: 217 paesi e oltre 2.000 regioni europee, dal 1960 a oggi</p>
     </div>
   </div>
-  <button class="pulsante pulsante--testo" id="apri-metodo" type="button" aria-haspopup="dialog">Fonti e metodo</button>
+  <nav class="testata__link" aria-label="Pagine">
+    <a class="pulsante pulsante--testo" href="scheda-fvg.html">Scheda: Friuli Venezia Giulia in Europa</a>
+    <button class="pulsante pulsante--testo" id="apri-metodo" type="button" aria-haspopup="dialog">Fonti e metodo</button>
+  </nav>
 </header>
 
 <div class="app">
@@ -32,6 +35,9 @@
       <button role="tab" id="tab-bolle" data-vista="bolle" aria-controls="scena" type="button"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="6" cy="13" r="3.5"/><circle cx="13" cy="7" r="4.5"/><circle cx="15.5" cy="15" r="2"/></svg>Bolle</button>
       <button role="tab" id="tab-linee" data-vista="linee" aria-controls="scena" type="button"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M2 15l5-5 4 3 7-8"/></svg>Linee</button>
       <button role="tab" id="tab-barre" data-vista="barre" aria-controls="scena" type="button"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 4h13 M3 8h9 M3 12h11 M3 16h6"/></svg>Barre</button>
+      <button role="tab" id="tab-sciame" data-vista="sciame" aria-controls="scena" type="button"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="4" cy="10" r="1.6"/><circle cx="8" cy="8" r="1.6"/><circle cx="8" cy="12" r="1.6"/><circle cx="12" cy="10" r="1.6"/><circle cx="12" cy="6" r="1.6"/><circle cx="12" cy="14" r="1.6"/><circle cx="16" cy="10" r="1.6"/></svg>Distribuzione</button>
+      <button role="tab" id="tab-pendenza" data-vista="pendenza" aria-controls="scena" type="button"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 3v14 M16 3v14 M4 13l12-7 M4 7l12 5"/></svg>Pendenza</button>
+      <button role="tab" id="tab-composizione" data-vista="composizione" aria-controls="scena" type="button"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M2 16l5-4 5 2 6-5v7z M2 12l5-5 5 3 6-6"/></svg>Composizione</button>
       <button role="tab" id="tab-tabella" data-vista="tabella" aria-controls="scena" type="button"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M2 4h16v12H2z M2 8h16 M2 12h16 M8 4v12"/></svg>Tabella</button>
       <button role="tab" id="tab-confronta" data-vista="confronta" aria-controls="scena" type="button"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 16V8 M8 16V4 M12 16V10 M17 16V6 M2 17h16"/></svg>Confronta</button>
     </div>
@@ -92,6 +98,10 @@
 
     <section class="blocco" aria-labelledby="t-indicatori">
       <h2 class="blocco__titolo" id="t-indicatori">Indicatori</h2>
+      <div class="campo campo--composizione">
+        <label for="gruppo-composizione">Insieme da scomporre</label>
+        <select id="gruppo-composizione"></select>
+      </div>
       <div class="campo campo--confronta">
         <label for="tema-confronto">Gruppo di indicatori da confrontare</label>
         <select id="tema-confronto"></select>
