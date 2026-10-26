@@ -7,7 +7,7 @@ Sito di esplorazione di tutti i valori contenuti nel repository. La struttura se
 | Famiglia | Fonte | Lotti | Copertura nel repository |
 |---|---|---|---|
 | Indicatori nazionali | Banca Mondiale, WDI (Indicatori di sviluppo mondiale): 150 indicatori | 1 e 2 | completa: 217 paesi e 49 aggregati, dal 1960 |
-| Regioni europee | Eurostat, 5 dataset demografici per territorio NUTS: 21 serie più 3 quote per età calcolate | 1 e 2 | completa: 37 paesi, livelli NUTS da 0 a 3, dal 1990 |
+| Regioni europee | Eurostat: 5 dataset demografici dei lotti 1 e 2 (21 serie più 3 quote per età calcolate) e 60 dataset regionali scaricati dall’API di Eurostat (160 indicatori su popolazione, economia, lavoro, istruzione, ricerca, salute, condizioni di vita, digitale, turismo, trasporti, agricoltura, imprese), file originali in `open data/Eurostat regionale/` | 1 e 2; API | completa per i territori pubblicati: livelli NUTS da 0 a 3, dal 1990 (o dall’inizio della serie) |
 | Archivi parziali | FAOSTAT (22 insiemi di dati) e OCSE (3 flussi) | 5, 9, 11, 15, 18, 19, 22, 23, 24, 26, 27, 28 | parziale: di ogni lotto il repository contiene uno o pochi archivi, quindi solo alcuni paesi o aggregati; nel sito gli archivi sono raggruppati per argomento e i numeri di lotto non compaiono |
 
 I lotti 3, 4, 6, 7, 8, 10, 12, 13, 14, 16, 17, 20 e 21 sono presenti solo con indici, registri, dizionari o guide, senza valori; il lotto 25 contiene indagini della fonte senza serie annuali. L'Atlante li elenca nella pagina "Fonti e metodo" ma non può mostrarli.
@@ -19,7 +19,7 @@ Mappe: Natural Earth 1:50 milioni (paesi, continenti, regioni del mondo) e GISCO
 | Indirizzo | Pagina |
 |---|---|
 | `#/` | prima pagina: ricerca, temi, indicatori in evidenza, confronti pronti, schede |
-| `#/tema/<tema>` | un tema con i suoi indicatori raggruppati per sottogruppo, valore più recente per l'Italia o il Friuli Venezia Giulia |
+| `#/tema/<tema>` | un tema con i suoi indicatori raggruppati per sottogruppo, valore più recente per l'Italia o il Friuli Venezia Giulia (il tema Regioni europee ha 14 sottogruppi) |
 | `#/i/<codice>` | esplorazione di un indicatore: viste Andamento, Mappa, Classifica, Tabella; parametri `v` (vista), `t` (territori), `y` (anno), `area`, `liv`, `pae`, `log`, `ult`, `n`, `o`, `z` (periodo ingrandito) |
 | `#/t/<territorio>` | profilo di un paese, di un aggregato o di una regione europea |
 | `#/confronta?t=<tema>&g=<territori>` | tabella di confronto: righe = indicatori, colonne = territori |
@@ -85,8 +85,11 @@ python3 estrai_eurostat.py <cartella lotti 1-2> /tmp/eurostat.json
 python3 mappa_aree_faostat.py "<Lotto 21  dizionari originali FAOSTAT.xlsx>" <ne50.geojson> aree_faostat.json
 # 3. decomprimere gli ZIP degli archivi parziali in <cartella>/L5, L9, L11, ... L28
 python3 estrai_archivi_parziali.py <cartella> /tmp/parziali aree_faostat.json   # scrive /tmp/parziali_L<n>.json
-# 4. generare i file del sito
-python3 genera_dati.py --cache /tmp/grezzi.json --eurostat /tmp/eurostat.json --parziali /tmp/parziali_L*.json
+# 4. indicatori regionali dall'API di Eurostat: i file TSV compressi stanno in "open data/Eurostat regionale/"
+#    (--scarica li scarica di nuovo se mancano, insieme a liste di codici e indice)
+python3 estrai_eurostat_api.py "../../open data/Eurostat regionale" /tmp/eurostat_api.json
+# 5. generare i file del sito
+python3 genera_dati.py --cache /tmp/grezzi.json --eurostat /tmp/eurostat.json --eurostat-api /tmp/eurostat_api.json --parziali /tmp/parziali_L*.json
 ```
 
 Confini NUTS: scaricare da GISCO `NUTS_RG_10M_2024_4326_LEVL_{0,1,2,3}.json`, ridurre le proprietà a `id`, `n`, `l`, `c` (codice ISO3 del paese) e unire con `mapshaper -simplify 35% keep-shapes -o format=topojson quantization=1e5`.
