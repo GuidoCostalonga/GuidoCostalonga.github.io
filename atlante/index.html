@@ -5,240 +5,71 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Atlante dei dati</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<meta name="description" content="Tutti i dati del repository open data: 150 indicatori della Banca Mondiale per 217 paesi, 24 indicatori Eurostat per le regioni europee, archivi FAOSTAT e OCSE. Mappe per continente e confronti fra paesi e regioni.">
+<meta name="description" content="Atlante dei dati: indicatori di Banca Mondiale, Eurostat, FAOSTAT e OCSE per 217 paesi e oltre 2.000 regioni europee. Cerca un dato, esplora mappe, andamenti e classifiche, confronta paesi e regioni.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&display=swap">
 <link rel="stylesheet" href="stile.css">
 </head>
 <body>
-<a class="salta" href="#scena">Vai alla visualizzazione</a>
+<a class="salta" href="#contenuto">Vai al contenuto</a>
 
-<header class="testata">
-  <div class="testata__marchio">
-    <svg class="testata__logo" viewBox="0 0 32 32" aria-hidden="true"><circle cx="11" cy="19" r="7" fill="var(--r1)"/><circle cx="21" cy="12" r="5" fill="var(--r2)"/><circle cx="23" cy="23" r="3.5" fill="var(--r4)"/></svg>
-    <div>
-      <h1>Atlante dei dati</h1>
-      <p class="testata__sotto">Banca Mondiale, Eurostat, FAOSTAT e OCSE: 217 paesi e oltre 2.000 regioni europee, dal 1960 a oggi</p>
+<header class="testa" id="testa">
+  <div class="testa__interno">
+    <a class="marchio" href="#/" aria-label="Atlante dei dati, prima pagina">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="11" cy="19" r="7" fill="var(--r1)"/><circle cx="21" cy="12" r="5" fill="var(--r2)"/><circle cx="23" cy="23" r="3.5" fill="var(--r4)"/></svg>
+      <span>Atlante <b>dei dati</b></span>
+    </a>
+
+    <div class="cerca" id="cerca-globale">
+      <label class="visivo-nascosto" for="cerca">Cerca un indicatore, un paese o una regione</label>
+      <svg class="cerca__icona" viewBox="0 0 20 20" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5"/><path d="M13 13l4.5 4.5"/></svg>
+      <input id="cerca" type="search" placeholder="Cerca un dato, un paese, una regione…" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="cerca-risultati" aria-autocomplete="list">
+      <kbd class="cerca__tasto" aria-hidden="true">/</kbd>
+      <ul class="combo__lista cerca__risultati" id="cerca-risultati" role="listbox" aria-label="Risultati della ricerca" hidden></ul>
     </div>
+
+    <nav class="nav" aria-label="Principale">
+      <div class="nav__gruppo">
+        <button class="nav__voce" id="apri-temi" type="button" aria-expanded="false" aria-controls="megamenu">Temi <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 8l5 5 5-5"/></svg></button>
+        <div class="megamenu" id="megamenu" hidden></div>
+      </div>
+      <a class="nav__voce" href="#/confronta">Confronta</a>
+      <div class="nav__gruppo">
+        <button class="nav__voce" id="apri-schede" type="button" aria-expanded="false" aria-controls="tendina-schede">Schede <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 8l5 5 5-5"/></svg></button>
+        <div class="tendina" id="tendina-schede" hidden>
+          <a href="scheda-fvg.html"><strong>Friuli Venezia Giulia in Europa</strong><span>Italia e FVG a confronto con le regioni europee</span></a>
+          <a href="#/t/ITA"><strong>Italia</strong><span>Profilo del paese con gli indicatori in evidenza</span></a>
+          <a href="#/t/EU:ITH4"><strong>Friuli Venezia Giulia</strong><span>Profilo della regione, dati Eurostat</span></a>
+          <a href="#/t/EUU"><strong>Unione europea</strong><span>Aggregato della Banca Mondiale</span></a>
+          <a href="#/t/WLD"><strong>Mondo</strong><span>Aggregato della Banca Mondiale</span></a>
+        </div>
+      </div>
+      <a class="nav__voce" href="#/archivi">Archivi</a>
+      <a class="nav__voce" href="#/fonti">Fonti</a>
+    </nav>
+
+    <button class="hamburger" id="apri-menu" type="button" aria-label="Apri il menu" aria-expanded="false" aria-controls="menu-mobile"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 5h14M3 10h14M3 15h14"/></svg></button>
   </div>
-  <nav class="testata__link" aria-label="Pagine">
-    <a class="pulsante pulsante--testo" href="scheda-fvg.html">Scheda: Friuli Venezia Giulia in Europa</a>
-    <button class="pulsante pulsante--testo" id="apri-metodo" type="button" aria-haspopup="dialog">Fonti e metodo</button>
-  </nav>
+  <div class="menu-mobile" id="menu-mobile" hidden></div>
 </header>
 
-<div class="app">
-  <main class="principale" aria-labelledby="titolo-vista">
-    <div class="schede" role="tablist" aria-label="Viste">
-      <button role="tab" id="tab-mappa" data-vista="mappa" aria-controls="scena" type="button"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M2 5l5-2 6 2 5-2v12l-5 2-6-2-5 2z M7 3v12 M13 5v12"/></svg>Mappa</button>
-      <button role="tab" id="tab-bolle" data-vista="bolle" aria-controls="scena" type="button"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="6" cy="13" r="3.5"/><circle cx="13" cy="7" r="4.5"/><circle cx="15.5" cy="15" r="2"/></svg>Bolle</button>
-      <button role="tab" id="tab-linee" data-vista="linee" aria-controls="scena" type="button"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M2 15l5-5 4 3 7-8"/></svg>Linee</button>
-      <button role="tab" id="tab-barre" data-vista="barre" aria-controls="scena" type="button"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 4h13 M3 8h9 M3 12h11 M3 16h6"/></svg>Barre</button>
-      <button role="tab" id="tab-sciame" data-vista="sciame" aria-controls="scena" type="button"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="4" cy="10" r="1.6"/><circle cx="8" cy="8" r="1.6"/><circle cx="8" cy="12" r="1.6"/><circle cx="12" cy="10" r="1.6"/><circle cx="12" cy="6" r="1.6"/><circle cx="12" cy="14" r="1.6"/><circle cx="16" cy="10" r="1.6"/></svg>Distribuzione</button>
-      <button role="tab" id="tab-pendenza" data-vista="pendenza" aria-controls="scena" type="button"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 3v14 M16 3v14 M4 13l12-7 M4 7l12 5"/></svg>Pendenza</button>
-      <button role="tab" id="tab-composizione" data-vista="composizione" aria-controls="scena" type="button"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M2 16l5-4 5 2 6-5v7z M2 12l5-5 5 3 6-6"/></svg>Composizione</button>
-      <button role="tab" id="tab-tabella" data-vista="tabella" aria-controls="scena" type="button"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M2 4h16v12H2z M2 8h16 M2 12h16 M8 4v12"/></svg>Tabella</button>
-      <button role="tab" id="tab-confronta" data-vista="confronta" aria-controls="scena" type="button"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 16V8 M8 16V4 M12 16V10 M17 16V6 M2 17h16"/></svg>Confronta</button>
-    </div>
+<main id="contenuto" class="pagina" tabindex="-1"><div class="caricamento">Carico i dati…</div></main>
 
-    <div class="intestazione-vista">
-      <h2 id="titolo-vista">Speranza di vita alla nascita</h2>
-      <p class="intestazione-vista__unita" id="unita-vista">anni</p>
-    </div>
-    <p class="evidenza" id="evidenza" aria-live="polite"></p>
-
-    <section class="scena" id="scena" role="tabpanel" aria-labelledby="titolo-vista" tabindex="-1">
-      <div class="scena__anno" id="anno-filigrana" aria-hidden="true">2024</div>
-      <div class="scena__corpo" id="corpo-vista"></div>
-      <div class="suggerimento" id="suggerimento" role="status" hidden></div>
-      <div class="scena__carico" id="carico" hidden>Carico i dati…</div>
-    </section>
-
-    <dl class="scheda-dato" id="scheda-dato">
-      <div><dt>Unità di misura</dt><dd id="sd-unita">…</dd></div>
-      <div><dt>Periodo</dt><dd id="sd-periodo">…</dd></div>
-      <div><dt>Fonte</dt><dd id="sd-fonte">…</dd></div>
-      <div><dt>Aggiornamento</dt><dd id="sd-agg">…</dd></div>
-      <div class="scheda-dato__mancanti"><dt>Dati mancanti</dt><dd id="sd-mancanti">…</dd></div>
-    </dl>
-    <details class="definizione">
-      <summary>Definizione e territori senza dato</summary>
-      <div class="definizione__corpo">
-        <p class="definizione__testo" id="def-testo"></p>
-        <p class="definizione__fonte" id="def-fonte"></p>
-        <h3>Senza dato nell’anno mostrato</h3>
-        <p class="definizione__elenco" id="def-mancanti"></p>
-      </div>
-    </details>
-  </main>
-
-  <aside class="pannello" aria-label="Territori, indicatori e legenda">
-    <section class="blocco" aria-labelledby="t-territori">
-      <h2 class="blocco__titolo" id="t-territori">Territori</h2>
-      <div class="cerca">
-        <label class="visivo-nascosto" for="cerca-territorio">Cerca un paese o un aggregato</label>
-        <svg class="cerca__icona" viewBox="0 0 20 20" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5"/><path d="M13 13l4.5 4.5"/></svg>
-        <input id="cerca-territorio" type="search" placeholder="Cerca un paese, es. Italia" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="risultati-territori" aria-autocomplete="list">
-        <ul class="cerca__risultati" id="risultati-territori" role="listbox" aria-label="Risultati" hidden></ul>
-      </div>
-      <ul class="selezionati" id="selezionati" aria-label="Territori selezionati"></ul>
-      <div class="selezionati__azioni">
-        <button class="pulsante pulsante--testo" id="svuota-selezione" type="button">Svuota selezione</button>
-        <span class="nota-piccola">Tocca un territorio nel grafico per aggiungerlo</span>
-      </div>
-      <div class="preset" aria-label="Confronti pronti">
-        <span class="nota-piccola">Confronti pronti:</span>
-        <button class="pulsante pulsante--chip" type="button" data-preset="EU:ITH4,EU:ITH3,EU:AT21,EU:SI04,EU:IT">Friuli Venezia Giulia e vicini</button>
-        <button class="pulsante pulsante--chip" type="button" data-preset="EU:ITH41,EU:ITH42,EU:ITH43,EU:ITH44,EU:ITH4">Province del Friuli Venezia Giulia</button>
-        <button class="pulsante pulsante--chip" type="button" data-preset="ITA,DEU,FRA,ESP,EUU">Italia e grandi paesi europei</button>
-        <button class="pulsante pulsante--chip" type="button" data-preset="SSF,ECS,SAS,EAS,LCN,NAC,MEA,WLD">Regioni del mondo</button>
-      </div>
-    </section>
-
-    <section class="blocco" aria-labelledby="t-indicatori">
-      <h2 class="blocco__titolo" id="t-indicatori">Indicatori</h2>
-      <div class="campo campo--composizione">
-        <label for="gruppo-composizione">Insieme da scomporre</label>
-        <select id="gruppo-composizione"></select>
-      </div>
-      <div class="campo campo--confronta">
-        <label for="tema-confronto">Gruppo di indicatori da confrontare</label>
-        <select id="tema-confronto"></select>
-      </div>
-      <div class="campo campo--principale">
-        <label for="ind-principale" id="etichetta-principale">Indicatore</label>
-        <select id="ind-principale"></select>
-      </div>
-      <div class="campo campo--bolle">
-        <label for="ind-x">Asse orizzontale</label>
-        <select id="ind-x"></select>
-      </div>
-      <div class="campo campo--bolle">
-        <label for="ind-r">Dimensione delle bolle</label>
-        <select id="ind-r"></select>
-      </div>
-      <div class="campo" id="campo-area">
-        <label for="area-mappa">Area della mappa</label>
-        <select id="area-mappa"></select>
-      </div>
-      <div class="campi-nuts" id="campi-nuts">
-        <div class="campo">
-          <label for="livello-nuts">Livello territoriale</label>
-          <select id="livello-nuts"></select>
-        </div>
-        <div class="campo">
-          <label for="paese-nuts">Paese</label>
-          <select id="paese-nuts"></select>
-        </div>
-      </div>
-      <fieldset class="opzioni">
-        <legend class="visivo-nascosto">Opzioni di lettura</legend>
-        <label class="interruttore" id="riga-log"><input type="checkbox" id="opt-log"><span>Scala logaritmica</span></label>
-        <label class="interruttore"><input type="checkbox" id="opt-ultimo"><span>Usa l’ultimo dato disponibile, fino a 10 anni prima</span></label>
-        <label class="interruttore" id="riga-aggregati"><input type="checkbox" id="opt-aggregati"><span>Mostra gli aggregati in tabella</span></label>
-      </fieldset>
-    </section>
-
-    <section class="blocco" id="blocco-archivi" aria-labelledby="t-archivi">
-      <h2 class="blocco__titolo" id="t-archivi">Archivi parziali del repository</h2>
-      <p class="nota-piccola">FAOSTAT e OCSE: nel repository c’è solo una parte di questi archivi, quindi solo alcuni paesi. Scegli un insieme di dati, poi una serie.</p>
-      <div class="campo">
-        <label for="archivio-dataset">Insieme di dati</label>
-        <select id="archivio-dataset"></select>
-      </div>
-      <p class="nota-piccola" id="archivio-info"></p>
-      <div class="cerca">
-        <label class="visivo-nascosto" for="archivio-cerca">Cerca una serie</label>
-        <svg class="cerca__icona" viewBox="0 0 20 20" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5"/><path d="M13 13l4.5 4.5"/></svg>
-        <input id="archivio-cerca" type="search" placeholder="Cerca una serie, es. nitrogen" autocomplete="off" disabled>
-      </div>
-      <ul class="archivio-serie" id="archivio-serie" aria-label="Serie dell’insieme scelto"></ul>
-    </section>
-
-    <section class="blocco" aria-labelledby="t-legenda">
-      <h2 class="blocco__titolo" id="t-legenda">Legenda</h2>
-      <div id="legenda-valori"></div>
-      <p class="nota-piccola" id="legenda-regioni-nota">Colore = regione. Tocca una regione per metterla in risalto.</p>
-      <ul class="legenda-regioni" id="legenda-regioni"></ul>
-    </section>
-  </aside>
-</div>
-
-<section class="tempo" aria-label="Linea temporale">
-  <div class="tempo__interno">
-    <div class="tempo__comandi">
-      <button class="pulsante pulsante--icona" id="anno-indietro" type="button" aria-label="Anno precedente"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M12.5 4.5L7 10l5.5 5.5"/></svg></button>
-      <button class="pulsante pulsante--play" id="riproduci" type="button" aria-label="Riproduci" aria-pressed="false"><svg class="ico-play" viewBox="0 0 20 20" aria-hidden="true"><path d="M6 4l10 6-10 6z"/></svg><svg class="ico-pausa" viewBox="0 0 20 20" aria-hidden="true"><path d="M6 4h3v12H6z M11 4h3v12h-3z"/></svg></button>
-      <button class="pulsante pulsante--icona" id="anno-avanti" type="button" aria-label="Anno successivo"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7.5 4.5L13 10l-5.5 5.5"/></svg></button>
-    </div>
-    <output class="tempo__anno" id="anno-grande" for="cursore-anno" aria-live="off">2024</output>
-    <div class="tempo__binario">
-      <svg class="tempo__copertura" id="copertura" aria-hidden="true"></svg>
-      <label class="visivo-nascosto" for="cursore-anno">Anno</label>
-      <input type="range" id="cursore-anno" min="1960" max="2024" step="1" value="2024">
-      <div class="tempo__estremi"><span id="anno-min">1960</span><span class="tempo__copertura-nota">Altezza delle barrette: paesi con dato in ciascun anno</span><span id="anno-max">2024</span></div>
-    </div>
-    <div class="tempo__velocita">
-      <label for="velocita">Velocità</label>
-      <select id="velocita">
-        <option value="1400">Lenta</option>
-        <option value="800" selected>Media</option>
-        <option value="350">Veloce</option>
-      </select>
-    </div>
+<footer class="pie">
+  <div class="pie__interno">
+    <p><strong>Atlante dei dati</strong> · dati di Banca Mondiale (WDI), Eurostat, FAOSTAT e OCSE dal repository <a href="https://github.com/GuidoCostalonga/open-data" target="_blank" rel="noopener">open data</a>. Nessun valore è stimato o interpolato: i dati mancanti restano mancanti.</p>
+    <p><a href="#/fonti">Fonti e metodo</a> · <a href="scheda-fvg.html">Scheda Friuli Venezia Giulia</a> · <a href="https://costalonga.org/">costalonga.org</a></p>
   </div>
-</section>
+</footer>
 
-<dialog class="metodo" id="metodo" aria-labelledby="metodo-titolo">
-  <div class="metodo__testa">
-    <h2 id="metodo-titolo">Fonti e metodo</h2>
-    <button class="pulsante pulsante--icona" id="chiudi-metodo" type="button" aria-label="Chiudi"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 5l10 10 M15 5L5 15"/></svg></button>
-  </div>
-  <div class="metodo__corpo">
-    <p>L’Atlante mostra tutti i <strong>valori</strong> contenuti nel repository <strong>open data</strong>. I file che contengono solo indici, registri o guide descrivono dati che nel repository non ci sono, e sono elencati qui sotto come tali.</p>
-    <h3>Cosa contiene il repository, lotto per lotto</h3>
-    <div class="metodo__tabella">
-      <table>
-        <thead><tr><th scope="col">Lotto</th><th scope="col">Fonte e contenuto</th><th scope="col">Nel repository</th><th scope="col">Nell’Atlante</th></tr></thead>
-        <tbody>
-          <tr><td>1</td><td>Banca Mondiale, 50 indicatori; Eurostat, densità e popolazione per età e sesso nelle regioni</td><td>completo</td><td>sì</td></tr>
-          <tr><td>2</td><td>Banca Mondiale, 100 indicatori; Eurostat, nati, decessi e fecondità nelle regioni</td><td>completo</td><td>sì</td></tr>
-          <tr><td>3</td><td>OMS, 20 indicatori; Eurostat, lavoro e altri dati regionali</td><td>solo indice, senza valori</td><td>no</td></tr>
-          <tr><td>4</td><td>FAOSTAT, 12 insiemi di dati</td><td>solo guida</td><td>no</td></tr>
-          <tr><td>5</td><td>OCSE, 3 flussi su istruzione</td><td>archivio 9 di 11: 6 paesi</td><td>sì, parziale</td></tr>
-          <tr><td>6, 7, 8</td><td>ONU, comune di Karlsruhe, FMI (Fondo monetario internazionale)</td><td>solo citati nei riepiloghi</td><td>no</td></tr>
-          <tr><td>9</td><td>FAOSTAT, 7 insiemi di dati</td><td>archivio 1 di 6: da Afghanistan a Cina</td><td>sì, parziale</td></tr>
-          <tr><td>10, 12</td><td>FAOSTAT</td><td>solo guide</td><td>no</td></tr>
-          <tr><td>11</td><td>FAOSTAT, 3 insiemi di dati</td><td>archivio 1 di 5: da Afghanistan a Comore</td><td>sì, parziale</td></tr>
-          <tr><td>13, 14</td><td>FAOSTAT</td><td>indice, guida e parti 8, 9 e 10 del registro: solo identità delle serie</td><td>no</td></tr>
-          <tr><td>15</td><td>FAOSTAT, 3 insiemi di dati</td><td>archivio 2 di 9: 23 paesi</td><td>sì, parziale</td></tr>
-          <tr><td>16, 17</td><td>FAOSTAT</td><td>guide, indice del lotto 17 e documento PDF di chiusura</td><td>no</td></tr>
-          <tr><td>18</td><td>FAOSTAT, 2 insiemi di dati</td><td>archivio 2 di 22: 10 paesi</td><td>sì, parziale</td></tr>
-        </tbody>
-      </table>
-    </div>
-    <p>Per completare l’Atlante servono gli archivi mancanti dei lotti 3, 4, 5 e da 9 a 18: appena caricati nel repository possono essere aggiunti con gli stessi strumenti.</p>
-    <h3>Come leggere i valori</h3>
-    <ul>
-      <li>Nessun valore è stimato o interpolato dall’Atlante. Gli anni senza dato restano vuoti: tratteggio sulla mappa, interruzioni nelle linee, “n.d.” (non disponibile) in tabella e nel confronto.</li>
-      <li>Archivi parziali: un paese assente non è un dato mancante della fonte, è un file che non è nel repository. La mappa lo mostra in grigio come “non nel repository”.</li>
-      <li>Le tre quote di popolazione per età Eurostat sono calcolate dall’Atlante: popolazione della classe d’età divisa per la popolazione totale, stesso territorio e stesso anno, per 100. Tutti gli altri valori sono quelli della fonte.</li>
-      <li>L’opzione “ultimo dato disponibile” riporta il valore più recente dei 10 anni precedenti e mostra sempre l’anno effettivo del dato.</li>
-      <li>Per la visualizzazione i valori decimali sono arrotondati a 6 cifre significative; i conteggi interi restano esatti. Il valore originale è negli Excel del repository.</li>
-      <li>Le percentuali sono nella scala della fonte: 35 significa 35%.</li>
-      <li>Gli aggregati (Mondo, Unione europea, fasce di reddito) sono calcolati dalle fonti e non vanno sommati ai paesi.</li>
-      <li>Nel confronto, un paese mostra anche i dati Eurostat nazionali (NUTS 0); una regione mostra solo i dati Eurostat, perché la Banca Mondiale pubblica solo dati nazionali.</li>
-    </ul>
-    <h3>Mappe</h3>
-    <p>Paesi e regioni del mondo: Natural Earth, scala 1:50 milioni, versione 5.1.2, campi <em>REGION_WB</em> e <em>CONTINENT</em>. Regioni europee: GISCO (Sistema d’informazione geografica della Commissione europea), NUTS (Nomenclatura delle unità territoriali statistiche) versione 2024, scala 1:10 milioni; © EuroGeographics per i confini amministrativi. I codici NUTS storici restano visibili in tabella ma non sulla mappa. I confini sono semplificati e non implicano alcuna posizione sullo status dei territori.</p>
-    <h3>Sigle</h3>
-    <p>WDI: Indicatori di sviluppo mondiale della Banca Mondiale. OMS: Organizzazione mondiale della sanità. OCSE: Organizzazione per la cooperazione e lo sviluppo economico. FAOSTAT: banca dati statistica dell’Organizzazione delle Nazioni Unite per l’alimentazione e l’agricoltura. PAM: Programma alimentare mondiale. BIRS: Banca internazionale per la ricostruzione e lo sviluppo. AIS: Associazione internazionale per lo sviluppo. PM2,5: particolato fine con diametro fino a 2,5 micrometri.</p>
-  </div>
-</dialog>
+<div class="suggerimento" id="suggerimento" role="status" hidden></div>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js"></script>
-<script src="app.js"></script>
+<script src="nucleo.js"></script>
+<script src="grafici.js"></script>
+<script src="pagine.js"></script>
 </body>
 </html>

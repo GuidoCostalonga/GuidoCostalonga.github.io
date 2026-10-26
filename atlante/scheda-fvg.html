@@ -12,20 +12,49 @@
 <link rel="stylesheet" href="stile.css">
 </head>
 <body class="sch">
-<header class="testata">
-  <div class="testata__marchio">
-    <svg class="testata__logo" viewBox="0 0 32 32" aria-hidden="true"><circle cx="11" cy="19" r="7" fill="var(--r1)"/><circle cx="21" cy="12" r="5" fill="var(--r2)"/><circle cx="23" cy="23" r="3.5" fill="var(--r4)"/></svg>
-    <div>
-      <p class="sch__marchio"><a href="./">Atlante dei dati</a></p>
-      <p class="testata__sotto">Scheda territoriale</p>
+<a class="salta" href="#contenuto">Vai al contenuto</a>
+
+<header class="testa" id="testa">
+  <div class="testa__interno">
+    <a class="marchio" href="./#/" aria-label="Atlante dei dati, prima pagina">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="11" cy="19" r="7" fill="var(--r1)"/><circle cx="21" cy="12" r="5" fill="var(--r2)"/><circle cx="23" cy="23" r="3.5" fill="var(--r4)"/></svg>
+      <span>Atlante <b>dei dati</b></span>
+    </a>
+
+    <div class="cerca" id="cerca-globale">
+      <label class="visivo-nascosto" for="cerca">Cerca un indicatore, un paese o una regione</label>
+      <svg class="cerca__icona" viewBox="0 0 20 20" aria-hidden="true"><circle cx="8.5" cy="8.5" r="5.5"/><path d="M13 13l4.5 4.5"/></svg>
+      <input id="cerca" type="search" placeholder="Cerca un dato, un paese, una regione…" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="cerca-risultati" aria-autocomplete="list">
+      <kbd class="cerca__tasto" aria-hidden="true">/</kbd>
+      <ul class="combo__lista cerca__risultati" id="cerca-risultati" role="listbox" aria-label="Risultati della ricerca" hidden></ul>
     </div>
+
+    <nav class="nav" aria-label="Principale">
+      <div class="nav__gruppo">
+        <button class="nav__voce" id="apri-temi" type="button" aria-expanded="false" aria-controls="megamenu">Temi <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 8l5 5 5-5"/></svg></button>
+        <div class="megamenu" id="megamenu" hidden></div>
+      </div>
+      <a class="nav__voce" href="./#/confronta">Confronta</a>
+      <div class="nav__gruppo">
+        <button class="nav__voce" id="apri-schede" type="button" aria-expanded="false" aria-controls="tendina-schede">Schede <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 8l5 5 5-5"/></svg></button>
+        <div class="tendina" id="tendina-schede" hidden>
+          <a href="scheda-fvg.html" aria-current="page"><strong>Friuli Venezia Giulia in Europa</strong><span>Italia e FVG a confronto con le regioni europee</span></a>
+          <a href="./#/t/ITA"><strong>Italia</strong><span>Profilo del paese con gli indicatori in evidenza</span></a>
+          <a href="./#/t/EU:ITH4"><strong>Friuli Venezia Giulia</strong><span>Profilo della regione, dati Eurostat</span></a>
+          <a href="./#/t/EUU"><strong>Unione europea</strong><span>Aggregato della Banca Mondiale</span></a>
+          <a href="./#/t/WLD"><strong>Mondo</strong><span>Aggregato della Banca Mondiale</span></a>
+        </div>
+      </div>
+      <a class="nav__voce" href="./#/archivi">Archivi</a>
+      <a class="nav__voce" href="./#/fonti">Fonti</a>
+    </nav>
+
+    <button class="hamburger" id="apri-menu" type="button" aria-label="Apri il menu" aria-expanded="false" aria-controls="menu-mobile"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 5h14M3 10h14M3 15h14"/></svg></button>
   </div>
-  <nav class="testata__link" aria-label="Pagine">
-    <a class="pulsante pulsante--testo" href="./#confronta">Apri l’Atlante</a>
-  </nav>
+  <div class="menu-mobile" id="menu-mobile" hidden></div>
 </header>
 
-<main class="sch__pagina">
+<main class="sch__pagina" id="contenuto" tabindex="-1">
   <section class="sch__apertura">
     <p class="sch__occhiello">Scheda · Eurostat e Banca Mondiale</p>
     <h1>Italia e Friuli Venezia Giulia a confronto con l’Europa</h1>
@@ -101,8 +130,35 @@
   </section>
 </main>
 
+<footer class="pie">
+  <div class="pie__interno">
+    <p><strong>Atlante dei dati</strong> · dati di Banca Mondiale (WDI), Eurostat, FAOSTAT e OCSE dal repository <a href="https://github.com/GuidoCostalonga/open-data" target="_blank" rel="noopener">open data</a>. Nessun valore è stimato o interpolato: i dati mancanti restano mancanti.</p>
+    <p><a href="./#/fonti">Fonti e metodo</a> · <a href="./#/">Atlante dei dati</a> · <a href="https://costalonga.org/">costalonga.org</a></p>
+  </div>
+</footer>
+
+<div class="suggerimento" id="suggerimento" role="status" hidden></div>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js"></script>
+<script src="nucleo.js"></script>
+<script>
+// La scheda vive fuori dall'applicazione a pagina unica: la testata (ricerca, menù) porta sempre all'Atlante.
+(function () {
+  const A = window.Atlante;
+  A.vai = (hash) => { location.href = './' + hash; };
+  A.caricaJson('dati/meta.json').then((meta) => {
+    A.META = meta;
+    meta.territori.forEach((t) => { A.T[t.id] = t; if (t.k === 'nuts' && t.l === 0) A.NUTS0[t.p] = t.id; });
+    meta.indicatori.forEach((i) => { A.IND[i.c] = Object.assign({ fam: 'wb' }, i); });
+    meta.regioni.forEach((r, i) => { A.REG[r.k] = Object.assign({ i }, r); });
+    (meta.archivi || []).forEach((a) => { A.ARC[a.f] = a; });
+    A.leggiColori(); A.costruisciIndice(); A.preparaTestata();
+    document.querySelectorAll('#megamenu a, #menu-mobile a').forEach((a) => { const h = a.getAttribute('href'); if (h && h.startsWith('#')) a.setAttribute('href', './' + h); });
+  }).catch(() => { /* la testata resta utilizzabile con i soli collegamenti */ });
+})();
+</script>
 <script src="scheda.js"></script>
 </body>
 </html>
