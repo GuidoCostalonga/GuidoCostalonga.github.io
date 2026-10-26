@@ -31,15 +31,15 @@ Mappe: Natural Earth 1:50 milioni (paesi, continenti, regioni del mondo) e GISCO
 
 - **Ricerca unica** nella barra in alto (tasto `/`): temi, indicatori (anche con il nome inglese o il codice), paesi, regioni europee, archivi, pagine.
 - **Menù a tendina** Temi e Schede; su telefono un unico menù.
-- **Andamento**: trascinare sul grafico ingrandisce un periodo, doppio clic lo ripristina; il navigatore sotto il grafico fa lo stesso con il dito; con Ctrl e rotellina (o pizzico) si ingrandisce. Gli altri territori restano in grigio sullo sfondo.
-- **Mappa**: mondo, continenti o regioni e province europee (livello NUTS e paese a scelta), con ingrandimento a pulsanti, rotellina e pizzico; scala logaritmica e "ultimo dato disponibile" quando servono.
+- **Andamento**: rotellina del mouse, pizzico sullo schermo, trascinamento sul grafico, pulsanti + e − sul grafico o navigatore sotto il grafico ingrandiscono un periodo; doppio clic o pulsante ripristinano l'intero periodo. Gli altri territori restano in grigio sullo sfondo.
+- **Mappa**: mondo, continenti o regioni e province europee (livello NUTS e paese a scelta), con ingrandimento fino a 28 volte a pulsanti, rotellina, pizzico e doppio clic, trascinamento per spostare; scala logaritmica e "ultimo dato disponibile" quando servono.
 - **Classifica**: prime 10, 25, 50 o tutte le voci, ordine crescente o decrescente, selezionati evidenziati anche fuori classifica.
 - **Tabella**: valore dell'anno, dato di dieci anni prima, variazione, posizione; ordinabile; selezione con caselle.
 - **Linea del tempo** con riproduzione a velocità scelta, anno in grande nella scena.
 - **Confronti pronti**: Friuli Venezia Giulia e vicini, province del Friuli Venezia Giulia, regioni italiane, Italia e grandi paesi europei, Italia e vicini, grandi economie del mondo, regioni del mondo.
 - **Scarica CSV** e **copia il collegamento** della vista corrente.
 - **Profili** con indicatori in evidenza, posizione in classifica e andamento degli ultimi trent'anni (file precalcolati in `dati/profili/`).
-- **Scheda Friuli Venezia Giulia**: `scheda-fvg.html`, testi e grafici calcolati dai file di dati al caricamento della pagina.
+- **Scheda Friuli Venezia Giulia**: `scheda-fvg.html`, testi e grafici calcolati dai file di dati al caricamento della pagina; anche qui grafici a linee e mappa si ingrandiscono con rotellina, pizzico e pulsanti.
 
 ## Aprire il sito
 

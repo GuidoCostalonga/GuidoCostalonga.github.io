@@ -50,6 +50,7 @@
     const linea = d3.line().defined((v) => v != null).x((v, i) => x(d.y0 + i)).y((v) => y(v));
     let y;
     const nota = d3.select(el).append('div').attr('class', 'zoom-nota');
+    let sincronizza = null;
 
     const dominioY = () => {
       const [a, b] = x.domain();
@@ -84,7 +85,8 @@
       etich.selectAll('text').data(fine, (f2) => f2.id).join('text').attr('class', (f2) => 'etichetta-dato' + (A.eAggregato(f2.id) ? ' etichetta-dato--tenue' : ''))
         .attr('x', (f2) => Math.min(f2.x, w) + 6).attr('y', (f2) => f2.ty + 4).text((f2) => `${A.nomeRif(f2.id)} ${fmt(f2.v)}`).style('opacity', (f2) => (spento(f2.id) && !A.eAggregato(f2.id) ? 0.3 : 1));
       aggiornaAnno(false);
-      nota.text(S.zoom ? `Periodo ${a}–${b} · doppio clic per tornare all’intero periodo` : (stretto ? 'Usa il cursore sotto il grafico per ingrandire un periodo' : 'Trascina sul grafico per ingrandire un periodo'));
+      nota.text(S.zoom ? `Periodo ${a}–${b} · doppio clic o pulsante per tornare all’intero periodo` : (stretto ? 'Pizzica, usa i pulsanti o il cursore sotto il grafico per ingrandire un periodo' : 'Rotellina, trascinamento o pulsanti per ingrandire un periodo'));
+      if (sincronizza) sincronizza();
     };
     const aggiornaAnno = (anima) => {
       const [a, b] = x.domain();
@@ -114,17 +116,34 @@
     gp.select('.overlay').style('cursor', 'crosshair').style('pointer-events', 'none');
     gp.selectAll('.selection').style('fill', A.colori.grafite).style('fill-opacity', 0.08).style('stroke', 'none');
     // il rettangolo trasparente passa gli eventi del mouse al pennello
-    area.on('mousedown', (ev) => { const o = gp.select('.overlay').node(); if (o && !ev.button) { ev.preventDefault(); o.dispatchEvent(new MouseEvent('mousedown', ev)); } });
+    const avviaPennello = (ev) => { const o = gp.select('.overlay').node(); if (o && !ev.button) { ev.preventDefault(); o.dispatchEvent(new MouseEvent('mousedown', ev)); } };
+    area.on('mousedown', avviaPennello); strati.on('mousedown', avviaPennello);
     gp.on('mousemove', (ev) => area.dispatch('pointermove', { detail: ev }));
     svg.on('dblclick', () => ctx.onZoom(null));
-    // Ctrl + rotellina o pizzico sul trackpad: ingrandisce attorno al puntatore
-    el.addEventListener('wheel', (ev) => {
-      if (!ev.ctrlKey) return; ev.preventDefault();
-      const [px] = d3.pointer(ev, g.node()); const c = x.invert(px); const [a, b] = x.domain();
-      const k = ev.deltaY > 0 ? 1.25 : 0.8; let na = c - (c - a) * k, nb = c + (b - c) * k;
-      na = Math.max(pieno[0], Math.round(na)); nb = Math.min(pieno[1], Math.round(nb));
-      ctx.onZoom(nb - na >= 2 && (na > pieno[0] || nb < pieno[1]) ? [na, nb] : null);
-    }, { passive: false });
+    // rotellina, pizzico e trascinamento con due dita: ingrandiscono o spostano il periodo (il mouse trascina il pennello)
+    let programmaticoZoom = false;
+    const periodoDa = (tr) => {
+      let [a, b] = tr.rescaleX(xBase).domain().map(Math.round);
+      a = Math.max(pieno[0], a); b = Math.min(pieno[1], b);
+      if (b - a < 2) { const c = Math.round((a + b) / 2); a = Math.max(pieno[0], c - 1); b = Math.min(pieno[1], a + 2); }
+      return a <= pieno[0] && b >= pieno[1] ? null : [a, b];
+    };
+    const zx = d3.zoom().scaleExtent([1, Math.max(1, (pieno[1] - pieno[0]) / 2)]).extent([[0, 0], [w, h]]).translateExtent([[0, 0], [w, h]])
+      .filter((ev) => ev.type === 'wheel' || ev.type.startsWith('touch'))
+      .on('zoom', (ev) => { if (programmaticoZoom || !ev.sourceEvent) return; const z = periodoDa(ev.transform); const cur = S.zoom; if ((z && cur && z[0] === cur[0] && z[1] === cur[1]) || (!z && !cur)) return; ctx.onZoom(z); });
+    g.call(zx);
+    const sincronizzaZoom = () => {
+      const [a, b] = dominio(); const k = (pieno[1] - pieno[0]) / Math.max(1, b - a);
+      programmaticoZoom = true; g.call(zx.transform, d3.zoomIdentity.translate(-xBase(a) * k, 0).scale(k)); programmaticoZoom = false;
+    };
+    sincronizza = sincronizzaZoom;
+    // pulsanti sul grafico: ingrandisce o riduce il periodo attorno al centro, torna all'intero periodo
+    const com = d3.select(el).append('div').attr('class', 'comandi-mappa comandi-mappa--grafico');
+    const zoomDi = (k) => { const [a0, a1] = dominio(); const c = (a0 + a1) / 2, half = Math.max(1, ((a1 - a0) / 2) * k); let na = Math.round(c - half), nb = Math.round(c + half); na = Math.max(pieno[0], na); nb = Math.min(pieno[1], nb); if (nb - na < 2) return; ctx.onZoom(na <= pieno[0] && nb >= pieno[1] ? null : [na, nb]); };
+    const bottone = (et, ico, f) => com.append('button').attr('class', 'pulsante').attr('type', 'button').attr('aria-label', et).attr('title', et).html(A.icona(ico, '')).on('click', f);
+    bottone('Ingrandisci il periodo', 'piu', () => zoomDi(0.6));
+    bottone('Riduci', 'meno', () => zoomDi(1 / 0.6));
+    bottone('Tutto il periodo', 'reset', () => ctx.onZoom(null));
 
     // navigatore sotto il grafico: miniserie di riferimento e cursore del periodo
     let brushNav = null, gNav = null, xNav = null, programmatico = false;
@@ -224,8 +243,9 @@
     }).on('pointerleave', (ev) => { if (ev.pointerType !== 'touch') A.nascondiSuggerimento(); })
       .on('click', (ev, f) => { if (A.T[chiave(f)]) ctx.onSeleziona(chiave(f)); });
     if (!eu) sfondo.filter((f) => !inUniverso.has(chiave(f))).on('pointermove', (ev, f) => A.mostraSuggerimento(ev, `<div class="suggerimento__nome">${esc(f.properties.n)}</div><div class="suggerimento__vuoto">${A.fam(cod) === 'arc' ? 'Non presente nell’archivio parziale del repository' : 'Territorio non presente nei dati della Banca Mondiale'}</div>`)).on('pointerleave', A.nascondiSuggerimento);
-    const zoom = d3.zoom().scaleExtent([1, 14]).translateExtent([[-w * 0.5, -h * 0.5], [w * 1.5, h * 1.5]]).on('zoom', (e) => g.attr('transform', e.transform));
+    const zoom = d3.zoom().scaleExtent([1, 28]).translateExtent([[-w * 0.5, -h * 0.5], [w * 1.5, h * 1.5]]).on('zoom', (e) => g.attr('transform', e.transform));
     svg.call(zoom);
+    d3.select(el).append('div').attr('class', 'zoom-nota').text('Rotellina, pizzico o doppio clic per ingrandire · trascina per spostare');
     const com = d3.select(el).append('div').attr('class', 'comandi-mappa');
     const bottone = (et, ico, f) => com.append('button').attr('class', 'pulsante').attr('type', 'button').attr('aria-label', et).attr('title', et).html(A.icona(ico, '')).on('click', f);
     bottone('Ingrandisci', 'piu', () => svg.transition().duration(300).call(zoom.scaleBy, 1.6));
