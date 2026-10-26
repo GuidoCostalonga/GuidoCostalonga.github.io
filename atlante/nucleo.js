@@ -41,7 +41,7 @@ window.Atlante = (function () {
     acq: { n: 'Acqua e servizi igienici', breve: 'Risorse idriche, prelievi, acqua potabile e servizi igienici sicuri.', flag: ['SH.H2O.SMDW.ZS', 'ER.H2O.FWST.ZS', 'SH.STA.SMSS.ZS'] },
     agr: { n: 'Agricoltura, territorio e pesca', breve: 'Superfici coltivate, produzione e rese, fertilizzanti, pesca.', flag: ['AG.LND.AGRI.ZS', 'AG.YLD.CREL.KG', 'ER.FSH.PROD.MT'] },
     dig: { n: 'Digitale e comunicazioni', breve: 'Internet, banda larga, telefonia mobile e fissa.', flag: ['IT.NET.USER.ZS', 'IT.CEL.SETS.P2', 'IT.NET.BBND.P2'] },
-    eur: { n: 'Regioni europee', breve: 'Popolazione, economia, lavoro, istruzione, salute, società, digitale, turismo, trasporti e agricoltura nelle regioni e province d’Europa (Eurostat).', flag: ['EU_ECO_PIL_AB', 'EU_LAV_DIS', 'EU_SAL_VITA'] },
+    eur: { n: 'Regioni europee', breve: 'Popolazione, economia, lavoro, istruzione, salute, società, digitale, turismo, trasporti, agricoltura e ambiente nelle regioni e province d’Europa (Eurostat), con gli indici di competitività, progresso sociale, qualità delle istituzioni e parità di genere e i pagamenti dei fondi europei (Commissione europea).', flag: ['EU_ECO_PIL_AB', 'EU_LAV_DIS', 'EU_SAL_VITA'] },
     arc: { n: 'Archivi FAOSTAT e OCSE', breve: 'Serie dettagliate su agricoltura, alimentazione, emissioni, commercio e istruzione: archivi parziali.', flag: [] },
   };
   A.ORDINE_TEMI = ['pop', 'sal', 'ist', 'amb', 'ene', 'acq', 'agr', 'dig', 'eur', 'arc'];
@@ -57,8 +57,13 @@ window.Atlante = (function () {
     agr: [['Superfici', /^(AG\.LND|AG\.SRF)/], ['Produzione e rese', /^(AG\.PRD|AG\.YLD)/], ['Fertilizzanti', /^AG\.CON/], ['Pesca e acquacoltura', /^ER\.FSH/]],
     dig: [['Internet', /^IT\.NET/], ['Telefonia', /^IT\.(CEL|MLT)/]],
     eur: [['Popolazione e densità', /^EU_(POP|DENS|AGR_AREA)/], ['Struttura per età', /^EU_(QUOTA|STR_)/], ['Nascite, decessi, fecondità e migrazioni', /^EU_(NATI|MORTI|TOTFERRT|AGEMOTH|MEDAGEMOTH|DIN_)/],
+      ['Proiezioni di popolazione al 2100 (Eurostat)', /^EU_PRJ_/],
       ['Economia', /^EU_ECO_/], ['Lavoro', /^EU_LAV_/], ['Istruzione e formazione', /^EU_IST_/], ['Ricerca, innovazione e cultura', /^EU_RIC_/], ['Salute', /^EU_SAL_/],
-      ['Condizioni di vita e sicurezza', /^EU_SOC_/], ['Digitale', /^EU_DIG_/], ['Turismo', /^EU_TUR_/], ['Trasporti', /^EU_TRA_/], ['Agricoltura, territorio e clima', /^EU_AGR_/], ['Imprese', /^EU_IMP_/]],
+      ['Condizioni di vita e sicurezza', /^EU_SOC_/], ['Digitale', /^EU_DIG_/], ['Turismo', /^EU_TUR_/], ['Trasporti', /^EU_TRA_/], ['Agricoltura, territorio e clima', /^EU_AGR_/],
+      ['Ambiente, gas serra ed energia rinnovabile', /^EU_(AMB|CLI|ENE)_/], ['Imprese', /^EU_IMP_/],
+      ['Competitività regionale: indice RCI 2.0 (Commissione europea)', /^EU_RCI_/], ['Progresso sociale: indice EU-SPI (Commissione europea)', /^EU_SPI/],
+      ['Qualità delle istituzioni: indice EQI (Commissione europea)', /^EU_EQI_/], ['Parità di genere: monitor regionale 2021 (Commissione europea)', /^EU_GEN_/],
+      ['Fondi europei: pagamenti per regione (Commissione europea)', /^EU_FON_/]],
   };
   A.sottogruppo = (i) => { const r = (A.SOTTOGRUPPI[i.t] || []).find(([, re]) => re.test(i.c)); return r ? r[0] : 'Altri indicatori'; };
 
@@ -100,6 +105,7 @@ window.Atlante = (function () {
     { c: 'EU_QUOTA_Y_GE65', t: 'Over 65 in Friuli Venezia Giulia', k: 'fvg' },
     { c: 'EU_IST_LAUREATI', t: 'Laureati in Friuli Venezia Giulia', k: 'fvg' },
     { c: 'EU_TUR_NOTTI', t: 'Presenze turistiche in Friuli Venezia Giulia', k: 'fvg' },
+    { c: 'EU_RCI_TOT', t: 'Competitività del Friuli Venezia Giulia (indice RCI, media UE = 100)', k: 'fvg' },
     { c: 'SP.POP.65UP.TO.ZS', t: 'Italiani con 65 anni e oltre', k: 'it' },
     { c: 'SP.DYN.TFRT.IN', t: 'Figli per donna in Italia', k: 'it', basso: true },
     { c: 'IT.NET.USER.ZS', t: 'Italiani che usano Internet', k: 'it' },
