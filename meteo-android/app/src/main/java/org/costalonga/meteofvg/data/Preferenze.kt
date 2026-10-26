@@ -1,6 +1,7 @@
 package org.costalonga.meteofvg.data
 
 import android.content.Context
+import org.costalonga.meteofvg.allerte.StatoAllerte
 
 /**
  * Quel poco che va ricordato sul telefono: il Comune scelto e l'ultimo dato
@@ -20,6 +21,11 @@ object Preferenze {
     private const val I_PIOGGIA = "istantanea_pioggia"
     private const val I_QUANDO = "istantanea_quando"
 
+    private const val AVVISI = "avvisi_attivi"
+    private const val A_COMUNE = "avviso_comune"
+    private const val A_STATO = "avviso_stato"
+    private const val A_IMPRONTA = "avviso_impronta"
+
     private fun archivio(contesto: Context) =
         contesto.getSharedPreferences(ARCHIVIO, Context.MODE_PRIVATE)
 
@@ -28,7 +34,53 @@ object Preferenze {
         comunePerNome(archivio(contesto).getString(COMUNE, null)) ?: COMUNE_PREDEFINITO
 
     fun salvaComune(contesto: Context, comune: Comune) {
+        // Cambiare Comune azzera la memoria degli avvisi: quello che sapevamo
+        // riguardava un altro paese.
+        val cambiato = comune(contesto).nome != comune.nome
         archivio(contesto).edit().putString(COMUNE, comune.nome).apply()
+        if (cambiato) dimenticaAvviso(contesto)
+    }
+
+    /** Se il telefono deve avvisare quando compare un'allerta. */
+    fun avvisiAttivi(contesto: Context): Boolean =
+        archivio(contesto).getBoolean(AVVISI, false)
+
+    fun salvaAvvisiAttivi(contesto: Context, attivi: Boolean) {
+        archivio(contesto).edit().putBoolean(AVVISI, attivi).apply()
+        if (!attivi) dimenticaAvviso(contesto)
+    }
+
+    /** L'ultima allerta vista dal controllo in sottofondo. */
+    fun memoriaAvviso(contesto: Context): MemoriaAvviso? {
+        val a = archivio(contesto)
+        val comune = a.getString(A_COMUNE, null) ?: return null
+        val stato = a.getString(A_STATO, null) ?: return null
+        return MemoriaAvviso(
+            comune = comune,
+            stato = runCatching { StatoAllerte.valueOf(stato) }.getOrNull() ?: return null,
+            impronta = a.getString(A_IMPRONTA, "").orEmpty(),
+        )
+    }
+
+    fun salvaMemoriaAvviso(
+        contesto: Context,
+        comune: Comune,
+        stato: StatoAllerte,
+        impronta: String,
+    ) {
+        archivio(contesto).edit()
+            .putString(A_COMUNE, comune.nome)
+            .putString(A_STATO, stato.name)
+            .putString(A_IMPRONTA, impronta)
+            .apply()
+    }
+
+    fun dimenticaAvviso(contesto: Context) {
+        archivio(contesto).edit()
+            .remove(A_COMUNE)
+            .remove(A_STATO)
+            .remove(A_IMPRONTA)
+            .apply()
     }
 
     fun salvaIstantanea(contesto: Context, istantanea: Istantanea) {
@@ -63,6 +115,13 @@ object Preferenze {
         )
     }
 }
+
+/** Che cosa sapeva il controllo in sottofondo l'ultima volta che ha guardato. */
+data class MemoriaAvviso(
+    val comune: String,
+    val stato: StatoAllerte,
+    val impronta: String,
+)
 
 /** Il minimo indispensabile per scrivere nel widget. */
 data class Istantanea(
