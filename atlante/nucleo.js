@@ -60,6 +60,20 @@ window.Atlante = (function () {
   };
   A.sottogruppo = (i) => { const r = (A.SOTTOGRUPPI[i.t] || []).find(([, re]) => re.test(i.c)); return r ? r[0] : 'Altri indicatori'; };
 
+  /* macro argomenti degli archivi parziali FAOSTAT e OCSE (per codice dell'insieme di dati) */
+  A.GRUPPI_ARCHIVI = [
+    ['Produzione, prezzi e valore', ['QCL', 'QV', 'PA', 'GFDI']],
+    ['Bilanci alimentari e disponibilità', ['FBS', 'FBSH', 'SUA', 'CB']],
+    ['Commercio', ['FT', 'TI']],
+    ['Fertilizzanti e terreni', ['RFB', 'RFN', 'RFM', 'ESB']],
+    ['Emissioni e allevamenti', ['EI', 'EM', 'GPP', 'GLE', 'EMN', 'EK']],
+    ['Aiuti e investimenti', ['FA', 'EA']],
+  ];
+  A.gruppoArchivio = (a) => {
+    if (/^OCSE/.test(a.fonte)) return 'Istruzione (OCSE)';
+    const g = A.GRUPPI_ARCHIVI.find(([, codici]) => codici.includes(a.cod));
+    return g ? g[0] : 'Altri insiemi di dati';
+  };
   A.VISTE = [['andamento', 'Andamento'], ['mappa', 'Mappa'], ['classifica', 'Classifica'], ['tabella', 'Tabella']];
   A.AREE = {
     mondo: { n: 'Mondo' }, europa: { n: 'Europa', b: [-25, 34, 45, 71] }, africa: { n: 'Africa', b: [-19, -36, 53, 38] },
@@ -352,7 +366,7 @@ window.Atlante = (function () {
     Object.values(A.IND).filter((i) => i.fam !== 'arc').forEach((i) => idx.push({ tipo: 'ind', id: i.c, n: i.n, alt: `${i.en} ${i.c}`, tema: i.t, sotto: `${A.TEMI[i.t].n} · ${i.u}` }));
     A.META.territori.forEach((t) => { if (t.k === 'storico' || t.k === 'aggf') return; idx.push({ tipo: 'terr', id: t.id, n: t.n, alt: `${t.en} ${t.cod || t.id}`, sotto: A.descriviTerritorio(t), k: t.k, l: t.l }); });
     A.ORDINE_TEMI.forEach((k) => idx.push({ tipo: 'tema', id: k, n: A.TEMI[k].n, alt: A.TEMI[k].breve, sotto: 'tema' }));
-    (A.META.archivi || []).forEach((a) => idx.push({ tipo: 'arch', id: a.f, n: a.n, alt: `${a.en} ${a.cod} ${a.fonte}`, sotto: `archivio ${a.fonte.replace(/ \(.*/, '')}, lotto ${a.lotto}` }));
+    (A.META.archivi || []).forEach((a) => idx.push({ tipo: 'arch', id: a.f, n: a.n, alt: `${a.en} ${a.cod} ${a.fonte}`, sotto: `archivio ${a.fonte.replace(/ \(.*/, '')} · ${A.gruppoArchivio(a)}` }));
     idx.push({ tipo: 'pagina', id: 'scheda-fvg.html', n: 'Scheda: Friuli Venezia Giulia in Europa', alt: 'scheda fvg italia europa confronto', sotto: 'scheda' });
     idx.push({ tipo: 'pagina', id: '#/confronta', n: 'Confronta paesi e regioni', alt: 'confronto confronta', sotto: 'strumento' });
     A.indice = idx.map((v) => Object.assign(v, { nn: A.norm(v.n), na: A.norm(v.alt) }));
