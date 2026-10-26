@@ -8,7 +8,7 @@ Sito di esplorazione di tutti i valori contenuti nel repository. La struttura se
 |---|---|---|---|
 | Indicatori nazionali | Banca Mondiale, WDI (Indicatori di sviluppo mondiale): 150 indicatori | 1 e 2 | completa: 217 paesi e 49 aggregati, dal 1960 |
 | Regioni europee | Eurostat, 5 dataset demografici per territorio NUTS: 21 serie più 3 quote per età calcolate | 1 e 2 | completa: 37 paesi, livelli NUTS da 0 a 3, dal 1990 |
-| Archivi parziali | FAOSTAT (22 insiemi di dati) e OCSE (3 flussi) | 5, 9, 11, 15, 18, 19, 22, 23, 24, 26, 27, 28 | parziale: di ogni lotto il repository contiene uno o pochi archivi, quindi solo alcuni paesi o aggregati |
+| Archivi parziali | FAOSTAT (22 insiemi di dati) e OCSE (3 flussi) | 5, 9, 11, 15, 18, 19, 22, 23, 24, 26, 27, 28 | parziale: di ogni lotto il repository contiene uno o pochi archivi, quindi solo alcuni paesi o aggregati; nel sito gli archivi sono raggruppati per argomento e i numeri di lotto non compaiono |
 
 I lotti 3, 4, 6, 7, 8, 10, 12, 13, 14, 16, 17, 20 e 21 sono presenti solo con indici, registri, dizionari o guide, senza valori; il lotto 25 contiene indagini della fonte senza serie annuali. L'Atlante li elenca nella pagina "Fonti e metodo" ma non può mostrarli.
 
@@ -23,7 +23,7 @@ Mappe: Natural Earth 1:50 milioni (paesi, continenti, regioni del mondo) e GISCO
 | `#/i/<codice>` | esplorazione di un indicatore: viste Andamento, Mappa, Classifica, Tabella; parametri `v` (vista), `t` (territori), `y` (anno), `area`, `liv`, `pae`, `log`, `ult`, `n`, `o`, `z` (periodo ingrandito) |
 | `#/t/<territorio>` | profilo di un paese, di un aggregato o di una regione europea |
 | `#/confronta?t=<tema>&g=<territori>` | tabella di confronto: righe = indicatori, colonne = territori |
-| `#/archivi` e `#/archivi/<file>` | archivi FAOSTAT e OCSE: elenco per lotto, ricerca fra le serie |
+| `#/archivi` e `#/archivi/<file>` | archivi FAOSTAT e OCSE: elenco per argomento, ricerca fra le serie |
 | `#/fonti` | fonti, metodo e copertura lotto per lotto |
 
 ## Funzioni

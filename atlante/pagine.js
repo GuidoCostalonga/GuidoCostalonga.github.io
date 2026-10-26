@@ -182,12 +182,12 @@
       ${correlati.length ? `<section class="correlati"><div class="sezione__testa"><h2>Altri indicatori: ${esc(sotto)}</h2></div><div class="indicatori-griglia">${correlati.map((x, idx) => cardIndicatore(x, idx)).join('')}</div></section>` : ''}
     </div>`;
     disegnaMini(main);
-    const fonte = fam === 'eu' ? `Eurostat, <a href="${i.url}" target="_blank" rel="noopener">${esc(i.ds)}</a>` : fam === 'arc' ? `${esc(i.arch.fonte.replace(/ \(.*/, ''))} ${esc(i.arch.cod)}, lotto ${i.lotto} · <a href="${i.url}" target="_blank" rel="noopener">archivio fonte</a>` : `Banca Mondiale, WDI · <a href="${i.url}" target="_blank" rel="noopener">${esc(i.c)}</a>`;
+    const fonte = fam === 'eu' ? `Eurostat, <a href="${i.url}" target="_blank" rel="noopener">${esc(i.ds)}</a>` : fam === 'arc' ? `${esc(i.arch.fonte.replace(/ \(.*/, ''))}, insieme di dati ${esc(i.arch.cod)} · <a href="${i.url}" target="_blank" rel="noopener">archivio fonte</a>` : `Banca Mondiale, WDI · <a href="${i.url}" target="_blank" rel="noopener">${esc(i.c)}</a>`;
     $('#sd-fonte').innerHTML = fonte;
-    $('#sd-agg').innerHTML = `fonte: ${A.data(i.agg)}<br>repository: ${fam === 'arc' ? 'ottobre 2026' : A.data(A.META.acquisizione[String(i.lotto)] || '')}, lotto ${i.lotto}`;
+    $('#sd-agg').innerHTML = `fonte: ${A.data(i.agg)}<br>repository: ${fam === 'arc' ? 'ottobre 2026' : A.data(A.META.acquisizione[String(i.lotto)] || '')}`;
     if (fam === 'arc') {
       $('#def-testo').textContent = `Serie originale: ${i.en}.`;
-      $('#def-fonte').innerHTML = `<strong>Archivio parziale.</strong> Il repository contiene solo ${esc(i.arch.archivio)} del lotto ${i.lotto}: ${i.arch.terr.length} territori. Gli altri paesi non mancano nella fonte, mancano nel repository.`;
+      $('#def-fonte').innerHTML = `<strong>Archivio parziale.</strong> La fonte distribuisce questo insieme di dati in più archivi; il repository ne contiene solo una parte (${esc(i.arch.archivio)}), cioè ${i.arch.terr.length} territori. Gli altri paesi non mancano nella fonte, mancano nel repository.`;
       $('#avviso').innerHTML = `<div class="avviso">Archivio parziale: ${i.arch.terr.length} territori presenti nel repository (${esc(i.arch.archivio)}). Gli altri paesi non sono mancanti nella fonte: non sono nel repository.</div>`;
     } else {
       $('#def-testo').textContent = i.def ? `“${i.def}”` : 'Definizione non presente nella fonte.';
@@ -362,7 +362,7 @@
       ${sezioneProfilo(prof, id, eu ? 'Dati Eurostat' : 'Indicatori in evidenza')}
       ${profEu ? sezioneProfilo(profEu, A.NUTS0[id], 'Dati Eurostat per il paese') : ''}
       ${!prof || !Object.keys(prof.ind).length ? `<p class="nota">${t.k === 'aggf' || t.k === 'storico' ? 'Territorio presente solo negli archivi parziali FAOSTAT e OCSE: nessun indicatore della Banca Mondiale o di Eurostat.' : 'Nessun indicatore in evidenza disponibile per questo territorio.'}</p>` : ''}
-      ${archiviCon.length ? `<section class="sezione"><div class="sezione__testa"><h2>Archivi FAOSTAT e OCSE con questo territorio</h2><p>Archivi parziali del repository in cui compare ${esc(t.n)}: apri l’archivio e cerca una serie.</p></div><div class="archivi-griglia sfalsa">${archiviCon.map((a, idx) => `<a class="archivio-card" data-tema="arc" href="#/archivi/${esc(a.f)}" style="--i:${idx}"><h3>${esc(a.n)}</h3><p>${esc(a.fonte.replace(/ \(.*/, ''))}, lotto ${a.lotto}</p><span class="conta">${a.terr.length} territori · ${A.F.int.format(a.serie)} serie · ${a.y0}–${a.y1}</span></a>`).join('')}</div></section>` : ''}
+      ${archiviCon.length ? `<section class="sezione"><div class="sezione__testa"><h2>Archivi FAOSTAT e OCSE con questo territorio</h2><p>Archivi parziali del repository in cui compare ${esc(t.n)}: apri l’archivio e cerca una serie.</p></div><div class="archivi-griglia sfalsa">${archiviCon.map((a, idx) => `<a class="archivio-card" data-tema="arc" href="#/archivi/${esc(a.f)}" style="--i:${idx}"><h3>${esc(a.n)}</h3><p>${esc(a.fonte.replace(/ \(.*/, ''))} · ${esc(A.gruppoArchivio(a))}</p><span class="conta">${a.terr.length} territori · ${A.F.int.format(a.serie)} serie · ${a.y0}–${a.y1}</span></a>`).join('')}</div></section>` : ''}
     </div>`;
     $('#p-sel').addEventListener('click', () => { if (S.sel.includes(id)) S.sel.splice(S.sel.indexOf(id), 1); else S.sel.push(id); A.salvaStato(); A.toast(S.sel.includes(id) ? `${t.n} aggiunto ai territori selezionati` : `${t.n} tolto dai territori selezionati`); A.pagine.t(main, parti); });
     main.querySelectorAll('.mini[data-sp]').forEach((el) => { const [y0, sp] = JSON.parse(el.dataset.sp); A.sparkline(el, { y0, valori: sp, colore: A.colori['t_' + el.dataset.tema] }); });
@@ -413,7 +413,7 @@
       const a = A.ARC[f];
       document.title = `${a.n} · Archivi · Atlante dei dati`;
       main.innerHTML = `<div class="entra" data-tema="arc">${briciole([{ n: 'Atlante', href: '#/' }, { n: 'Archivi', href: '#/archivi' }, { n: a.n }])}
-        <header class="tema-testa"><div class="tema-testa__riga">${A.icona('arc')}<h1>${esc(a.n)}</h1></div><p>${esc(a.fonte)}, codice ${esc(a.cod)}, lotto ${a.lotto}. <strong>Archivio parziale:</strong> il repository contiene ${esc(a.archivio)}, cioè ${a.terr.length} territori${a.aggr && a.aggr.length ? ` (di cui ${a.aggr.length} aggregati)` : ''}. ${A.F.int.format(a.serie)} serie dal ${a.y0} al ${a.y1}; descrizioni in inglese, come nella fonte. Nome originale: ${esc(a.en)}.</p>${a.mb >= 4 ? `<p class="avviso">Archivio molto grande (${A.F.d1.format(a.mb)} MB): il primo caricamento può richiedere qualche secondo, soprattutto da telefono.</p>` : ''}<div class="chips">${a.terr.slice(0, 40).map((id) => (A.T[id] ? `<a class="chip" href="#/t/${esc(id)}">${esc(A.T[id].n)}</a>` : '')).join('')}${a.terr.length > 40 ? `<span class="nd">e altri ${a.terr.length - 40}</span>` : ''}</div></header>
+        <header class="tema-testa"><div class="tema-testa__riga">${A.icona('arc')}<h1>${esc(a.n)}</h1></div><p>${esc(a.fonte)}, insieme di dati ${esc(a.cod)}, argomento “${esc(A.gruppoArchivio(a))}”. <strong>Archivio parziale:</strong> la fonte distribuisce questo insieme di dati in più archivi e il repository ne contiene solo una parte (${esc(a.archivio)}), cioè ${a.terr.length} territori${a.aggr && a.aggr.length ? ` (di cui ${a.aggr.length} aggregati)` : ''}. ${A.F.int.format(a.serie)} serie dal ${a.y0} al ${a.y1}; descrizioni in inglese, come nella fonte. Nome originale: ${esc(a.en)}.</p>${a.mb >= 4 ? `<p class="avviso">Archivio molto grande (${A.F.d1.format(a.mb)} MB): il primo caricamento può richiedere qualche secondo, soprattutto da telefono.</p>` : ''}<div class="chips">${a.terr.slice(0, 40).map((id) => (A.T[id] ? `<a class="chip" href="#/t/${esc(id)}">${esc(A.T[id].n)}</a>` : '')).join('')}${a.terr.length > 40 ? `<span class="nd">e altri ${a.terr.length - 40}</span>` : ''}</div></header>
         <div class="comandi" style="grid-template-columns:1fr"><div class="campo"><label for="a-cerca">Cerca una serie</label><div class="combo"><input id="a-cerca" type="search" placeholder="es. wheat, nitrogen, import" autocomplete="off"></div></div></div>
         <ul class="serie-lista" id="a-serie"><li class="nota">Carico le serie…</li></ul></div>`;
       const ul = $('#a-serie'), inp = $('#a-cerca');
@@ -430,45 +430,43 @@
       return;
     }
     document.title = 'Archivi FAOSTAT e OCSE · Atlante dei dati';
-    const perLotto = new Map(); elenco.forEach((a) => { if (!perLotto.has(a.lotto)) perLotto.set(a.lotto, []); perLotto.get(a.lotto).push(a); });
+    const ordineGruppi = A.GRUPPI_ARCHIVI.map((g) => g[0]).concat(['Istruzione (OCSE)', 'Altri insiemi di dati']);
+    const perGruppo = new Map(); elenco.forEach((a) => { const g = A.gruppoArchivio(a); if (!perGruppo.has(g)) perGruppo.set(g, []); perGruppo.get(g).push(a); });
     main.innerHTML = `<div class="entra" data-tema="arc">${briciole([{ n: 'Atlante', href: '#/' }, { n: 'Archivi' }])}
-      <header class="tema-testa"><div class="tema-testa__riga">${A.icona('arc')}<h1>Archivi FAOSTAT e OCSE</h1></div><p>${A.TEMI.arc.breve} Di ogni lotto il repository contiene solo alcuni archivi, quindi solo alcuni paesi: la copertura è indicata in ogni scheda. Scegli un insieme di dati, poi una serie: si apre su mappa, andamento, classifica e tabella.</p></header>
-      ${[...perLotto.entries()].sort((a, b) => a[0] - b[0]).map(([l, arr]) => `<section class="sezione"><div class="sezione__testa"><h2>Lotto ${l} · ${esc(arr[0].fonte.replace(/ \(.*/, ''))}</h2><p>${esc(arr[0].archivio)}</p></div><div class="archivi-griglia sfalsa">${arr.map((a, idx) => `<a class="archivio-card" data-tema="arc" href="#/archivi/${esc(a.f)}" style="--i:${idx}"><h3>${esc(a.n)}</h3><p>${esc(a.en)}</p><span class="conta">${a.terr.length} territori · ${A.F.int.format(a.serie)} serie · ${a.y0}–${a.y1}${a.mb >= 4 ? ` · ${A.F.d1.format(a.mb)} MB` : ''}</span></a>`).join('')}</div></section>`).join('')}
+      <header class="tema-testa"><div class="tema-testa__riga">${A.icona('arc')}<h1>Archivi FAOSTAT e OCSE</h1></div><p>${A.TEMI.arc.breve} Le fonti distribuiscono ogni insieme di dati in più archivi e il repository ne contiene solo una parte, quindi solo alcuni paesi o aggregati: la copertura è indicata in ogni scheda. Scegli un argomento e un insieme di dati, poi una serie: si apre su mappa, andamento, classifica e tabella.</p></header>
+      ${ordineGruppi.filter((g) => perGruppo.has(g)).map((g) => { const arr = perGruppo.get(g).slice().sort((x, y) => x.n.localeCompare(y.n)); return `<section class="sezione"><div class="sezione__testa"><h2>${esc(g)}</h2><p>${arr.length === 1 ? 'un insieme di dati' : `${arr.length} insiemi di dati`} · ${esc([...new Set(arr.map((a) => a.fonte.replace(/ \(.*/, '')))].join(', '))}</p></div><div class="archivi-griglia sfalsa">${arr.map((a, idx) => `<a class="archivio-card" data-tema="arc" href="#/archivi/${esc(a.f)}" style="--i:${idx}"><h3>${esc(a.n)}</h3><p>${esc(a.en)}</p><span class="conta">${a.terr.length} territori · ${A.F.int.format(a.serie)} serie · ${a.y0}–${a.y1}${a.mb >= 4 ? ` · ${A.F.d1.format(a.mb)} MB` : ''}</span></a>`).join('')}</div></section>`; }).join('')}
     </div>`;
   };
 
   /* ---------- fonti e metodo ---------- */
   A.pagine.fonti = async (main) => {
     document.title = 'Fonti e metodo · Atlante dei dati';
+    const archivi = (A.META.archivi || []).slice().sort((a, b) => A.gruppoArchivio(a).localeCompare(A.gruppoArchivio(b)) || a.n.localeCompare(b.n));
+    const nPaesi = A.PAESI.length, nNuts = A.META.territori.filter((t) => t.k === 'nuts').length;
+    const nWb = Object.values(A.IND).filter((i) => i.fam === 'wb').length, nEu = Object.values(A.IND).filter((i) => i.fam === 'eu').length;
     const righe = [
-      ['1', 'Banca Mondiale, 50 indicatori; Eurostat, densità e popolazione per età e sesso nelle regioni', 'completo', 'sì'],
-      ['2', 'Banca Mondiale, 100 indicatori; Eurostat, nati, decessi e fecondità nelle regioni', 'completo', 'sì'],
-      ['3', 'OMS, 20 indicatori; Eurostat, lavoro e altri dati regionali', 'solo indice, senza valori', 'no'],
-      ['4', 'FAOSTAT, 12 insiemi di dati', 'solo guida', 'no'],
-      ['5', 'OCSE, 3 flussi su istruzione', 'archivio 9 di 11: 6 paesi', 'sì, parziale'],
-      ['6, 7, 8', 'ONU, comune di Karlsruhe, FMI (Fondo monetario internazionale)', 'solo citati nei riepiloghi', 'no'],
-      ['9', 'FAOSTAT, 7 insiemi di dati', 'archivio 1 di 6', 'sì, parziale'],
-      ['10, 12', 'FAOSTAT', 'solo guide', 'no'],
-      ['11', 'FAOSTAT, 3 insiemi di dati', 'archivio 1 di 5', 'sì, parziale'],
-      ['13, 14', 'FAOSTAT', 'indice, guida e parti del registro: solo identità delle serie', 'no'],
-      ['15', 'FAOSTAT, 3 insiemi di dati', 'archivio 2 di 9', 'sì, parziale'],
-      ['16, 17', 'FAOSTAT', 'guide, indice del lotto 17 e documento di chiusura', 'no'],
-      ['18', 'FAOSTAT, flussi forestali e valore della produzione', 'archivio 2 di 22', 'sì, parziale'],
-      ['19', 'FAOSTAT, commercio di fertilizzanti per partner (RFM)', 'archivio 10 di 26', 'sì, parziale'],
-      ['20, 21', 'FAOSTAT, emissioni totali (GT) e produzione forestale (FO)', 'solo dizionari e registro, senza valori', 'no'],
-      ['22', 'FAOSTAT, produzione di colture e prodotti zootecnici (QCL)', 'archivio 3 di 6, aggregati statistici', 'sì, parziale'],
-      ['23', 'FAOSTAT, bilanci alimentari dal 2010 (FBS)', 'archivio 7 di 22', 'sì, parziale'],
-      ['24', 'FAOSTAT, emissioni degli allevamenti (GLE)', 'archivi 24 di 30 e 8 di 8', 'sì, parziale'],
-      ['25', 'FAOSTAT, apporti alimentari da indagini individuali (FDIQ)', 'archivio 10 di 26: dati per indagine e area, senza anni', 'no: schema non annuale'],
-      ['26', 'FAOSTAT, flussi di sviluppo verso l’agricoltura (EA)', '13 archivi su 198 fra paesi, aggregati e destinatari non classificati', 'sì, parziale'],
-      ['27', 'FAOSTAT, indici del commercio agricolo (TI)', '6 archivi su 85', 'sì, parziale'],
-      ['28', 'FAOSTAT, bilanci alimentari storici (FBSH)', '5 archivi su 89', 'sì, parziale'],
+      ['Banca Mondiale, WDI (Indicatori di sviluppo mondiale)', `${nWb} indicatori su popolazione, salute, istruzione, ambiente, energia, acqua, agricoltura e digitale`, `completa: ${nPaesi} paesi e ${A.META.territori.filter((t) => t.k === 'agg').length} aggregati, dal 1960`],
+      ['Eurostat, statistiche regionali', `${nEu} indicatori demografici: popolazione per età e sesso, densità, nati, decessi, fecondità, età delle madri`, `completa: ${nNuts} territori NUTS di 37 paesi, dai paesi alle province, dal 1990`],
+      ['FAOSTAT', `${archivi.filter((a) => /^FAOSTAT/.test(a.fonte)).length} insiemi di dati su produzione, bilanci alimentari, commercio, fertilizzanti, emissioni, aiuti e investimenti`, 'parziale: per ogni insieme di dati il repository contiene solo una parte degli archivi della fonte, quindi solo alcuni paesi o aggregati (elenco qui sotto)'],
+      ['OCSE (Organizzazione per la cooperazione e lo sviluppo economico)', `${archivi.filter((a) => /^OCSE/.test(a.fonte)).length} flussi sull’istruzione degli adulti e sul personale scolastico`, 'parziale: 6 paesi'],
+    ];
+    const soloIndici = [
+      'OMS (Organizzazione mondiale della sanità): 20 indicatori sanitari, presenti solo nell’indice.',
+      'Eurostat: lavoro e altri dati regionali oltre a quelli demografici, presenti solo nell’indice.',
+      'FAOSTAT: emissioni totali (GT), produzione forestale (FO) e altri insiemi di dati descritti solo da guide, dizionari o registri delle serie.',
+      'FAOSTAT: apporti alimentari da indagini individuali (FDIQ), presenti ma organizzati per indagine e non per anno, quindi non rappresentabili nelle viste dell’Atlante.',
+      'ONU, FMI (Fondo monetario internazionale) e comune di Karlsruhe: citati nei riepiloghi, senza valori nel repository.',
     ];
     main.innerHTML = `<div class="entra prosa">${briciole([{ n: 'Atlante', href: '#/' }, { n: 'Fonti e metodo' }])}
       <h1>Fonti e metodo</h1>
       <p>L’Atlante mostra tutti i <strong>valori</strong> contenuti nel repository <a href="https://github.com/GuidoCostalonga/open-data" target="_blank" rel="noopener">open data</a>. I file che contengono solo indici, registri o guide descrivono dati che nel repository non ci sono, e sono elencati qui come tali.</p>
-      <h2>Cosa contiene il repository, lotto per lotto</h2>
-      <div class="tabella-prosa"><table><thead><tr><th>Lotto</th><th>Fonte e contenuto</th><th>Nel repository</th><th>Nell’Atlante</th></tr></thead><tbody>${righe.map((r) => `<tr>${r.map((c) => `<td>${esc(c)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>
+      <h2>Che cosa contiene l’Atlante</h2>
+      <div class="tabella-prosa"><table><thead><tr><th>Fonte</th><th>Contenuto</th><th>Copertura</th></tr></thead><tbody>${righe.map((r) => `<tr>${r.map((c) => `<td>${esc(c)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>
+      <h2>Archivi parziali: che cosa c’è nel repository</h2>
+      <p>Le fonti distribuiscono ogni insieme di dati in più archivi; nel repository ne è presente solo una parte, indicata qui per ciascun insieme di dati. Un paese assente non è un dato mancante della fonte: è un archivio che non è nel repository.</p>
+      <div class="tabella-prosa"><table><thead><tr><th>Insieme di dati</th><th>Argomento</th><th>Nel repository</th><th>Territori</th></tr></thead><tbody>${archivi.map((a) => `<tr><td><a href="#/archivi/${esc(a.f)}">${esc(a.n)}</a><br><span class="nd">${esc(a.fonte.replace(/ \(.*/, ''))}, ${esc(a.cod)}</span></td><td>${esc(A.gruppoArchivio(a))}</td><td>${esc(a.archivio)}</td><td>${a.terr.length}</td></tr>`).join('')}</tbody></table></div>
+      <h2>Dati presenti solo come indici o guide</h2>
+      <ul>${soloIndici.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>
       <h2>Come leggere i valori</h2>
       <ul>
         <li>Nessun valore è stimato o interpolato dall’Atlante. Gli anni senza dato restano vuoti: tratteggio sulla mappa, interruzioni nelle linee, “n.d.” (non disponibile) in tabella e nel confronto.</li>
