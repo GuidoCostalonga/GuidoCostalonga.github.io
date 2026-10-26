@@ -254,6 +254,8 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 .evidenza { font-size: 16px; color: var(--grafite-2); max-width: 90ch; min-height: 1.5em; }
 .evidenza strong { color: var(--grafite); }
 .avviso { padding: 10px 14px; border-radius: 10px; background: color-mix(in srgb, var(--t-agr) 12%, var(--carta)); border: 1px solid color-mix(in srgb, var(--t-agr) 35%, transparent); font-size: 14px; }
+.confronto__avviso { margin: 0 0 12px; }
+.confronto__avviso .chips { margin-top: 8px; }
 .grafico-card { border: 1.5px solid var(--griglia); border-radius: var(--raggio); background: var(--carta); overflow: hidden; display: grid; grid-template-rows: auto 1fr auto; }
 .grafico-card.pieno { position: fixed; inset: 0; z-index: 90; border-radius: 0; border: 0; padding-top: env(safe-area-inset-top, 0px); }
 .grafico-card:fullscreen { padding: 0; }
