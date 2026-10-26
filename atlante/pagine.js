@@ -372,19 +372,24 @@
   A.pagine.confronta = async (main, parti, q) => {
     document.title = 'Confronta · Atlante dei dati';
     if (q.get('t') != null) S.sel = q.get('t').split(',').filter((id) => A.T[id]);
-    if (q.get('g') && A.TEMI[q.get('g')] && q.get('g') !== 'arc') S.temaConf = q.get('g');
-    if (!A.TEMI[S.temaConf] || S.temaConf === 'arc') S.temaConf = 'sal';
-    main.innerHTML = `<div class="entra" data-tema="${S.temaConf}">
+    // il gruppo è un tema oppure, per le Regioni europee (troppi indicatori per una tabella), un sottogruppo: "eur|Economia"
+    const gruppoValido = (g) => { const [b, so] = (g || '').split('|'); return !!A.TEMI[b] && b !== 'arc' && (!so || (A.SOTTOGRUPPI[b] || []).some((x) => x[0] === so)); };
+    if (q.get('g') && gruppoValido(q.get('g'))) S.temaConf = q.get('g');
+    if (!gruppoValido(S.temaConf)) S.temaConf = 'sal';
+    if (S.temaConf === 'eur') S.temaConf = 'eur|' + A.SOTTOGRUPPI.eur[0][0];
+    const temaBase = () => S.temaConf.split('|')[0];
+    main.innerHTML = `<div class="entra" data-tema="${temaBase()}">
       ${briciole([{ n: 'Atlante', href: '#/' }, { n: 'Confronta' }])}
       <div class="esplora__titolo"><h1>Confronta paesi e regioni</h1><p class="evidenza">Scegli i territori e un gruppo di indicatori: ogni riga è un indicatore, ogni colonna un territorio, con il valore più recente disponibile o quello dell’anno scelto.</p></div>
       <div class="comandi comandi--territori" id="box-territori"></div>
-      <div class="comandi"><div class="campo"><label for="c-tema">Gruppo di indicatori</label><div class="seleziona"><select id="c-tema">${temiConIndicatori().map((k) => `<option value="${k}" ${k === S.temaConf ? 'selected' : ''}>${esc(A.TEMI[k].n)}</option>`).join('')}</select></div></div><div class="campo"><label for="c-anno">Anno</label><div class="seleziona"><select id="c-anno"><option value="">Più recente disponibile</option></select></div></div><div class="campo"><label>&nbsp;</label><button class="pulsante" type="button" id="c-csv">${A.icona('scarica', '')} Scarica la tabella (CSV)</button></div></div>
+      <div class="comandi"><div class="campo"><label for="c-tema">Gruppo di indicatori</label><div class="seleziona"><select id="c-tema">${temiConIndicatori().map((k) => (k === 'eur' ? A.SOTTOGRUPPI.eur.map((g) => `<option value="eur|${esc(g[0])}" ${`eur|${g[0]}` === S.temaConf ? 'selected' : ''}>${esc(A.TEMI.eur.n)} · ${esc(g[0])}</option>`).join('') : `<option value="${k}" ${k === S.temaConf ? 'selected' : ''}>${esc(A.TEMI[k].n)}</option>`)).join('')}</select></div></div><div class="campo"><label for="c-anno">Anno</label><div class="seleziona"><select id="c-anno"><option value="">Più recente disponibile</option></select></div></div><div class="campo"><label>&nbsp;</label><button class="pulsante" type="button" id="c-csv">${A.icona('scarica', '')} Scarica la tabella (CSV)</button></div></div>
       <div class="confronto" id="confronto"><div class="caricamento">Carico…</div></div>
       <p class="nota">▲ valore più alto fra i territori selezionati. “Non previsto”: l’indicatore non esiste per quel tipo di territorio. Un paese mostra anche i dati Eurostat nazionali; una regione solo i dati Eurostat.</p>
     </div>`;
     let righeCsv = [];
     const disegna = async () => {
-      const inds = indicatoriDi(S.temaConf);
+      const [tb, ts] = S.temaConf.split('|');
+      const inds = indicatoriDi(tb).filter((i) => !ts || A.sottogruppo(i) === ts);
       const box = $('#confronto'); box.innerHTML = '<div class="caricamento">Carico…</div>';
       await Promise.all(inds.map((i) => A.carica(i.c)));
       const sel = $('#c-anno'); const anni = d3.range(d3.max(inds, (i) => i.y1), d3.min(inds, (i) => i.y0) - 1, -1);
@@ -399,7 +404,7 @@
       A.sostituisci(`#/confronta?t=${S.sel.join(',')}&g=${S.temaConf}`);
     };
     const selettore = A.selettoreTerritori($('#box-territori'), { onChange: disegna });
-    $('#c-tema').addEventListener('change', (e) => { S.temaConf = e.target.value; main.firstElementChild.dataset.tema = S.temaConf; A.salvaStato(); disegna(); });
+    $('#c-tema').addEventListener('change', (e) => { S.temaConf = e.target.value; main.firstElementChild.dataset.tema = temaBase(); A.salvaStato(); disegna(); });
     $('#c-anno').addEventListener('change', disegna);
     $('#c-csv').addEventListener('click', () => { const testo = '﻿' + righeCsv.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(';')).join('\r\n'); const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([testo], { type: 'text/csv;charset=utf-8' })); a.download = 'atlante_confronto.csv'; document.body.appendChild(a); a.click(); a.remove(); A.toast('File CSV in scaricamento'); });
     await disegna();
@@ -446,7 +451,7 @@
     const nWb = Object.values(A.IND).filter((i) => i.fam === 'wb').length, nEu = Object.values(A.IND).filter((i) => i.fam === 'eu').length;
     const righe = [
       ['Banca Mondiale, WDI (Indicatori di sviluppo mondiale)', `${nWb} indicatori su popolazione, salute, istruzione, ambiente, energia, acqua, agricoltura e digitale`, `completa: ${nPaesi} paesi e ${A.META.territori.filter((t) => t.k === 'agg').length} aggregati, dal 1960`],
-      ['Eurostat, statistiche regionali', `${nEu} indicatori demografici: popolazione per età e sesso, densità, nati, decessi, fecondità, età delle madri`, `completa: ${nNuts} territori NUTS di 37 paesi, dai paesi alle province, dal 1990`],
+      ['Eurostat, statistiche regionali', `${nEu} indicatori: popolazione, età, nascite, decessi e migrazioni; economia e reddito; lavoro; istruzione; ricerca; salute e cause di morte; condizioni di vita e reati; digitale; turismo; trasporti; agricoltura, territorio e clima; imprese. I file originali dell’API di Eurostat (scaricati il ${A.data(A.META.acquisizione.api || '')}) sono conservati nel repository`, `completa per i territori pubblicati da Eurostat: ${nNuts} codici NUTS (paesi, macroregioni, regioni, province; anche codici delle versioni precedenti della classificazione); a seconda dell’indicatore il dettaglio arriva alle regioni (NUTS 2) o alle province (NUTS 3)`],
       ['FAOSTAT', `${archivi.filter((a) => /^FAOSTAT/.test(a.fonte)).length} insiemi di dati su produzione, bilanci alimentari, commercio, fertilizzanti, emissioni, aiuti e investimenti`, 'parziale: per ogni insieme di dati il repository contiene solo una parte degli archivi della fonte, quindi solo alcuni paesi o aggregati (elenco qui sotto)'],
       ['OCSE (Organizzazione per la cooperazione e lo sviluppo economico)', `${archivi.filter((a) => /^OCSE/.test(a.fonte)).length} flussi sull’istruzione degli adulti e sul personale scolastico`, 'parziale: 6 paesi'],
     ];
