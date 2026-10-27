@@ -42,7 +42,7 @@ window.Atlante = (function () {
     agr: { n: 'Agricoltura, territorio e pesca', breve: 'Superfici coltivate, produzione e rese, fertilizzanti, pesca.', flag: ['AG.LND.AGRI.ZS', 'AG.YLD.CREL.KG', 'ER.FSH.PROD.MT'] },
     dig: { n: 'Digitale e comunicazioni', breve: 'Internet, banda larga, telefonia mobile e fissa.', flag: ['IT.NET.USER.ZS', 'IT.CEL.SETS.P2', 'IT.NET.BBND.P2'] },
     eur: { n: 'Regioni europee', breve: 'Popolazione, economia, lavoro, istruzione, salute, società, digitale, turismo, trasporti, agricoltura e ambiente nelle regioni e province d’Europa (Eurostat), con gli indici di competitività, progresso sociale, qualità delle istituzioni e parità di genere e i pagamenti dei fondi europei (Commissione europea).', flag: ['EU_ECO_PIL_AB', 'EU_LAV_DIS', 'EU_SAL_VITA'] },
-    arc: { n: 'Archivi FAOSTAT e OCSE', breve: 'Serie dettagliate su agricoltura, alimentazione, emissioni, commercio e istruzione: archivi parziali.', flag: [] },
+    arc: { n: 'Insiemi di dati', breve: 'FAOSTAT, OMS, OCSE, ONU e FMI: tutte le serie degli insiemi di dati dei lotti su agricoltura, alimentazione, emissioni, commercio, salute, istruzione e clima.', flag: [] },
   };
   A.ORDINE_TEMI = ['pop', 'sal', 'ist', 'amb', 'ene', 'acq', 'agr', 'dig', 'eur', 'arc'];
 
@@ -67,20 +67,26 @@ window.Atlante = (function () {
   };
   A.sottogruppo = (i) => { const r = (A.SOTTOGRUPPI[i.t] || []).find(([, re]) => re.test(i.c)); return r ? r[0] : 'Altri indicatori'; };
 
-  /* macro argomenti degli archivi parziali FAOSTAT e OCSE (per codice dell'insieme di dati) */
+  /* macro argomenti degli insiemi di dati (per codice FAOSTAT o per fonte) */
   A.GRUPPI_ARCHIVI = [
-    ['Produzione, prezzi e valore', ['QCL', 'QV', 'PA', 'GFDI']],
-    ['Bilanci alimentari e disponibilità', ['FBS', 'FBSH', 'SUA', 'CB']],
-    ['Commercio', ['FT', 'TI']],
-    ['Fertilizzanti e terreni', ['RFB', 'RFN', 'RFM', 'ESB']],
-    ['Emissioni e allevamenti', ['EI', 'EM', 'GPP', 'GLE', 'EMN', 'EK']],
-    ['Aiuti e investimenti', ['FA', 'EA']],
+    ['Produzione agricola, prezzi e valore', ['QCL', 'QI', 'QV', 'PA', 'PP', 'CP', 'PD', 'PE', 'GFDI', 'WCAD', 'MK', 'CS']],
+    ['Bilanci alimentari, disponibilità e dieta', ['FBS', 'FBSH', 'SUA', 'SCL', 'CB', 'CBH', 'FS', 'HCES', 'FDIQ', 'MDDW', 'CAHD', 'HS']],
+    ['Commercio agricolo', ['TCL', 'TCLI', 'TI', 'TM', 'FT']],
+    ['Fertilizzanti, pesticidi, terreni e bioenergia', ['RFB', 'RFN', 'RFM', 'RA', 'RP', 'RT', 'ESB', 'RL', 'LC', 'RM', 'RY', 'BE']],
+    ['Emissioni, clima e allevamenti', ['EI', 'EM', 'GPP', 'GLE', 'GCE', 'GF', 'GI', 'GN', 'GV', 'GT', 'EMN', 'EK', 'ET']],
+    ['Foreste', ['FO', 'FOP']],
+    ['Popolazione, lavoro e condizioni di vita rurali', ['OA', 'OEA', 'OER', 'RLIS', 'SXS', 'SDGB']],
+    ['Aiuti, investimenti e ricerca agricola', ['FA', 'EA', 'FDI', 'IC', 'IG', 'AE', 'AF']],
   ];
+  A.GRUPPI_FONTI = { WHO: 'Salute (OMS)', OECD: 'Istruzione (OCSE)', UNSD: 'Annuario statistico ONU', IMF: 'Clima ed economia (FMI)', DATA_EUROPA: 'Dati comunali (data.europa.eu)' };
   A.gruppoArchivio = (a) => {
+    if (A.GRUPPI_FONTI[a.src]) return A.GRUPPI_FONTI[a.src];
     if (/^OCSE/.test(a.fonte)) return 'Istruzione (OCSE)';
     const g = A.GRUPPI_ARCHIVI.find(([, codici]) => codici.includes(a.cod));
     return g ? g[0] : 'Altri insiemi di dati';
   };
+  // contrassegni delle osservazioni negli insiemi di dati (FAOSTAT e altre fonti)
+  A.FLAG = { A: 'dato ufficiale', E: 'stima della fonte', I: 'valore imputato dalla fonte', X: 'dato di organizzazione internazionale', M: 'dato mancante', F: 'previsione', T: 'dato non ufficiale', P: 'provvisorio', O: 'valore mancante', K: 'serie interrotta', Q: 'dato non ufficiale', Fc: 'valore calcolato', B: 'interruzione della serie' };
   A.VISTE = [['andamento', 'Andamento'], ['mappa', 'Mappa'], ['classifica', 'Classifica'], ['tabella', 'Tabella']];
   A.AREE = {
     mondo: { n: 'Mondo' }, europa: { n: 'Europa', b: [-25, 34, 45, 71] }, africa: { n: 'Africa', b: [-19, -36, 53, 38] },
@@ -181,16 +187,25 @@ window.Atlante = (function () {
   A.carica = async (cod) => {
     if (!cache[cod]) {
       const i = A.IND[cod];
-      cache[cod] = i && i.fam === 'arc' ? Promise.resolve(cache[cod + '_pronto']) : caricaJson(i && i.fam === 'eu' ? `dati/eurostat/${cod}.json` : `dati/indicatori/${cod}.json`);
+      if (i && i.fam === 'arc') { const m = /^A:([^:]+):(\d+)$/.exec(cod); cache[cod] = caricaGz(`dati/archivi/${m[1]}/${m[2]}.json.gz`).then((d) => { if (d.f) { noteRisolte[cod] = {}; Object.entries(d.f).forEach(([t, anni]) => { noteRisolte[cod][t] = {}; Object.entries(anni).forEach(([y, fl]) => { noteRisolte[cod][t][y] = [A.FLAG[fl] ? `${fl}: ${A.FLAG[fl]}` : fl, null]; }); }); } return d; }); }
+      else cache[cod] = caricaJson(i && i.fam === 'eu' ? `dati/eurostat/${cod}.json` : `dati/indicatori/${cod}.json`);
     }
     const d = await cache[cod];
     cache[cod + '_r'] = d;
     return d;
   };
+  // file compressi (gzip) degli insiemi di dati: decompressione nel browser, o lettura diretta se il server li ha già decompressi
+  const caricaGz = async (u) => {
+    const r = await fetch(u); if (!r.ok) throw new Error(u);
+    const buf = await r.arrayBuffer(); const b = new Uint8Array(buf);
+    if (b.length > 2 && b[0] === 0x1f && b[1] === 0x8b) { const testo = await new Response(new Blob([buf]).stream().pipeThrough(new DecompressionStream('gzip'))).text(); return JSON.parse(testo); }
+    return JSON.parse(new TextDecoder().decode(buf));
+  };
   A.dati = (cod) => cache[cod + '_r'];
   A.caricaNote = (cod) => {
     const i = A.IND[cod];
     if (!i || !i.note) return Promise.resolve(null);
+    if (i.fam === 'arc') return A.carica(cod).then(() => noteRisolte[cod] || null);
     if (!cacheNote[cod]) cacheNote[cod] = caricaJson(`dati/note/${cod}.json`).catch(() => null).then((n) => { noteRisolte[cod] = n; return n; });
     return cacheNote[cod];
   };
@@ -202,14 +217,13 @@ window.Atlante = (function () {
     if (!cacheProf[u]) cacheProf[u] = caricaJson(u).catch(() => null);
     return cacheProf[u].then((p) => (p && t.k === 'nuts' ? { id, ind: p[id] || {} } : p));
   };
-  // una serie di un archivio parziale diventa un indicatore con codice A:<file>:<indice>
+  // una serie di un insieme di dati diventa un indicatore con codice A:<file>:<indice>; i valori stanno in un file a parte
   A.registraSerie = async (id) => {
     if (A.IND[id]) return true;
     const m = /^A:([^:]+):(\d+)$/.exec(id); if (!m || !A.ARC[m[1]]) return false;
     const a = await A.caricaArchivio(m[1]); const s = a.s[+m[2]]; if (!s) return false;
     const c = A.ARC[m[1]];
-    A.IND[id] = { c: id, fam: 'arc', t: 'arc', n: s.l, u: s.u || 'unità non indicata', en: `${c.en}: ${s.l}`, y0: s.y0, y1: s.y1, arch: c, interi: s.i, lotto: c.lotto, agg: c.agg, url: c.url, note: false };
-    cache[id + '_pronto'] = { c: id, y0: s.y0, y1: s.y1, d: s.d };
+    A.IND[id] = { c: id, fam: 'arc', t: 'arc', n: s.l, u: s.u || 'unità non indicata', en: `${c.en}: ${s.l}`, y0: s.y0, y1: s.y1, arch: c, interi: s.i, lotto: c.lotto, agg: c.agg, url: c.url, note: true, nterr: s.n, dims: s.dims, cods: s.cod };
     return true;
   };
   A.universo = (cod) => {
@@ -428,7 +442,7 @@ window.Atlante = (function () {
     apri($('#apri-schede'), $('#tendina-schede'));
     // menu per telefono
     const mm = $('#menu-mobile'), hb = $('#apri-menu');
-    mm.innerHTML = `<div class="menu-mobile__titolo">Temi</div>${A.ORDINE_TEMI.map((k) => `<a data-tema="${k}" href="${k === 'arc' ? '#/archivi' : '#/tema/' + k}">${A.icona(k)}${A.esc(A.TEMI[k].n)}</a>`).join('')}<div class="menu-mobile__titolo">Strumenti</div><a href="#/confronta">${A.icona('classifica')}Confronta paesi e regioni</a><a href="scheda-fvg.html">${A.icona('eur')}Scheda: Friuli Venezia Giulia in Europa</a><a href="#/t/ITA">${A.icona('mappa')}Profilo dell’Italia</a><a href="#/archivi">${A.icona('arc')}Archivi FAOSTAT e OCSE</a><a href="#/fonti">${A.icona('tabella')}Fonti e metodo</a>`;
+    mm.innerHTML = `<div class="menu-mobile__titolo">Temi</div>${A.ORDINE_TEMI.map((k) => `<a data-tema="${k}" href="${k === 'arc' ? '#/archivi' : '#/tema/' + k}">${A.icona(k)}${A.esc(A.TEMI[k].n)}</a>`).join('')}<div class="menu-mobile__titolo">Strumenti</div><a href="#/confronta">${A.icona('classifica')}Confronta paesi e regioni</a><a href="scheda-fvg.html">${A.icona('eur')}Scheda: Friuli Venezia Giulia in Europa</a><a href="#/t/ITA">${A.icona('mappa')}Profilo dell’Italia</a><a href="#/archivi">${A.icona('arc')}Insiemi di dati</a><a href="#/fonti">${A.icona('tabella')}Fonti e metodo</a>`;
     hb.addEventListener('click', () => { const era = !mm.hidden; mm.hidden = era; hb.setAttribute('aria-expanded', era ? 'false' : 'true'); });
     mm.addEventListener('click', (e) => { if (e.target.closest('a')) { mm.hidden = true; hb.setAttribute('aria-expanded', 'false'); } });
     addEventListener('scroll', () => { $('#testa').classList.toggle('scorre', scrollY > 4); }, { passive: true });

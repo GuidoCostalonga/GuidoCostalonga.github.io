@@ -38,10 +38,10 @@
     const storie = A.STORIE.map((s) => ({ s, i: A.IND[s.c], p: pano(s.c) })).filter((x) => x.i && x.p && x.p[x.s.k]).slice(0, 6);
     main.innerHTML = `<div class="entra">
       <section class="eroe">
-        <p class="occhiello" data-tema="pop">Banca Mondiale · Eurostat · FAOSTAT · OCSE</p>
+        <p class="occhiello" data-tema="pop">Banca Mondiale · Eurostat · Commissione europea · FAOSTAT · OMS · OCSE · ONU · FMI</p>
         <h1>I numeri del <em>mondo</em>, delle regioni europee e del Friuli Venezia Giulia</h1>
         <p>Cerca un dato, aprilo su mappa, andamento e classifica, confronta paesi e regioni. Ogni valore viene dalla fonte: niente stime, niente interpolazioni.</p>
-        <div class="eroe__numeri"><span><b data-n="${nInd}">0</b>indicatori</span><span><b data-n="${A.PAESI.length}">0</b>paesi</span><span><b data-n="${nReg}">0</b>regioni e province europee</span><span><b data-n="${nArc}">0</b>archivi FAOSTAT e OCSE</span></div>
+        <div class="eroe__numeri"><span><b data-n="${nInd}">0</b>indicatori</span><span><b data-n="${A.PAESI.length}">0</b>paesi</span><span><b data-n="${nReg}">0</b>regioni e province europee</span><span><b data-n="${nArc}">0</b>insiemi di dati FAOSTAT, OMS, OCSE, ONU, FMI</span></div>
         <div class="scorciatoie">
           <a class="chip chip--accento" data-tema="sal" href="#/i/SP.DYN.LE00.IN">Speranza di vita</a>
           <a class="chip chip--accento" data-tema="eur" href="#/i/EU_QUOTA_Y_GE65?t=EU:ITH4,EU:ITH3,EU:AT21,EU:SI04,EU:IT&v=mappa&liv=2">Over 65 nelle regioni europee</a>
@@ -61,7 +61,7 @@
         <div class="schede-griglia">
           <a class="scheda-card" data-tema="eur" href="scheda-fvg.html"><span class="occhiello">Scheda</span><h3>Italia e Friuli Venezia Giulia a confronto con l’Europa</h3><p>Invecchiamento, nascite e decessi, le quattro province, la posizione fra le regioni europee e l’Italia nel mondo. Testi e grafici calcolati dai dati.</p><span class="pulsante pulsante--accento">Apri la scheda</span></a>
           <a class="scheda-card" data-tema="pop" href="#/t/ITA"><span class="occhiello">Profilo</span><h3>Italia</h3><p>Diciotto indicatori in evidenza con posizione fra i paesi e andamento degli ultimi trent’anni. Cerca qualsiasi altro paese o regione nella barra in alto.</p><span class="pulsante pulsante--accento">Apri il profilo</span></a>
-          <a class="scheda-card" data-tema="arc" href="#/archivi"><span class="occhiello">Archivi</span><h3>FAOSTAT e OCSE</h3><p>Serie dettagliate su produzione agricola, bilanci alimentari, emissioni, commercio e istruzione. Archivi parziali: solo i paesi presenti nel repository.</p><span class="pulsante pulsante--accento">Sfoglia gli archivi</span></a>
+          <a class="scheda-card" data-tema="arc" href="#/archivi"><span class="occhiello">Insiemi di dati</span><h3>FAOSTAT, OMS, OCSE, ONU e FMI</h3><p>Tutte le serie dei lotti: produzione agricola, bilanci alimentari, emissioni, commercio, salute, istruzione e clima, serie per serie.</p><span class="pulsante pulsante--accento">Sfoglia gli insiemi di dati</span></a>
         </div></section>
     </div>`;
     main.querySelectorAll('.eroe__numeri b').forEach((b) => A.animaNumero(b, +b.dataset.n, (v) => A.F.int.format(Math.round(v))));
@@ -146,7 +146,7 @@
       else S.sel = A.PREDEF.sel.slice();
     }
     main.innerHTML = '<div class="caricamento">Carico i dati…</div>';
-    const d = await A.carica(cod); A.caricaNote(cod);
+    const d = await A.carica(cod); A.caricaNote(cod).then(() => { if (vista && vista.aggiorna && S.vista === 'tabella') vista.aggiorna(); });
     const st = A.stat(cod);
     // anno iniziale: il più recente con dati per almeno metà dei territori
     const annoBuono = () => { const mx = Math.max(...st.perAnno, 1); for (let k = st.perAnno.length - 1; k >= 0; k--) if (st.perAnno[k] >= mx * 0.5) return d.y0 + k; return d.y1; };
@@ -182,13 +182,18 @@
       ${correlati.length ? `<section class="correlati"><div class="sezione__testa"><h2>Altri indicatori: ${esc(sotto)}</h2></div><div class="indicatori-griglia">${correlati.map((x, idx) => cardIndicatore(x, idx)).join('')}</div></section>` : ''}
     </div>`;
     disegnaMini(main);
-    const fonte = fam === 'eu' ? `${esc(i.org || 'Eurostat')}, <a href="${i.url}" target="_blank" rel="noopener">${esc(i.ds)}</a>` : fam === 'arc' ? `${esc(i.arch.fonte.replace(/ \(.*/, ''))}, insieme di dati ${esc(i.arch.cod)} · <a href="${i.url}" target="_blank" rel="noopener">archivio fonte</a>` : `Banca Mondiale, WDI · <a href="${i.url}" target="_blank" rel="noopener">${esc(i.c)}</a>`;
+    const fonte = fam === 'eu' ? `${esc(i.org || 'Eurostat')}, <a href="${i.url}" target="_blank" rel="noopener">${esc(i.ds)}</a>` : fam === 'arc' ? `${esc(i.arch.fonte.replace(/ \(.*/, ''))}, insieme di dati ${esc(i.arch.cod)}${i.url ? ` · <a href="${i.url}" target="_blank" rel="noopener">fonte</a>` : ''}` : `Banca Mondiale, WDI · <a href="${i.url}" target="_blank" rel="noopener">${esc(i.c)}</a>`;
     $('#sd-fonte').innerHTML = fonte;
     $('#sd-agg').innerHTML = `fonte: ${A.data(i.agg)}<br>repository: ${fam === 'arc' ? 'ottobre 2026' : A.data(A.META.acquisizione[String(i.lotto)] || '')}`;
     if (fam === 'arc') {
-      $('#def-testo').textContent = `Serie originale: ${i.en}.`;
-      $('#def-fonte').innerHTML = `<strong>Archivio parziale.</strong> La fonte distribuisce questo insieme di dati in più archivi; il repository ne contiene solo una parte (${esc(i.arch.archivio)}), cioè ${i.arch.terr.length} territori. Gli altri paesi non mancano nella fonte, mancano nel repository.`;
-      $('#avviso').innerHTML = `<div class="avviso">Archivio parziale: ${i.arch.terr.length} territori presenti nel repository (${esc(i.arch.archivio)}). Gli altri paesi non sono mancanti nella fonte: non sono nel repository.</div>`;
+      const dims = i.dims ? Object.entries(i.dims).map(([k, v]) => `${k} = ${v}`).join('; ') : '';
+      $('#def-testo').textContent = `Serie originale: ${i.en}.${dims ? ` Dimensioni originali: ${dims}.` : ''}${i.cods && i.cods !== i.arch.cod ? ` Codice indicatore: ${i.cods}.` : ''}`;
+      if (i.arch.archivio) {
+        $('#def-fonte').innerHTML = `<strong>Archivio parziale.</strong> La fonte distribuisce questo insieme di dati in più archivi; il repository ne contiene solo una parte (${esc(i.arch.archivio)}), cioè ${i.arch.terr.length} territori. Gli altri paesi non mancano nella fonte, mancano nel repository.`;
+        $('#avviso').innerHTML = `<div class="avviso">Archivio parziale: ${i.arch.terr.length} territori presenti nel repository (${esc(i.arch.archivio)}). Gli altri paesi non sono mancanti nella fonte: non sono nel repository.</div>`;
+      } else {
+        $('#def-fonte').innerHTML = `Insieme di dati completo (lotto ${i.arch.lotto}): ${i.arch.terr.length} territori e ${A.F.int.format(i.arch.serie)} serie nell’insieme, ${i.nterr} territori in questa serie. I contrassegni della fonte (dato ufficiale, stima, valore imputato) compaiono nelle note della tabella.`;
+      }
     } else {
       $('#def-testo').textContent = i.def ? `“${i.def}”` : 'Definizione non presente nella fonte.';
       $('#def-fonte').innerHTML = fam === 'eu' ? `Fonte: ${esc(i.org || 'Eurostat')}, dataset ${esc(i.ds)} (${esc(i.en)}). ${i.stima ? `<strong>${esc(i.stima)}</strong> ` : ''}${i.calc ? `<strong>${esc(i.calc)}</strong> ` : ''}I codici NUTS storici compaiono in tabella ma non sulla mappa, disegnata con i confini NUTS 2024.` : `Testo originale in inglese della Banca Mondiale per <strong>${esc(i.en)}</strong>. Fonte originaria dichiarata: ${esc((i.org || 'n.d.').replace(/, uri: \S+/g, '').replace(/\n/g, '; '))}. Osservazioni: ${A.F.int.format(i.righe)} righe, ${A.F.int.format(i.valori)} con valore numerico.`;
@@ -361,8 +366,8 @@
         <div class="chips"><button class="pulsante ${gia ? '' : 'pulsante--accento'}" type="button" id="p-sel">${gia ? 'Togli dai territori selezionati' : 'Aggiungi ai territori selezionati'}</button><a class="pulsante" href="#/confronta?t=${esc([...new Set([id, ...S.sel])].join(','))}&g=${eu ? 'eur' : 'sal'}">Confronta con gli altri selezionati</a>${t.k === 'nuts' && t.id === 'EU:ITH4' ? '<a class="pulsante" href="scheda-fvg.html">Scheda: Friuli Venezia Giulia in Europa</a>' : ''}${t.k === 'paese' && A.NUTS0[id] ? `<a class="pulsante" href="#/i/EU_QUOTA_Y_GE65?v=mappa&liv=2&pae=${id}&t=${A.NUTS0[id]}">Mappa delle regioni</a>` : ''}</div></header>
       ${sezioneProfilo(prof, id, eu ? 'Dati regionali in evidenza (Eurostat e Commissione europea)' : 'Indicatori in evidenza')}
       ${profEu ? sezioneProfilo(profEu, A.NUTS0[id], 'Dati regionali per il paese (Eurostat e Commissione europea)') : ''}
-      ${!prof || !Object.keys(prof.ind).length ? `<p class="nota">${t.k === 'aggf' || t.k === 'storico' ? 'Territorio presente solo negli archivi parziali FAOSTAT e OCSE: nessun indicatore della Banca Mondiale o di Eurostat.' : 'Nessun indicatore in evidenza disponibile per questo territorio.'}</p>` : ''}
-      ${archiviCon.length ? `<section class="sezione"><div class="sezione__testa"><h2>Archivi FAOSTAT e OCSE con questo territorio</h2><p>Archivi parziali del repository in cui compare ${esc(t.n)}: apri l’archivio e cerca una serie.</p></div><div class="archivi-griglia sfalsa">${archiviCon.map((a, idx) => `<a class="archivio-card" data-tema="arc" href="#/archivi/${esc(a.f)}" style="--i:${idx}"><h3>${esc(a.n)}</h3><p>${esc(a.fonte.replace(/ \(.*/, ''))} · ${esc(A.gruppoArchivio(a))}</p><span class="conta">${a.terr.length} territori · ${A.F.int.format(a.serie)} serie · ${a.y0}–${a.y1}</span></a>`).join('')}</div></section>` : ''}
+      ${!prof || !Object.keys(prof.ind).length ? `<p class="nota">${t.k === 'aggf' || t.k === 'storico' ? 'Territorio presente solo negli insiemi di dati FAOSTAT, OMS, OCSE, ONU o FMI: nessun indicatore della Banca Mondiale o di Eurostat.' : 'Nessun indicatore in evidenza disponibile per questo territorio.'}</p>` : ''}
+      ${archiviCon.length ? `<section class="sezione"><div class="sezione__testa"><h2>Insiemi di dati con questo territorio</h2><p>Insiemi di dati dei lotti in cui compare ${esc(t.n)}: apri l’insieme e cerca una serie.</p></div><div class="archivi-griglia sfalsa">${archiviCon.map((a, idx) => `<a class="archivio-card" data-tema="arc" href="#/archivi/${esc(a.f)}" style="--i:${idx}"><h3>${esc(a.n)}</h3><p>${esc(a.fonte.replace(/ \(.*/, ''))} · ${esc(A.gruppoArchivio(a))}</p><span class="conta">${a.terr.length} territori · ${A.F.int.format(a.serie)} serie · ${a.y0}–${a.y1}</span></a>`).join('')}</div></section>` : ''}
     </div>`;
     $('#p-sel').addEventListener('click', () => { if (S.sel.includes(id)) S.sel.splice(S.sel.indexOf(id), 1); else S.sel.push(id); A.salvaStato(); A.toast(S.sel.includes(id) ? `${t.n} aggiunto ai territori selezionati` : `${t.n} tolto dai territori selezionati`); A.pagine.t(main, parti); });
     main.querySelectorAll('.mini[data-sp]').forEach((el) => { const [y0, sp] = JSON.parse(el.dataset.sp); A.sparkline(el, { y0, valori: sp, colore: A.colori['t_' + el.dataset.tema] }); });
@@ -426,7 +431,7 @@
     await disegna();
   };
 
-  /* ---------- archivi parziali ---------- */
+  /* ---------- insiemi di dati (archivi dei lotti) ---------- */
   A.pagine.archivi = async (main, parti) => {
     const elenco = A.META.archivi || [];
     const f = parti[1];
@@ -434,15 +439,16 @@
       const a = A.ARC[f];
       document.title = `${a.n} · Archivi · Atlante dei dati`;
       main.innerHTML = `<div class="entra" data-tema="arc">${briciole([{ n: 'Atlante', href: '#/' }, { n: 'Archivi', href: '#/archivi' }, { n: a.n }])}
-        <header class="tema-testa"><div class="tema-testa__riga">${A.icona('arc')}<h1>${esc(a.n)}</h1></div><p>${esc(a.fonte)}, insieme di dati ${esc(a.cod)}, argomento “${esc(A.gruppoArchivio(a))}”. <strong>Archivio parziale:</strong> la fonte distribuisce questo insieme di dati in più archivi e il repository ne contiene solo una parte (${esc(a.archivio)}), cioè ${a.terr.length} territori${a.aggr && a.aggr.length ? ` (di cui ${a.aggr.length} aggregati)` : ''}. ${A.F.int.format(a.serie)} serie dal ${a.y0} al ${a.y1}; descrizioni in inglese, come nella fonte. Nome originale: ${esc(a.en)}.</p>${a.mb >= 4 ? `<p class="avviso">Archivio molto grande (${A.F.d1.format(a.mb)} MB): il primo caricamento può richiedere qualche secondo, soprattutto da telefono.</p>` : ''}<div class="chips">${a.terr.slice(0, 40).map((id) => (A.T[id] ? `<a class="chip" href="#/t/${esc(id)}">${esc(A.T[id].n)}</a>` : '')).join('')}${a.terr.length > 40 ? `<span class="nd">e altri ${a.terr.length - 40}</span>` : ''}</div></header>
+        <header class="tema-testa"><div class="tema-testa__riga">${A.icona('arc')}<h1>${esc(a.n)}</h1></div><p>${esc(a.fonte)}, insieme di dati ${esc(a.cod)}, argomento “${esc(A.gruppoArchivio(a))}”, lotto ${a.lotto}. ${a.archivio ? `<strong>Archivio parziale:</strong> la fonte distribuisce questo insieme di dati in più archivi e il repository ne contiene solo una parte (${esc(a.archivio)}), cioè ${a.terr.length} territori` : `<strong>Insieme completo:</strong> ${a.terr.length} territori`}${a.aggr && a.aggr.length ? ` (di cui ${a.aggr.length} aggregati)` : ''}. ${A.F.int.format(a.serie)} serie dal ${a.y0} al ${a.y1}, ${A.F.int.format(a.righe || 0)} osservazioni; descrizioni in inglese, come nella fonte. Nome originale: ${esc(a.en)}.</p><div class="chips">${a.terr.slice(0, 40).map((id) => (A.T[id] ? `<a class="chip" href="#/t/${esc(id)}">${esc(A.T[id].n)}</a>` : '')).join('')}${a.terr.length > 40 ? `<span class="nd">e altri ${a.terr.length - 40}</span>` : ''}</div></header>
         <div class="comandi" style="grid-template-columns:1fr"><div class="campo"><label for="a-cerca">Cerca una serie</label><div class="combo"><input id="a-cerca" type="search" placeholder="es. wheat, nitrogen, import" autocomplete="off"></div></div></div>
         <ul class="serie-lista" id="a-serie"><li class="nota">Carico le serie…</li></ul></div>`;
       const ul = $('#a-serie'), inp = $('#a-cerca');
       let serie = [];
       const disegna = () => {
         const nq = A.norm(inp.value.trim());
-        const trov = serie.map((s, k) => ({ s, k, n: Object.keys(s.d).length })).filter((o) => !nq || A.norm(o.s.l).includes(nq) || A.norm(o.s.u).includes(nq)).sort((x, y) => y.n - x.n || x.s.l.localeCompare(y.s.l));
-        ul.innerHTML = trov.slice(0, 80).map((o) => `<li><button type="button" data-k="${o.k}"><span>${esc(o.s.l)}</span><span class="tipo">${esc(o.s.u || 'unità non indicata')} · dal ${o.s.y0} al ${o.s.y1} · ${o.n} territori</span></button></li>`).join('') + (trov.length > 80 ? `<li class="nota">Altre ${trov.length - 80} serie: restringi la ricerca.</li>` : '') + (!trov.length ? '<li class="nota">Nessuna serie corrisponde alla ricerca.</li>' : '');
+        const parole = nq.split(/\s+/).filter(Boolean);
+        const trov = serie.map((s, k) => ({ s, k, n: s.n })).filter((o) => { if (!parole.length) return true; const t = A.norm(`${o.s.l} ${o.s.u} ${o.s.cod || ''}`); return parole.every((w) => t.includes(w)); }).sort((x, y) => y.n - x.n || x.s.l.localeCompare(y.s.l));
+        ul.innerHTML = trov.slice(0, 120).map((o) => `<li><button type="button" data-k="${o.k}"><span>${esc(o.s.l)}</span><span class="tipo">${esc(o.s.u || 'unità non indicata')} · dal ${o.s.y0} al ${o.s.y1} · ${o.n} territori</span></button></li>`).join('') + (trov.length > 120 ? `<li class="nota">Altre ${A.F.int.format(trov.length - 120)} serie: restringi la ricerca (più parole restringono).</li>` : '') + (!trov.length ? '<li class="nota">Nessuna serie corrisponde alla ricerca.</li>' : '');
         ul.querySelectorAll('button').forEach((b) => b.addEventListener('click', async () => { const id = `A:${f}:${b.dataset.k}`; await A.registraSerie(id); S.vista = 'mappa'; S.area = 'mondo'; A.vai(`#/i/${id}?v=mappa`); }));
       };
       try { serie = (await A.caricaArchivio(f)).s; A.cache[f + '_serie'] = serie; } catch (e) { ul.innerHTML = '<li class="nota">Non riesco a caricare questo archivio.</li>'; return; }
@@ -450,12 +456,12 @@
       disegna();
       return;
     }
-    document.title = 'Archivi FAOSTAT e OCSE · Atlante dei dati';
-    const ordineGruppi = A.GRUPPI_ARCHIVI.map((g) => g[0]).concat(['Istruzione (OCSE)', 'Altri insiemi di dati']);
+    document.title = 'Insiemi di dati · Atlante dei dati';
+    const ordineGruppi = A.GRUPPI_ARCHIVI.map((g) => g[0]).concat(Object.values(A.GRUPPI_FONTI), ['Altri insiemi di dati']);
     const perGruppo = new Map(); elenco.forEach((a) => { const g = A.gruppoArchivio(a); if (!perGruppo.has(g)) perGruppo.set(g, []); perGruppo.get(g).push(a); });
     main.innerHTML = `<div class="entra" data-tema="arc">${briciole([{ n: 'Atlante', href: '#/' }, { n: 'Archivi' }])}
-      <header class="tema-testa"><div class="tema-testa__riga">${A.icona('arc')}<h1>Archivi FAOSTAT e OCSE</h1></div><p>${A.TEMI.arc.breve} Le fonti distribuiscono ogni insieme di dati in più archivi e il repository ne contiene solo una parte, quindi solo alcuni paesi o aggregati: la copertura è indicata in ogni scheda. Scegli un argomento e un insieme di dati, poi una serie: si apre su mappa, andamento, classifica e tabella.</p></header>
-      ${ordineGruppi.filter((g) => perGruppo.has(g)).map((g) => { const arr = perGruppo.get(g).slice().sort((x, y) => x.n.localeCompare(y.n)); return `<section class="sezione"><div class="sezione__testa"><h2>${esc(g)}</h2><p>${arr.length === 1 ? 'un insieme di dati' : `${arr.length} insiemi di dati`} · ${esc([...new Set(arr.map((a) => a.fonte.replace(/ \(.*/, '')))].join(', '))}</p></div><div class="archivi-griglia sfalsa">${arr.map((a, idx) => `<a class="archivio-card" data-tema="arc" href="#/archivi/${esc(a.f)}" style="--i:${idx}"><h3>${esc(a.n)}</h3><p>${esc(a.en)}</p><span class="conta">${a.terr.length} territori · ${A.F.int.format(a.serie)} serie · ${a.y0}–${a.y1}${a.mb >= 4 ? ` · ${A.F.d1.format(a.mb)} MB` : ''}</span></a>`).join('')}</div></section>`; }).join('')}
+      <header class="tema-testa"><div class="tema-testa__riga">${A.icona('arc')}<h1>Insiemi di dati</h1></div><p>${A.TEMI.arc.breve} ${elenco.filter((a) => !a.archivio).length} insiemi completi e ${elenco.filter((a) => a.archivio).length} ancora parziali (per questi il repository contiene solo una parte degli archivi della fonte, quindi solo alcuni paesi: la copertura è indicata in ogni scheda). Scegli un argomento e un insieme di dati, poi una serie: si apre su mappa, andamento, classifica e tabella.</p></header>
+      ${ordineGruppi.filter((g) => perGruppo.has(g)).map((g) => { const arr = perGruppo.get(g).slice().sort((x, y) => x.n.localeCompare(y.n)); return `<section class="sezione"><div class="sezione__testa"><h2>${esc(g)}</h2><p>${arr.length === 1 ? 'un insieme di dati' : `${arr.length} insiemi di dati`} · ${esc([...new Set(arr.map((a) => a.fonte.replace(/ \(.*/, '')))].join(', '))}</p></div><div class="archivi-griglia sfalsa">${arr.map((a, idx) => `<a class="archivio-card" data-tema="arc" href="#/archivi/${esc(a.f)}" style="--i:${idx}"><h3>${esc(a.n)}</h3><p>${esc(a.en)}</p><span class="conta">${a.archivio ? 'parziale · ' : ''}${a.terr.length} territori · ${A.F.int.format(a.serie)} serie · ${a.y0}–${a.y1}</span></a>`).join('')}</div></section>`; }).join('')}
     </div>`;
   };
 
@@ -469,37 +475,44 @@
       ['Banca Mondiale, WDI (Indicatori di sviluppo mondiale)', `${nWb} indicatori su popolazione, salute, istruzione, ambiente, energia, acqua, agricoltura e digitale`, `completa: ${nPaesi} paesi e ${A.META.territori.filter((t) => t.k === 'agg').length} aggregati, dal 1960`],
       ['Eurostat, statistiche regionali', `${nEu} indicatori: popolazione, età, nascite, decessi e migrazioni; proiezioni di popolazione al 2100; economia, valore aggiunto, retribuzioni e produttività; lavoro; istruzione; ricerca; salute, cause di morte, ricoveri e personale sanitario; condizioni di vita e reati; digitale (famiglie e imprese); turismo; trasporti; agricoltura, aziende agricole e conti dell’agricoltura; impianti per i rifiuti ed erosione del suolo; imprese e innovazione. I file originali dell’API di Eurostat (scaricati il ${A.data(A.META.acquisizione.api || '')}) sono conservati nel repository`, `completa per i territori pubblicati da Eurostat: ${nNuts} codici NUTS (paesi, macroregioni, regioni, province; anche codici delle versioni precedenti della classificazione); a seconda dell’indicatore il dettaglio arriva alle regioni (NUTS 2) o alle province (NUTS 3)`],
       ['Commissione europea, DG REGIO (piattaforma cohesiondata, trovata su data.europa.eu)', `${nReg} indicatori: indice di competitività regionale RCI 2.0 (2016, 2019, 2022); indice di progresso sociale EU-SPI (edizioni 2020 e 2024); indice di qualità delle istituzioni EQI (2010, 2013, 2017, 2021, 2024); monitor regionale di genere 2021; emissioni di gas serra per abitante e intensità carbonica 1990-2021 (stime JRC); pagamenti dei fondi europei per regione 1989-2022; produzione e potenziale di energia rinnovabile da sole e vento per provincia (stima JRC). I file originali (scaricati il ${A.data(A.META.acquisizione.regio || '')}) sono conservati nel repository`, 'regioni NUTS 2 dei paesi dell’Unione europea (province NUTS 3 per le rinnovabili); gli indici hanno pochi anni di riferimento, le serie dei gas serra e dei fondi partono dal 1990 e dal 1989'],
-      ['FAOSTAT', `${archivi.filter((a) => /^FAOSTAT/.test(a.fonte)).length} insiemi di dati su produzione, bilanci alimentari, commercio, fertilizzanti, emissioni, aiuti e investimenti`, 'parziale: per ogni insieme di dati il repository contiene solo una parte degli archivi della fonte, quindi solo alcuni paesi o aggregati (elenco qui sotto)'],
-      ['OCSE (Organizzazione per la cooperazione e lo sviluppo economico)', `${archivi.filter((a) => /^OCSE/.test(a.fonte)).length} flussi sull’istruzione degli adulti e sul personale scolastico`, 'parziale: 6 paesi'],
     ];
+    const perFonte = (src) => archivi.filter((a) => a.src === src);
+    const descr = (src, testo) => { const arr = perFonte(src); if (!arr.length) return null; const comp = arr.filter((a) => !a.archivio).length, parz = arr.length - comp; return [arr[0].fonte, `${arr.length} insiemi di dati (${A.F.int.format(arr.reduce((t, a) => t + a.serie, 0))} serie): ${testo}`, `${comp ? `${comp} insiemi completi (tutti i territori pubblicati dalla fonte)` : ''}${comp && parz ? '; ' : ''}${parz ? `${parz} insiemi ancora parziali, con i soli paesi degli archivi presenti nel repository (elenco qui sotto)` : ''}`]; };
+    [descr('FAOSTAT', 'produzione, prezzi, bilanci alimentari, commercio, fertilizzanti e terreni, emissioni, foreste, popolazione rurale, aiuti e investimenti'),
+     descr('WHO', 'speranza di vita, mortalità, fattori di rischio (pressione, glicemia, colesterolo, peso, alcol, attività fisica), personale sanitario, suicidi; per sesso ed età'),
+     descr('OECD', 'istruzione degli adulti e personale scolastico'), descr('UNSD', 'tavole dell’annuario statistico delle Nazioni Unite'),
+     descr('IMF', 'cruscotto climatico del Fondo monetario internazionale'), descr('DATA_EUROPA', 'dataset comunale di Karlsruhe nel catalogo europeo')].filter(Boolean).forEach((r) => righe.push(r));
+    const parziali = archivi.filter((a) => a.archivio);
     const soloIndici = [
-      'OMS (Organizzazione mondiale della sanità): 20 indicatori sanitari, presenti solo nell’indice.',
       'Eurostat: i dati su lavoro e altri temi regionali citati negli indici dei lotti non sono nei lotti; l’Atlante li ha presi direttamente dall’API di Eurostat (tabella qui sopra).',
-      'FAOSTAT: emissioni totali (GT), produzione forestale (FO) e altri insiemi di dati descritti solo da guide, dizionari o registri delle serie.',
-      'FAOSTAT: apporti alimentari da indagini individuali (FDIQ), presenti ma organizzati per indagine e non per anno, quindi non rappresentabili nelle viste dell’Atlante.',
-      'ONU, FMI (Fondo monetario internazionale) e comune di Karlsruhe: citati nei riepiloghi, senza valori nel repository.',
+      'FAOSTAT: gli insiemi di dati dei lotti non ancora acquisiti dall’Atlante (lotti 12-14, 16-17, 20-21 e 29-31) sono descritti solo dagli indici e dalle guide; le matrici bilaterali (commercio e fertilizzanti per paese partner, aiuti per donatore) hanno una struttura per coppie di paesi che le viste dell’Atlante non rappresentano.',
+      'FAOSTAT: apporti alimentari da indagini individuali (FDIQ, lotto 25), organizzati per indagine e non per anno, quindi non rappresentabili nelle viste dell’Atlante.',
     ];
     main.innerHTML = `<div class="entra prosa">${briciole([{ n: 'Atlante', href: '#/' }, { n: 'Fonti e metodo' }])}
       <h1>Fonti e metodo</h1>
       <p>L’Atlante mostra tutti i <strong>valori</strong> contenuti nel repository <a href="https://github.com/GuidoCostalonga/open-data" target="_blank" rel="noopener">open data</a>. I file che contengono solo indici, registri o guide descrivono dati che nel repository non ci sono, e sono elencati qui come tali.</p>
       <h2>Che cosa contiene l’Atlante</h2>
       <div class="tabella-prosa"><table><thead><tr><th>Fonte</th><th>Contenuto</th><th>Copertura</th></tr></thead><tbody>${righe.map((r) => `<tr>${r.map((c) => `<td>${esc(c)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>
-      <h2>Archivi parziali: che cosa c’è nel repository</h2>
-      <p>Le fonti distribuiscono ogni insieme di dati in più archivi; nel repository ne è presente solo una parte, indicata qui per ciascun insieme di dati. Un paese assente non è un dato mancante della fonte: è un archivio che non è nel repository.</p>
-      <div class="tabella-prosa"><table><thead><tr><th>Insieme di dati</th><th>Argomento</th><th>Nel repository</th><th>Territori</th></tr></thead><tbody>${archivi.map((a) => `<tr><td><a href="#/archivi/${esc(a.f)}">${esc(a.n)}</a><br><span class="nd">${esc(a.fonte.replace(/ \(.*/, ''))}, ${esc(a.cod)}</span></td><td>${esc(A.gruppoArchivio(a))}</td><td>${esc(a.archivio)}</td><td>${a.terr.length}</td></tr>`).join('')}</tbody></table></div>
+      <h2>Insiemi di dati ancora parziali</h2>
+      <p>Per questi insiemi il repository contiene solo una parte degli archivi della fonte, indicata qui. Un paese assente non è un dato mancante della fonte: è un archivio che non è nel repository. Gli altri ${archivi.length - parziali.length} insiemi sono completi.</p>
+      <div class="tabella-prosa"><table><thead><tr><th>Insieme di dati</th><th>Argomento</th><th>Nel repository</th><th>Territori</th></tr></thead><tbody>${parziali.map((a) => `<tr><td><a href="#/archivi/${esc(a.f)}">${esc(a.n)}</a><br><span class="nd">${esc(a.fonte.replace(/ \(.*/, ''))}, ${esc(a.cod)}</span></td><td>${esc(A.gruppoArchivio(a))}</td><td>${esc(a.archivio)}</td><td>${a.terr.length}</td></tr>`).join('')}</tbody></table></div>
+      ${(A.META.archivi_esclusi || []).length ? `<h2>Insiemi di dati presenti ma non rappresentabili</h2>
+      <p>Questi insiemi sono nei lotti e sono stati letti integralmente, ma ogni loro serie ha una sola osservazione (indagini, censimenti, rilevazioni per sottogruppo): non sono serie annuali per territorio e le viste dell’Atlante non li possono mostrare.</p>
+      <ul>${A.META.archivi_esclusi.map((a) => `<li>${esc(a.n)} (${esc(a.fonte.replace(/ \(.*/, ''))} ${esc(a.cod)}, lotto ${a.lotto}): ${A.F.int.format(a.serie)} serie e ${A.F.int.format(a.righe)} osservazioni; ${esc(a.motivo)}.</li>`).join('')}</ul>` : ''}
       <h2>Dati presenti solo come indici o guide</h2>
       <ul>${soloIndici.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>
       <h2>Come leggere i valori</h2>
       <ul>
         <li>Nessun valore è stimato o interpolato dall’Atlante. Gli anni senza dato restano vuoti: tratteggio sulla mappa, interruzioni nelle linee, “n.d.” (non disponibile) in tabella e nel confronto.</li>
-        <li>Archivi parziali: un paese assente non è un dato mancante della fonte, è un file che non è nel repository. La mappa lo mostra in grigio come “non nel repository”.</li>
+        <li>Insiemi di dati parziali: un paese assente non è un dato mancante della fonte, è un file che non è nel repository. La mappa lo mostra in grigio come “non nel repository”.</li>
+        <li>Negli insiemi di dati ogni osservazione conserva il contrassegno della fonte (dato ufficiale, stima, valore imputato, previsione): compare nelle note della tabella. Le stime e le previsioni restano tali e non vengono trasformate in dati osservati.</li>
         <li>Le tre quote di popolazione per età Eurostat sono calcolate dall’Atlante: popolazione della classe d’età divisa per la popolazione totale, stesso territorio e stesso anno, per 100. I due totali dei pagamenti dei fondi europei sono la somma, per regione e anno, dei sette fondi pubblicati dalla Commissione (sommando anche i periodi di programmazione che si sovrappongono nello stesso anno). Posizioni in classifica, mediane e variazioni sono calcolate dai valori della fonte. Tutti gli altri numeri sono quelli pubblicati.</li>
         <li>Alcuni indicatori sono stime o proiezioni della fonte stessa, non misurazioni: gas serra regionali e potenziale rinnovabile (modelli del Centro comune di ricerca), spesa modellata dei fondi europei, erosione del suolo, proiezioni di popolazione al 2100. La scheda dell’indicatore lo dichiara in evidenza.</li>
         <li>L’opzione “ultimo dato disponibile” riporta il valore più recente dei 10 anni precedenti e mostra sempre l’anno effettivo del dato.</li>
         <li>Per la visualizzazione i valori decimali sono arrotondati a 6 cifre significative; i conteggi interi restano esatti. Il valore originale è negli Excel del repository.</li>
         <li>Le percentuali sono nella scala della fonte: 35 significa 35%.</li>
         <li>Gli aggregati (Mondo, Unione europea, fasce di reddito, regioni FAOSTAT) sono calcolati dalle fonti e non vanno sommati ai paesi.</li>
-        <li>Negli archivi FAOSTAT l’identità delle serie comprende il territorio: le serie sono raggruppate per descrizione e unità di misura, così da poter confrontare i paesi presenti.</li>
+        <li>Negli insiemi di dati una serie è definita dalle dimensioni originali della fonte (prodotto, elemento, sesso, età, unità) senza il territorio, così da confrontare i paesi; le dimensioni originali sono riportate nella scheda della serie.</li>
       </ul>
       <h2>Mappe</h2>
       <p>Paesi e regioni del mondo: Natural Earth, scala 1:50 milioni, versione 5.1.2, campi <em>REGION_WB</em> e <em>CONTINENT</em>. Regioni europee: GISCO (Sistema d’informazione geografica della Commissione europea), NUTS (Nomenclatura delle unità territoriali statistiche) versione 2024, scala 1:10 milioni; © EuroGeographics per i confini amministrativi. I confini sono semplificati e non implicano alcuna posizione sullo status dei territori. I codici area FAOSTAT sono collegati ai codici ISO3 tramite il codice M49 dei dizionari originali.</p>

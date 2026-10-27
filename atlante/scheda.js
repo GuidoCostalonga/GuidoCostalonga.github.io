@@ -53,21 +53,40 @@
     const serie = ids.filter((id) => d.d[id]).map((id) => ({ id, p: d.d[id].map((v, i) => ({ y: d.y0 + i, v })).filter((o) => o.v != null) }));
     const anni = d3.extent(serie.flatMap((s) => s.p.map((o) => o.y)));
     const vals = serie.flatMap((s) => s.p.map((o) => o.v));
-    const x = d3.scaleLinear().domain(anni).range([0, w]);
+    const x0 = d3.scaleLinear().domain(anni).range([0, w]);
     const y = d3.scaleLinear().domain(opz.zero ? [0, d3.max(vals)] : d3.extent(vals)).nice().range([h, 0]);
     const svg = d3.select(el).append('svg').attr('viewBox', `0 0 ${W} ${H}`).attr('role', 'img').attr('aria-label', opz.etichetta || 'Grafico a linee');
     const g = svg.append('g').attr('transform', `translate(${m.l},${m.t})`);
-    g.append('g').attr('class', 'asse asse--base').attr('transform', `translate(0,${h})`).call(d3.axisBottom(x).ticks(Math.min(stretto ? 4 : 8, anni[1] - anni[0])).tickFormat(d3.format('d')).tickSizeOuter(0));
+    const clipId = 'clip-' + Math.random().toString(36).slice(2, 7);
+    svg.append('defs').append('clipPath').attr('id', clipId).append('rect').attr('x', -2).attr('y', -6).attr('width', w + 4).attr('height', h + 8);
+    const gx = g.append('g').attr('class', 'asse asse--base').attr('transform', `translate(0,${h})`);
     g.append('g').attr('class', 'asse').call(d3.axisLeft(y).ticks(5).tickSize(-w).tickPadding(6).tickFormat((v) => (Math.abs(v) >= 1000 ? F.int.format(v) : F.s3.format(v))));
-    const linea = d3.line().x((o) => x(o.y)).y((o) => y(o.v));
+    g.append('rect').attr('width', w).attr('height', h).style('fill', 'transparent');
+    const strati = g.append('g').attr('clip-path', `url(#${clipId})`);
     const col = opz.colore || ((s) => colore(s.id));
-    g.selectAll('path.l').data(serie).join('path').attr('class', (s) => 'linea' + (s.id === UE ? ' linea--mondo' : '')).attr('d', (s) => linea(s.p))
-      .style('stroke', col).style('stroke-width', (s) => (s.id === FVG || opz.spesse ? 3 : 2));
-    const fine = serie.map((s) => { const o = s.p[s.p.length - 1]; return { s, x: x(o.y), y: y(o.v), ty: y(o.v), v: o.v }; }).sort((a, b) => a.y - b.y);
-    for (let k = 1; k < fine.length; k++) if (fine[k].ty - fine[k - 1].ty < 15) fine[k].ty = fine[k - 1].ty + 15;
-    g.selectAll('circle').data(fine).join('circle').attr('cx', (f) => f.x).attr('cy', (f) => f.y).attr('r', 4).style('fill', (f) => col(f.s)).style('stroke', colori.carta).style('stroke-width', 2);
-    g.selectAll('text.e').data(fine).join('text').attr('class', (f) => 'etichetta-dato' + (f.s.id === FVG ? '' : ' etichetta-dato--tenue'))
-      .attr('x', (f) => f.x + 8).attr('y', (f) => f.ty + 4).text((f) => `${opz.nome ? opz.nome(f.s) : (stretto && CORTI[f.s.id]) || nome(f.s.id)} ${fmt(f.v, opz.dec)}`);
+    const disegna = (x) => {
+      const [a, b] = x.domain();
+      gx.call(d3.axisBottom(x).ticks(Math.min(stretto ? 4 : 8, Math.max(1, Math.round(b - a)))).tickFormat(d3.format('d')).tickSizeOuter(0));
+      const linea = d3.line().x((o) => x(o.y)).y((o) => y(o.v));
+      strati.selectAll('path.l').data(serie).join('path').attr('class', (s) => 'l linea' + (s.id === UE ? ' linea--mondo' : '')).attr('d', (s) => linea(s.p))
+        .style('stroke', col).style('stroke-width', (s) => (s.id === FVG || opz.spesse ? 3 : 2));
+      const fine = serie.map((s) => { const vis = s.p.filter((o) => o.y >= a && o.y <= b); const o = vis[vis.length - 1]; return o ? { s, x: x(o.y), y: y(o.v), ty: y(o.v), v: o.v } : null; }).filter(Boolean).sort((p, q) => p.y - q.y);
+      for (let k = 1; k < fine.length; k++) if (fine[k].ty - fine[k - 1].ty < 15) fine[k].ty = fine[k - 1].ty + 15;
+      g.selectAll('circle').data(fine, (f) => f.s.id).join('circle').attr('cx', (f) => f.x).attr('cy', (f) => f.y).attr('r', 4).style('fill', (f) => col(f.s)).style('stroke', colori.carta).style('stroke-width', 2);
+      g.selectAll('text.e').data(fine, (f) => f.s.id).join('text').attr('class', (f) => 'e etichetta-dato' + (f.s.id === FVG ? '' : ' etichetta-dato--tenue'))
+        .attr('x', (f) => f.x + 8).attr('y', (f) => f.ty + 4).text((f) => `${opz.nome ? opz.nome(f.s) : (stretto && CORTI[f.s.id]) || nome(f.s.id)} ${fmt(f.v, opz.dec)}`);
+    };
+    // ingrandimento del periodo: rotellina, pizzico, trascinamento, pulsanti; doppio clic per tornare all'intero periodo
+    const zx = d3.zoom().scaleExtent([1, Math.max(1, (anni[1] - anni[0]) / 2)]).extent([[0, 0], [w, h]]).translateExtent([[0, 0], [w, h]])
+      .on('zoom', (ev) => { const x = ev.transform.rescaleX(x0); disegna(x); });
+    g.call(zx).on('dblclick.zoom', null);
+    svg.on('dblclick', () => g.transition().duration(300).call(zx.transform, d3.zoomIdentity));
+    const com = d3.select(el).append('div').attr('class', 'comandi-mappa comandi-mappa--grafico');
+    const bottone = (et, ico, f) => com.append('button').attr('class', 'pulsante').attr('type', 'button').attr('aria-label', et).attr('title', et).html(window.Atlante.icona(ico, '')).on('click', f);
+    bottone('Ingrandisci il periodo', 'piu', () => g.transition().duration(300).call(zx.scaleBy, 1.6));
+    bottone('Riduci', 'meno', () => g.transition().duration(300).call(zx.scaleBy, 1 / 1.6));
+    bottone('Tutto il periodo', 'reset', () => g.transition().duration(300).call(zx.transform, d3.zoomIdentity));
+    disegna(x0);
   }
 
   function sciame(el, d, y, regioni, evid) {
@@ -113,13 +132,22 @@
     const vals = regioni.map((f) => in_(d, 'EU:' + f.properties.id, y)).filter((v) => v != null).sort((a, b) => a - b);
     const sc = d3.scaleSequential(d3.interpolateLab(colori.seq0, colori.seq1)).domain([d3.quantile(vals, 0.02), d3.quantile(vals, 0.98)]).clamp(true);
     const svg = d3.select(el).append('svg').attr('viewBox', `0 0 ${W} ${H}`).attr('role', 'img').attr('aria-label', `Mappa delle regioni europee, quota di 65 anni e oltre nel ${y}`);
-    svg.append('g').selectAll('path').data(paesi).join('path').attr('d', path).style('fill', colori.altro).style('stroke', colori.carta).style('stroke-width', 0.4);
-    svg.append('g').selectAll('path').data(regioni).join('path').attr('d', path)
+    svg.attr('class', 'mappa');
+    const g = svg.append('g');
+    g.append('g').selectAll('path').data(paesi).join('path').attr('d', path).style('fill', colori.altro).style('stroke', colori.carta).style('stroke-width', 0.4);
+    g.append('g').selectAll('path').data(regioni).join('path').attr('d', path)
       .style('fill', (f) => { const v = in_(d, 'EU:' + f.properties.id, y); return v == null ? colori.altro : sc(v); })
       .style('stroke', colori.carta).style('stroke-width', 0.4)
       .append('title').text((f) => { const v = in_(d, 'EU:' + f.properties.id, y); return `${f.properties.n}: ${v == null ? 'n.d.' : fmt(v, 1) + '%'}`; });
     const f = regioni.find((q) => 'EU:' + q.properties.id === FVG);
-    if (f) svg.append('path').attr('d', path(f)).style('fill', 'none').style('stroke', colori.grafite).style('stroke-width', 2.2);
+    if (f) g.append('path').attr('d', path(f)).style('fill', 'none').style('stroke', colori.grafite).style('stroke-width', 2.2);
+    const zoom = d3.zoom().scaleExtent([1, 20]).translateExtent([[-W * 0.5, -H * 0.5], [W * 1.5, H * 1.5]]).on('zoom', (e) => g.attr('transform', e.transform));
+    svg.call(zoom);
+    const com = d3.select(el).append('div').attr('class', 'comandi-mappa');
+    const bottone = (et, ico, fn) => com.append('button').attr('class', 'pulsante').attr('type', 'button').attr('aria-label', et).attr('title', et).html(window.Atlante.icona(ico, '')).on('click', fn);
+    bottone('Ingrandisci', 'piu', () => svg.transition().duration(300).call(zoom.scaleBy, 1.6));
+    bottone('Riduci', 'meno', () => svg.transition().duration(300).call(zoom.scaleBy, 1 / 1.6));
+    bottone('Torna all’inquadratura iniziale', 'reset', () => svg.transition().duration(400).call(zoom.transform, d3.zoomIdentity));
     const lg = $('#legenda-mappa');
     const stops = d3.range(0, 1.01, 0.1).map((t) => `${sc.interpolator()(t)} ${t * 100}%`).join(',');
     lg.innerHTML = `<span>${fmt(sc.domain()[0], 1)}% o meno</span><span class="sch__barra" style="background:linear-gradient(90deg,${stops})"></span><span>${fmt(sc.domain()[1], 1)}% o più</span>`;

@@ -327,6 +327,9 @@ input[type="range"]::-moz-range-thumb { width: 14px; height: 14px; border-radius
 .zoom-nota { position: absolute; left: 12px; top: 10px; font-size: 12px; color: var(--grafite-3); background: color-mix(in srgb, var(--carta) 80%, transparent); padding: 3px 8px; border-radius: 6px; pointer-events: none; }
 .comandi-mappa { position: absolute; left: 10px; bottom: 10px; display: flex; flex-direction: column; gap: 6px; z-index: 2; }
 .comandi-mappa .pulsante { width: 36px; height: 36px; padding: 0; justify-content: center; border-radius: 9px; box-shadow: var(--ombra-lieve); }
+.comandi-mappa--grafico { left: auto; right: 10px; bottom: 10px; flex-direction: row; }
+.sch__mappa { position: relative; }
+.sch__grafico { position: relative; }
 .legenda-mappa { position: absolute; right: 12px; top: 10px; z-index: 2; max-width: calc(100% - 24px); background: color-mix(in srgb, var(--carta) 88%, transparent); border: 1px solid var(--griglia); border-radius: 10px; padding: 8px 10px; font-size: 12px; color: var(--grafite-2); display: grid; gap: 4px; min-width: 190px; }
 .legenda-mappa__barra { height: 10px; border-radius: 3px; }
 .legenda-mappa__estremi { display: flex; justify-content: space-between; }
@@ -357,6 +360,7 @@ input[type="range"]::-moz-range-thumb { width: 14px; height: 14px; border-radius
 .tabella tbody tr:hover { background: var(--carta-2); }
 .tabella tr.riga--sel td:first-child + td { font-weight: 700; }
 .tabella .anno-dato { color: var(--grafite-3); font-size: 12.5px; }
+.tabella .nota-flag { color: var(--grafite-3); font-size: 11px; text-decoration: none; border-bottom: 1px dotted var(--grafite-3); cursor: help; margin-left: 2px; }
 .tabella .agg td:nth-child(2)::after { content: "aggregato"; margin-left: 8px; font-size: 11px; color: var(--grafite-3); border: 1px solid var(--filo); border-radius: 99px; padding: 0 6px; }
 .tabella input[type="checkbox"] { width: 17px; height: 17px; accent-color: var(--grafite); vertical-align: -3px; }
 .mini svg { display: block; overflow: visible; }
