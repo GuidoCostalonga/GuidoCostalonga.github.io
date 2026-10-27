@@ -17,6 +17,8 @@ from python_calamine import CalamineWorkbook
 arg = [a for a in sys.argv[1:] if not a.startswith('--')]
 radice, uscita = arg[0], arg[1]
 mappa = json.load(open(arg[2])) if len(arg) > 2 else {}
+# ISO3 validi per riconoscere il paese nel nome del file: quelli della tabella aree piu' quelli delle cartelle PAESI
+iso_validi = set(mappa.values()) | {d for r in [radice] for root, dirs, _ in os.walk(r) if os.path.basename(root) == 'PAESI' for d in dirs if re.match(r'^[A-Z]{3}$', d)}
 solo = None
 for a in sys.argv[1:]:
     if a.startswith('--lotti='):
@@ -59,8 +61,9 @@ def lotti_presenti():
     return out
 
 
-def chiave_file(f):
-    """Territorio e tipo dal nome del file o dalla cartella: (chiave ISO3 o None, aggregato?)."""
+def chiave_file(f, validi=frozenset()):
+    """Territorio e tipo dal nome del file o dalla cartella: (chiave ISO3 o None, aggregato?).
+    Un token e' preso come ISO3 solo se e' un codice noto (evita di leggere il codice del dataset, es. TCL, come paese)."""
     base = os.path.basename(f)[:-5]
     parti = f.split('/')
     if 'AGGREGATI' in parti:
@@ -69,9 +72,10 @@ def chiave_file(f):
         i = parti.index('PAESI')
         return (parti[i + 1] if re.match(r'^[A-Z]{3}$', parti[i + 1]) else None), False
     tok = base.split('_')
-    agg = len(tok) > 1 and (tok[1] in ('AGG', 'DEST') or 'excluding' in base or 'unspecified' in base)
-    if len(tok) > 1 and re.match(r'^[A-Z]{3}$', tok[1]) and tok[1] not in ('AGG', 'DEST'):
-        return tok[1], False
+    agg = any(t in ('AGG', 'DEST') for t in tok[1:3]) or 'excluding' in base or 'unspecified' in base
+    for t in tok[1:3]:
+        if re.match(r'^[A-Z]{3}$', t) and t in validi:
+            return t, False
     return None, agg
 
 
@@ -103,7 +107,7 @@ for lotto, file in sorted(lotti_presenti().items()):
         base = os.path.basename(f)[:-5]
         if not re.match(r'^L\d+_', base):
             continue
-        iso, agg = chiave_file(f)
+        iso, agg = chiave_file(f, iso_validi)
         wb = CalamineWorkbook.from_path(f)
         for s in wb.sheet_names:
             if s in RUBRICA_DIM:

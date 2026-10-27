@@ -123,12 +123,8 @@ UNITA_IT = {
     'kg/cap': 'kg per persona', 'g/Int$': 'g per dollaro internazionale', 'PS_FTE': 'persone equivalenti a tempo pieno',
 }
 LOTTO_ARCHIVIO = {
-    15: 'archivio 2 di 9', 18: 'archivio 2 di 22',
-    19: 'archivio 10 di 26 (paesi e territori)', 22: 'archivio 3 di 6 (aggregati statistici)', 23: 'archivio 7 di 22 (paesi e territori)',
-    24: 'archivi 24 di 30 (paesi e territori) e 8 di 8 (aggregati statistici)',
+    19: 'archivio 10 di 26 (paesi e territori)',
     26: 'archivi 18, 49, 67, 81, 84, 103 e 110 di 110 (paesi e territori), 7, 21, 38 e 58 di 61 (aggregati), 19 di 27 (destinatari non classificati)',
-    27: 'archivi 3, 24, 39 e 59 di 59 (paesi e territori), 2 di 17 (aggregati), 2 di 9 (aree non classificate)',
-    28: 'archivi 10, 24, 44 e 67 di 75 (paesi e territori) e 13 di 14 (aggregati)',
 }
 FONTE_LOTTO = {5: 'OCSE (Organizzazione per la cooperazione e lo sviluppo economico)'}
 UNITA_IT.update({
