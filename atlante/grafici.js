@@ -325,7 +325,8 @@
     const aggiorna = () => {
       cap.textContent = `${A.IND[cod].n}, ${A.IND[cod].u}, anno ${S.anno}`;
       let insieme = A.universo(cod);
-      if (S.aggregati) insieme = insieme.concat(A.aggregatiDi(cod));
+      // se nessun paese ha dati (serie di soli aggregati, tipica dei lotti parziali) gli aggregati compaiono comunque
+      if (S.aggregati || !insieme.some((t) => d.d[t.id])) insieme = insieme.concat(A.aggregatiDi(cod));
       const righe = insieme.map((t) => { const r = A.valore(d, t.id, S.anno), c = d.d[t.id] ? d.d[t.id][conf() - d.y0] : null; return { t, v: r ? r.v : null, y: r ? r.y : null, c: c ?? null, dv: r && c != null ? r.v - c : null }; });
       righe.filter((o) => o.v != null && !A.eAggregato(o.t.id)).sort((a, b) => b.v - a.v).forEach((o, k) => { o.pos = k + 1; });
       const { col, dir } = S.ordTab, s = dir === 'asc' ? 1 : -1;
@@ -336,10 +337,11 @@
       const nd = '<span class="nd">n.d.</span>';
       tbody.innerHTML = righe.map((o) => {
         const sel = A.selezionato(cod, o.t.id), dv = o.dv == null ? nd : (o.dv > 0 ? '+' : o.dv < 0 ? '−' : '') + fmt(Math.abs(o.dv));
+        const nota = o.v == null ? null : A.notaDi(cod, o.t.id, o.y), flag = nota ? ` <abbr class="nota-flag" title="${esc(nota)}">${esc(nota.split(':')[0].slice(0, 4))}</abbr>` : '';
         return `<tr class="${sel ? 'riga--sel' : ''} ${A.eAggregato(o.t.id) ? 'agg' : ''}" style="${spento(o.t.id) ? 'opacity:.4' : ''}">
           <td><input type="checkbox" data-id="${esc(o.t.id)}" ${sel ? 'checked' : ''} aria-label="Seleziona ${esc(o.t.n)}"></td>
           <td><span class="pallino" style="background:${A.coloreRegione(o.t.id)}"></span> <a href="#/t/${esc(o.t.id)}">${esc(o.t.n)}</a>${eu && o.t.cod ? ` <span class="anno-dato">${esc(o.t.cod)}</span>` : ''}</td>
-          <td>${esc(gruppo(o.t))}</td><td class="num"><strong>${o.v == null ? nd : fmt(o.v)}</strong></td><td class="num anno-dato">${o.y ?? nd}</td>
+          <td>${esc(gruppo(o.t))}</td><td class="num"><strong>${o.v == null ? nd : fmt(o.v)}</strong>${flag}</td><td class="num anno-dato">${o.y ?? nd}</td>
           <td class="num">${o.c == null ? nd : fmt(o.c)}</td><td class="num">${dv}</td><td class="num">${o.pos ?? '<span class="nd">·</span>'}</td></tr>`;
       }).join('');
       tbody.querySelectorAll('input[type="checkbox"]').forEach((c) => c.addEventListener('change', () => ctx.onSeleziona(c.dataset.id)));

@@ -12,7 +12,7 @@ Legge i fogli DATI_NAZIONALI_WB e DIZ_INDICATORI degli Excel dei lotti 1 e 2
 Uso:
   python3 genera_dati.py                       estrae dagli ZIP (circa 10 minuti)
   python3 genera_dati.py --cache grezzi.json   riusa un'estrazione già fatta
-  aggiungere --eurostat eurostat.json --eurostat-api eurostat_api.json --regio regio.json --parziali parziali.json
+  aggiungere --eurostat eurostat.json --eurostat-api eurostat_api.json --regio regio.json --insiemi <cartella estratti>
   per i dati NUTS (Eurostat e Commissione europea) e gli archivi parziali
 """
 import argparse, glob, io, json, math, os, zipfile
@@ -90,7 +90,7 @@ def main():
     p.add_argument('--eurostat', help='JSON prodotto da estrai_eurostat.py')
     p.add_argument('--eurostat-api', dest='eurostat_api', help='JSON prodotto da estrai_eurostat_api.py (indicatori regionali dall’API di Eurostat)')
     p.add_argument('--regio', help='JSON prodotto da estrai_regio.py (indici e serie regionali della Commissione europea, DG REGIO)')
-    p.add_argument('--parziali', nargs='+', help='JSON prodotti da estrai_archivi_parziali.py (uno o più file)')
+    p.add_argument('--insiemi', help='cartella con i JSON prodotti da estrai_lotti.py (un file per insieme di dati)')
     a = p.parse_args()
     if a.cache and os.path.exists(a.cache):
         d = json.load(open(a.cache))
@@ -170,8 +170,9 @@ def main():
         regio, scaricato = genera_extra.eurostat_api(a.regio, USCITA, territori, arrotonda, lotto='regio')
         indicatori += regio
         acquisizione['regio'] = scaricato
-    if a.parziali:
-        archivi = genera_extra.archivi(a.parziali, USCITA, territori, arrotonda)
+    esclusi = []
+    if a.insiemi:
+        archivi, esclusi = genera_extra.insiemi(a.insiemi, USCITA, territori, arrotonda)
 
     meta = {
         'titolo': 'Atlante dei dati',
@@ -179,6 +180,7 @@ def main():
         'acquisizione': acquisizione,
         'temi': temi,
         'archivi': archivi,
+        'archivi_esclusi': esclusi,
         'regioni': [{'k': k, 'n': n, 'c': c, 'cs': cs} for k, n, c, cs in REGIONI],
         'indicatori': indicatori,
         'territori': territori,

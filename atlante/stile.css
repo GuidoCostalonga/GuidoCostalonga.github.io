@@ -360,6 +360,7 @@ input[type="range"]::-moz-range-thumb { width: 14px; height: 14px; border-radius
 .tabella tbody tr:hover { background: var(--carta-2); }
 .tabella tr.riga--sel td:first-child + td { font-weight: 700; }
 .tabella .anno-dato { color: var(--grafite-3); font-size: 12.5px; }
+.tabella .nota-flag { color: var(--grafite-3); font-size: 11px; text-decoration: none; border-bottom: 1px dotted var(--grafite-3); cursor: help; margin-left: 2px; }
 .tabella .agg td:nth-child(2)::after { content: "aggregato"; margin-left: 8px; font-size: 11px; color: var(--grafite-3); border: 1px solid var(--filo); border-radius: 99px; padding: 0 6px; }
 .tabella input[type="checkbox"] { width: 17px; height: 17px; accent-color: var(--grafite); vertical-align: -3px; }
 .mini svg { display: block; overflow: visible; }

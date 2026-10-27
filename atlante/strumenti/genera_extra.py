@@ -1,9 +1,9 @@
-"""Dati aggiuntivi dell'Atlante: territori NUTS Eurostat (lotti 1 e 2) e archivi parziali (lotti 5, 9, 11, 15, 18).
+"""Dati aggiuntivi dell'Atlante: territori NUTS Eurostat (lotti 1 e 2 e API), indici DG REGIO e insiemi di dati dei lotti.
 
-Chiamato da genera_dati.py con --eurostat e --parziali (file prodotti da estrai_eurostat.py
-ed estrai_archivi_parziali.py).
+Chiamato da genera_dati.py con --eurostat, --eurostat-api, --regio e --insiemi (file prodotti da estrai_eurostat.py,
+estrai_eurostat_api.py, estrai_regio.py ed estrai_lotti.py).
 """
-import json, os, re
+import glob, gzip, json, os, re
 
 TEMA_EU = 'eur'
 NOME_TEMA_EU = 'Demografia regionale europea (Eurostat)'
@@ -58,6 +58,36 @@ DATASET_IT = {
     'EA': 'Flussi di sviluppo verso l’agricoltura', 'TI': 'Indici del commercio agricolo',
     'FBSH': 'Bilanci alimentari storici (fino al 2013, vecchia metodologia)',
 }
+DATASET_IT.update({
+    'AE': 'Spesa per ricerca agricola (ASTI)', 'AF': 'Ricercatori agricoli (ASTI)', 'BE': 'Bioenergia', 'CAHD': 'Costo e accessibilità di una dieta sana',
+    'CBH': 'Bilanci delle merci non alimentari (fino al 2013, vecchia metodologia)', 'CP': 'Indici dei prezzi al consumo', 'CS': 'Stock di capitale',
+    'ET': 'Variazione della temperatura sulla terraferma', 'FDI': 'Investimenti diretti esteri in agricoltura', 'FOP': 'Capacità di pasta di legno e carta (indagine)',
+    'FS': 'Indicatori di sicurezza alimentare', 'GCE': 'Emissioni dalle colture', 'GF': 'Emissioni dalle foreste', 'GI': 'Emissioni dagli incendi',
+    'GN': 'Emissioni dall’uso di energia in agricoltura', 'GV': 'Emissioni dai suoli organici drenati', 'HCES': 'Consumo alimentare apparente da indagini sulle famiglie',
+    'HS': 'Indicatori da indagini sulle famiglie (archivio storico)', 'IC': 'Credito all’agricoltura', 'IG': 'Spesa pubblica per l’agricoltura',
+    'LC': 'Copertura del suolo', 'MDDW': 'Diversità alimentare minima delle donne (MDD-W)', 'MK': 'Indicatori macroeconomici',
+    'OA': 'Popolazione annuale', 'OEA': 'Occupazione in agricoltura e sistemi agroalimentari', 'OER': 'Occupazione rurale',
+    'PD': 'Deflatori', 'PE': 'Tassi di cambio', 'PP': 'Prezzi alla produzione', 'QI': 'Indici della produzione agricola',
+    'RA': 'Fertilizzanti (archivio storico)', 'RL': 'Uso del suolo', 'RLIS': 'Indicatori delle condizioni di vita rurali', 'RM': 'Macchine agricole (archivio storico)',
+    'RP': 'Uso di pesticidi', 'RT': 'Commercio di pesticidi', 'RY': 'Macchine agricole (archivio storico, serie precedente)', 'SCL': 'Conti di approvvigionamento e utilizzo (dal 2010)',
+    'SDGB': 'Indicatori degli Obiettivi di sviluppo sostenibile', 'SXS': 'Indicatori di genere', 'TCL': 'Commercio di prodotti agricoli e zootecnici',
+    'TCLI': 'Indicatori del commercio agricolo', 'TM': 'Matrice dettagliata del commercio', 'WCAD': 'Censimenti agricoli mondiali (dati strutturali)',
+    'WHO_GHO': 'Osservatorio sanitario mondiale (GHO): 20 indicatori',
+    'SYB_1': 'Popolazione, densità e superficie', 'SYB_327': 'Migranti internazionali e rifugiati', 'SYB_246': 'Crescita della popolazione, fecondità e mortalità',
+    'SYB_253': 'Popolazione urbana e capitali', 'SYB_309': 'Iscritti all’istruzione primaria e secondaria', 'SYB_323': 'Personale docente',
+    'SYB_263': 'Produzione, commercio e offerta di energia', 'SYB_328': 'Omicidi volontari e altri reati', 'SYB_317': 'Seggi parlamentari occupati da donne',
+    'SYB_319': 'Rapporto fra ragazze e ragazzi nell’istruzione', 'SYB_310': 'Stime delle emissioni di CO₂', 'SYB_315': 'Acqua potabile e servizi igienici',
+    'SYB_313': 'Specie minacciate', 'SYB_314': 'Uso di internet',
+    '7cae02f84ed547fbbd6210d90da19879': 'Rischio INFORM legato al clima', '9c3764c0efcc4c71934ab3988f219e0e': 'Concentrazione atmosferica di CO₂ (mondo)',
+    'b13b69ee0dde43a99c811f592af4e821': 'Frequenza dei disastri legati al clima', '74561f6a-4783-4d70-b86a-008deec09441': 'Popolazione dei quartieri di Karlsruhe',
+})
+FONTE_IT = {'FAOSTAT': 'FAOSTAT (FAO, Organizzazione per l’alimentazione e l’agricoltura)', 'WHO': 'OMS (Organizzazione mondiale della sanità)',
+            'OECD': 'OCSE (Organizzazione per la cooperazione e lo sviluppo economico)', 'UNSD': 'ONU (Divisione statistica delle Nazioni Unite, annuario statistico)',
+            'IMF': 'FMI (Fondo monetario internazionale, cruscotto climatico)', 'DATA_EUROPA': 'data.europa.eu (portale europeo dei dati aperti)', 'ALTRO': 'Altra fonte'}
+AGG_FONTI_IT = {'WHO_GLOBAL': 'Mondo (OMS)', 'WHO_AFR': 'Africa (regione OMS)', 'WHO_AMR': 'Americhe (regione OMS)', 'WHO_SEAR': 'Sud-est asiatico (regione OMS)',
+                'WHO_EUR': 'Europa (regione OMS)', 'WHO_EMR': 'Mediterraneo orientale (regione OMS)', 'WHO_WPR': 'Pacifico occidentale (regione OMS)',
+                'WHO_WB_HI': 'Paesi ad alto reddito (OMS, classificazione Banca Mondiale)', 'WHO_WB_UMI': 'Paesi a reddito medio-alto (OMS, classificazione Banca Mondiale)',
+                'WHO_WB_LMI': 'Paesi a reddito medio-basso (OMS, classificazione Banca Mondiale)', 'WHO_WB_LI': 'Paesi a basso reddito (OMS, classificazione Banca Mondiale)'}
 STORICI_IT = {'TWN': 'Taiwan', 'AIA': 'Anguilla', 'SHN': 'Ascensione, Sant’Elena e Tristan da Cunha',
               'BES': 'Bonaire, Sint Eustatius e Saba', 'COK': 'Isole Cook', 'FAO_351': 'Cina (totale FAOSTAT)',
               'FAO_357': 'Cina, esclusi Hong Kong e Macao', 'FAO_15': 'Belgio e Lussemburgo (codice storico FAOSTAT)',
@@ -93,7 +123,7 @@ UNITA_IT = {
     'kg/cap': 'kg per persona', 'g/Int$': 'g per dollaro internazionale', 'PS_FTE': 'persone equivalenti a tempo pieno',
 }
 LOTTO_ARCHIVIO = {
-    5: 'archivio 9 di 11', 9: 'archivio 1 di 6', 11: 'archivio 1 di 5', 15: 'archivio 2 di 9', 18: 'archivio 2 di 22',
+    15: 'archivio 2 di 9', 18: 'archivio 2 di 22',
     19: 'archivio 10 di 26 (paesi e territori)', 22: 'archivio 3 di 6 (aggregati statistici)', 23: 'archivio 7 di 22 (paesi e territori)',
     24: 'archivi 24 di 30 (paesi e territori) e 8 di 8 (aggregati statistici)',
     26: 'archivi 18, 49, 67, 81, 84, 103 e 110 di 110 (paesi e territori), 7, 21, 38 e 58 di 61 (aggregati), 19 di 27 (destinatari non classificati)',
@@ -281,67 +311,85 @@ def eurostat(percorso, uscita, territori, arrotonda):
     return indicatori, NOME_TEMA_EU
 
 
-def archivi(percorsi, uscita, territori, arrotonda):
-    """Catalogo degli archivi parziali: un file per dataset con tutte le serie e i territori presenti."""
-    d = {}
-    for percorso in percorsi:
-        d.update(json.load(open(percorso)))
+def insiemi(cartella, uscita, territori, arrotonda):
+    """Insiemi di dati completi o parziali estratti dai lotti (estrai_lotti.py): per ogni dataset un indice delle serie
+    (dati/archivi/<f>.json) e un file compresso per serie (dati/archivi/<f>/<k>.json.gz). Restituisce il catalogo."""
     per_id = {t['id']: t for t in territori}
-    catalogo = []
-    for chiave, ds in sorted(d.items(), key=lambda x: (int(x[0].split('|')[0]), x[0])):
-        lotto, codice = chiave.split('|')
-        lotto = int(lotto)
+    catalogo, esclusi = [], []
+    for percorso in sorted(glob.glob(os.path.join(cartella, 'L*.json'))):
+        ds = json.load(open(percorso, encoding='utf-8'))
+        lotto, codice, fonte = ds['lotto'], ds['ds'], ds['fonte']
+        n_serie = len(ds['ind'])
+        n_oss = sum(len(t) for x in ds['ind'].values() for t in x['s'].values())
+        # insiemi organizzati per indagine o per censimento, con una sola osservazione per serie: non sono serie annuali
+        if n_serie and (n_oss / n_serie < 2 or n_serie > 50000):
+            esclusi.append({'lotto': lotto, 'cod': codice, 'n': DATASET_IT.get(codice, ds['n']), 'en': ds['n'], 'fonte': FONTE_IT.get(fonte, fonte),
+                            'serie': n_serie, 'righe': n_oss, 'motivo': 'organizzato per indagine o censimento, con una sola osservazione per serie: non rappresentabile come serie annuale'})
+            print(f'L{lotto:02d}_{codice}: escluso ({n_serie} serie, {n_oss} osservazioni)', flush=True)
+            continue
         terr, aggr = {}, []
-        tipo = ds.get('tipo', {})
-        for c, nome in ds['terr'].items():
-            e_agg = tipo.get(c) == 'agg'
+        for c, info in ds['terr'].items():
+            e_agg = bool(info.get('agg'))
             if c not in per_id:
-                nuovo = {'id': c, 'n': STORICI_IT.get(c, nome), 'en': nome, 'k': 'aggf' if e_agg else 'storico'}
+                nuovo = {'id': c, 'n': STORICI_IT.get(c, AGG_FONTI_IT.get(c, info['n'])), 'en': info['n'], 'k': 'aggf' if e_agg else 'storico'}
                 territori.append(nuovo)
                 per_id[c] = nuovo
             if e_agg or per_id[c]['k'] in ('agg', 'aggf'):
                 aggr.append(c)
-            terr[c] = nome
-        # l'identità SHA256 della fonte comprende il territorio: si raggruppano le serie per descrizione e unità,
-        # tenendo separate due identità diverse che cadrebbero sullo stesso territorio
-        gruppi = {}
-        for ident, s in ds['serie'].items():
-            # toglie dall'etichetta il nome del territorio, presente in alcune fonti (es. paese beneficiario in FA)
-            nomi = {str(ds['terr'][c]) for c in s['d']}
-            s['l'] = ' · '.join(x for x in s['l'].split(' · ') if x not in nomi)
-            if codice in ('FT', 'RFM') and s['l']:
-                s['l'] = 'Paese partner ' + s['l']
-            if codice == 'EA' and s['l']:
-                s['l'] = 'Donatore ' + s['l']
-            k = (s['l'], s['u'])
-            elenco = gruppi.setdefault(k, [])
-            for g in elenco:
-                if not set(g['d']) & set(s['d']):
-                    g['d'].update(s['d'])
-                    break
-            else:
-                elenco.append({'l': s['l'], 'u': s['u'], 'd': dict(s['d'])})
+            terr[c] = info['n']
+        # etichette ripetute dentro lo stesso insieme: si distinguono con i codici delle dimensioni
+        conta = {}
+        for ind in ds['ind'].values():
+            conta[(ind['n'], ind['u'])] = conta.get((ind['n'], ind['u']), 0) + 1
         serie = []
-        for s in (g for elenco in gruppi.values() for g in elenco):
-            pt = s['d']
+        for chiave, ind in ds['ind'].items():
+            pt = ind['s']
             interi = all(float(v[0]).is_integer() for t in pt.values() for v in t.values() if v[0] is not None)
             y = _serie_annuale(pt, arrotonda, interi)
             if not y:
                 continue
             y0, y1, dati = y
-            serie.append({'l': s['l'] or codice, 'u': UNITA_IT.get(s['u'], s['u'] or ''), 'uo': s['u'] or '', 'y0': y0, 'y1': y1, 'd': dati, 'i': interi})
-        serie.sort(key=lambda s: (s['l'], s['u']))
+            flag = {}
+            for c, t in pt.items():
+                for anno, v in t.items():
+                    if v[1]:
+                        flag.setdefault(c, {})[str(anno)] = v[1]
+            etich = ind['n'] or codice
+            if conta[(ind['n'], ind['u'])] > 1:
+                codici = ', '.join(f'{k} {v}' for k, v in ind['dims'].items() if k != 'Unit' and 'Code' in k or k in ('Indicator',))
+                etich = f"{etich} [{codici}]" if codici else etich
+            unita = UNITA_IT.get(ind['u'], ind['u']) if ind['u'] else ('indice (2014-2016 = 100)' if codice == 'QI' else 'unità nella descrizione')
+            serie.append({'l': etich, 'u': unita, 'uo': ind['u'] or '', 'y0': y0, 'y1': y1, 'i': interi,
+                          'n': len(dati), 'cod': ind.get('cod', codice), 'dims': ind['dims'], 'd': dati, 'fl': flag})
+        if not serie:
+            continue
+        serie.sort(key=lambda x: (x['l'], x['u']))
         nome_file = f'L{lotto:02d}_{re.sub(r"[^A-Za-z0-9]+", "_", codice)}'
-        percorso_file = os.path.join(uscita, 'archivi', nome_file + '.json')
-        _scrivi(percorso_file, {'s': serie})
+        cart = os.path.join(uscita, 'archivi', nome_file)
+        os.makedirs(cart, exist_ok=True)
+        byte = 0
+        indice = []
+        for k, x in enumerate(serie):
+            corpo = {'c': f'A:{nome_file}:{k}', 'y0': x['y0'], 'y1': x['y1'], 'd': x['d']}
+            if x['fl']:
+                corpo['f'] = x['fl']
+            testo = json.dumps(corpo, separators=(',', ':'), ensure_ascii=False).encode('utf-8')
+            with open(os.path.join(cart, f'{k}.json.gz'), 'wb') as fh:
+                with gzip.GzipFile(fileobj=fh, mode='wb', mtime=0, compresslevel=9) as gz:
+                    gz.write(testo)
+            byte += os.path.getsize(os.path.join(cart, f'{k}.json.gz'))
+            indice.append({'l': x['l'], 'u': x['u'], 'uo': x['uo'], 'y0': x['y0'], 'y1': x['y1'], 'i': x['i'], 'n': x['n'], 'cod': x['cod'],
+                           'dims': {kk: vv for kk, vv in x['dims'].items() if kk != 'Unit'}})
+        _scrivi(os.path.join(uscita, 'archivi', nome_file + '.json'), {'s': indice})
         catalogo.append({
-            'mb': round(os.path.getsize(percorso_file) / 1e6, 1),
-            'f': nome_file, 'lotto': lotto, 'cod': codice, 'n': DATASET_IT.get(codice, ds['n']), 'en': ds['n'],
-            'fonte': FONTE_LOTTO.get(lotto, 'FAOSTAT'), 'archivio': LOTTO_ARCHIVIO.get(lotto, f'lotto {lotto}'), 'url': ds['url'], 'agg': (ds['agg'] or '')[:10],
-            'terr': sorted(terr), 'aggr': sorted(aggr), 'serie': len(serie),
-            'y0': min(s['y0'] for s in serie), 'y1': max(s['y1'] for s in serie),
+            'mb': round(byte / 1e6, 1), 'f': nome_file, 'lotto': lotto, 'cod': codice, 'n': DATASET_IT.get(codice, ds['n']), 'en': ds['n'],
+            'fonte': FONTE_IT.get(fonte, fonte), 'src': fonte, 'archivio': LOTTO_ARCHIVIO.get(lotto, ''), 'url': ds['url'], 'agg': (ds['agg'] or '')[:10],
+            'terr': sorted(terr), 'aggr': sorted(aggr), 'serie': len(serie), 'righe': sum(len(t) for x in ds['ind'].values() for t in x['s'].values()),
+            'y0': min(x['y0'] for x in serie), 'y1': max(x['y1'] for x in serie),
         })
-    return catalogo
+        print(f"{nome_file}: {len(serie)} serie, {len(terr)} territori, {byte / 1e6:.1f} MB", flush=True)
+    catalogo.sort(key=lambda a: (a['lotto'], a['cod']))
+    return catalogo, esclusi
 
 
 # Indicatori in evidenza per i profili dei territori e la prima pagina
