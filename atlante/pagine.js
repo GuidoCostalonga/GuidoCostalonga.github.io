@@ -485,7 +485,7 @@
     const parziali = archivi.filter((a) => a.archivio);
     const soloIndici = [
       'Eurostat: i dati su lavoro e altri temi regionali citati negli indici dei lotti non sono nei lotti; l’Atlante li ha presi direttamente dall’API di Eurostat (tabella qui sopra).',
-      'FAOSTAT: gli insiemi di dati dei lotti non ancora acquisiti dall’Atlante (lotti 12-14, 16-17, 20-21 e 29-31) sono descritti solo dagli indici e dalle guide; le matrici bilaterali (commercio e fertilizzanti per paese partner, aiuti per donatore) hanno una struttura per coppie di paesi che le viste dell’Atlante non rappresentano.',
+      'FAOSTAT: le matrici bilaterali (commercio per paese partner, lotto 31; fertilizzanti per paese partner, lotto 19; aiuti per donatore e destinatario, lotto 26) hanno una struttura per coppie di paesi che le viste dell’Atlante non rappresentano: dei lotti 19 e 26 restano le parti già presenti nel repository, il lotto 31 non è acquisito. Il lotto 25 (FDIQ) contiene indagini della fonte senza valori annuali.',
       'FAOSTAT: apporti alimentari da indagini individuali (FDIQ, lotto 25), organizzati per indagine e non per anno, quindi non rappresentabili nelle viste dell’Atlante.',
     ];
     main.innerHTML = `<div class="entra prosa">${briciole([{ n: 'Atlante', href: '#/' }, { n: 'Fonti e metodo' }])}
