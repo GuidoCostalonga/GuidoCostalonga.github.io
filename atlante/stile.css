@@ -256,7 +256,7 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 .avviso { padding: 10px 14px; border-radius: 10px; background: color-mix(in srgb, var(--t-agr) 12%, var(--carta)); border: 1px solid color-mix(in srgb, var(--t-agr) 35%, transparent); font-size: 14px; }
 .confronto__avviso { margin: 0 0 12px; }
 .confronto__avviso .chips { margin-top: 8px; }
-.grafico-card { border: 1.5px solid var(--griglia); border-radius: var(--raggio); background: var(--carta); overflow: hidden; display: grid; grid-template-rows: auto 1fr auto; }
+.grafico-card { border: 1.5px solid var(--griglia); border-radius: var(--raggio); background: var(--carta); overflow: hidden; display: grid; grid-template-rows: auto 1fr auto; grid-template-columns: minmax(0, 1fr); }
 .grafico-card.pieno { position: fixed; inset: 0; z-index: 90; border-radius: 0; border: 0; padding-top: env(safe-area-inset-top, 0px); }
 .grafico-card:fullscreen { padding: 0; }
 .grafico-card__barra { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 12px; border-bottom: 1px solid var(--griglia); }
@@ -464,8 +464,8 @@ input[type="range"]::-moz-range-thumb { width: 14px; height: 14px; border-radius
   .barre__separatore span { left: calc(34% + 10px); }
   .segmenti button { padding: 8px 10px; font-size: 13px; }
   .segmenti button svg { display: none; }
-  .legenda-mappa { min-width: 0; width: 132px; font-size: 11px; padding: 6px 8px; right: 8px; top: 8px; }
-  .legenda-mappa__riga { white-space: nowrap; }
+  .legenda-mappa { min-width: 0; width: auto; max-width: min(190px, calc(100% - 64px)); font-size: 11px; padding: 6px 8px; right: 8px; top: auto; bottom: 8px; }
+  .legenda-mappa__riga { white-space: normal; }
   .temi-griglia { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
   .tema-tessera { padding: 12px; }
   .sottogruppi { top: 108px; }
