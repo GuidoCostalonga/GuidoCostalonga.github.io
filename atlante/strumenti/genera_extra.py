@@ -122,10 +122,7 @@ UNITA_IT = {
     'PS': 'persone', 't CO2eq/ha': 't di CO₂ equivalente per ettaro', 'kg CO2eq/Int$': 'kg di CO₂ equivalente per dollaro internazionale',
     'kg/cap': 'kg per persona', 'g/Int$': 'g per dollaro internazionale', 'PS_FTE': 'persone equivalenti a tempo pieno',
 }
-LOTTO_ARCHIVIO = {
-    19: 'archivio 10 di 26 (paesi e territori)',
-    26: 'archivi 18, 49, 67, 81, 84, 103 e 110 di 110 (paesi e territori), 7, 21, 38 e 58 di 61 (aggregati), 19 di 27 (destinatari non classificati)',
-}
+LOTTO_ARCHIVIO = {}  # lotto -> archivi presenti, per gli insiemi parziali (oggi nessuno)
 BILATERALI = {(19, 'RFM'), (26, 'EA'), (31, 'TM')}
 FONTE_LOTTO = {5: 'OCSE (Organizzazione per la cooperazione e lo sviluppo economico)'}
 UNITA_IT.update({

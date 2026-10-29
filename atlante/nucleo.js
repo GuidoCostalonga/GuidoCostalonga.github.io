@@ -404,6 +404,11 @@ window.Atlante = (function () {
     A.indice = idx.map((v) => Object.assign(v, { nn: A.norm(v.n), na: A.norm(v.alt) }));
   };
   const ORD_TERR = { paese: 0, nuts: 1, agg: 2, agg_eu: 3 };
+  const PAROLE_PARTNER = [
+    [/^(commerc|scamb|import|esport|partner)/, 'TM', (n) => `Commercio di prodotti agricoli: ${n} e i suoi partner`],
+    [/^(fertilizz|concim)/, 'RFM', (n) => `Commercio di fertilizzanti: ${n} e i suoi partner`],
+    [/^(aiut|donat|destinat|cooperaz)/, 'EA', (n) => `Aiuti all’agricoltura ricevuti: ${n} e i suoi donatori`],
+  ];
   A.cercaIndice = (q, limiti) => {
     const nq = A.norm(q); if (!nq) return [];
     const parole = nq.split(/\s+/).filter(Boolean);
@@ -415,6 +420,15 @@ window.Atlante = (function () {
     };
     const trov = A.indice.map((v) => ({ v, p: punteggio(v) })).filter((x) => x.p > 0).sort((a, b) => b.p - a.p || a.v.nn.length - b.v.nn.length);
     const per = {}; trov.forEach((x) => { (per[x.v.tipo] = per[x.v.tipo] || []).push(x.v); });
+    // "Italia commercio", "fertilizzanti Francia", "aiuti Etiopia": collegamento diretto alla vista Partner del paese
+    const conPartner = parole.map((w) => PAROLE_PARTNER.find(([re]) => re.test(w)));
+    if (conPartner.some(Boolean) && conPartner.some((x) => !x)) {
+      const resto = parole.filter((w, i) => !conPartner[i]);
+      const paesi = A.indice.filter((v) => v.tipo === 'terr' && v.k === 'paese' && resto.every((w) => v.nn.split(/[\s,()]+/).some((x) => x.startsWith(w)) || v.na.includes(w))).slice(0, 2);
+      const insiemi = [...new Set(conPartner.filter(Boolean))];
+      const voci = paesi.flatMap((t) => insiemi.map(([, k, testo]) => ({ tipo: 'pagina', id: `#/partner/${k}?t=${t.id}`, n: testo(t.n), sotto: 'vista Partner, FAOSTAT' })));
+      per.pagina = voci.concat(per.pagina || []);
+    }
     const L = limiti || { terr: 6, ind: 7, tema: 3, arch: 3, pagina: 4 };
     return [['tema', 'Temi'], ['ind', 'Indicatori'], ['terr', 'Territori'], ['arch', 'Archivi'], ['pagina', 'Pagine']].map(([k, titolo]) => ({ titolo, voci: (per[k] || []).slice(0, L[k] || 0) }));
   };
@@ -448,7 +462,7 @@ window.Atlante = (function () {
     apri($('#apri-schede'), $('#tendina-schede'));
     // menu per telefono
     const mm = $('#menu-mobile'), hb = $('#apri-menu');
-    mm.innerHTML = `<div class="menu-mobile__titolo">Temi</div>${A.ORDINE_TEMI.map((k) => `<a data-tema="${k}" href="${k === 'arc' ? '#/archivi' : '#/tema/' + k}">${A.icona(k)}${A.esc(A.TEMI[k].n)}</a>`).join('')}<div class="menu-mobile__titolo">Strumenti</div><a href="#/confronta">${A.icona('classifica')}Confronta paesi e regioni</a><a href="scheda-fvg.html">${A.icona('eur')}Scheda: Friuli Venezia Giulia in Europa</a><a href="#/t/ITA">${A.icona('mappa')}Profilo dell’Italia</a><a href="#/archivi">${A.icona('arc')}Insiemi di dati</a><a href="#/fonti">${A.icona('tabella')}Fonti e metodo</a>`;
+    mm.innerHTML = `<div class="menu-mobile__titolo">Temi</div>${A.ORDINE_TEMI.map((k) => `<a data-tema="${k}" href="${k === 'arc' ? '#/archivi' : '#/tema/' + k}">${A.icona(k)}${A.esc(A.TEMI[k].n)}</a>`).join('')}<div class="menu-mobile__titolo">Strumenti</div><a href="#/confronta">${A.icona('classifica')}Confronta paesi e regioni</a><a href="scheda-fvg.html">${A.icona('eur')}Scheda: Friuli Venezia Giulia in Europa</a><a href="#/t/ITA">${A.icona('mappa')}Profilo dell’Italia</a><a href="#/archivi">${A.icona('arc')}Insiemi di dati</a><a href="#/partner">${A.icona('mappa')}Partner: commercio, fertilizzanti e aiuti</a><a href="#/fonti">${A.icona('tabella')}Fonti e metodo</a>`;
     hb.addEventListener('click', () => { const era = !mm.hidden; mm.hidden = era; hb.setAttribute('aria-expanded', era ? 'false' : 'true'); });
     mm.addEventListener('click', (e) => { if (e.target.closest('a')) { mm.hidden = true; hb.setAttribute('aria-expanded', 'false'); } });
     addEventListener('scroll', () => { $('#testa').classList.toggle('scorre', scrollY > 4); }, { passive: true });

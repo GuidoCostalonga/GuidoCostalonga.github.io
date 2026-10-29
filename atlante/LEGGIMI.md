@@ -39,7 +39,7 @@ Mappe: Natural Earth 1:50 milioni (paesi, continenti, regioni del mondo) e GISCO
 - **Tabella**: valore dell'anno, dato di dieci anni prima, variazione, posizione; ordinabile; selezione con caselle.
 - **Linea del tempo** con riproduzione a velocità scelta, anno in grande nella scena.
 - **Confronti pronti**: Friuli Venezia Giulia e vicini, province del Friuli Venezia Giulia, regioni italiane, Italia e grandi paesi europei, Italia e vicini, grandi economie del mondo, regioni del mondo.
-- **Vista Partner**: per un paese, i valori di ciascun partner (o donatore) su mappa ingrandibile e in tabella; un clic su un paese della mappa o della tabella ne apre i partner. Raggiungibile dalla pagina Insiemi di dati e dalla ricerca.
+- **Vista Partner**: per un paese, i valori di ciascun partner (o donatore) su mappa ingrandibile e in tabella; un clic su un paese della mappa o della tabella ne apre i partner. Raggiungibile dalla voce Partner del menù, dalla pagina Insiemi di dati e dalla ricerca: scrivendo un paese con «commercio», «esportazioni», «fertilizzanti» o «aiuti» (per esempio «Italia commercio») si apre direttamente la vista di quel paese.
 - **Scarica CSV** e **copia il collegamento** della vista corrente.
 - **Profili** con indicatori in evidenza, posizione in classifica e andamento degli ultimi trent'anni (file precalcolati in `dati/profili/`).
 - **Scheda Friuli Venezia Giulia**: `scheda-fvg.html`, testi e grafici calcolati dai file di dati al caricamento della pagina; anche qui grafici a linee e mappa si ingrandiscono con rotellina, pizzico e pulsanti.
