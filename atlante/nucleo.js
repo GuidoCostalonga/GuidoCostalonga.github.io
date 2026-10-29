@@ -201,6 +201,7 @@ window.Atlante = (function () {
     if (b.length > 2 && b[0] === 0x1f && b[1] === 0x8b) { const testo = await new Response(new Blob([buf]).stream().pipeThrough(new DecompressionStream('gzip'))).text(); return JSON.parse(testo); }
     return JSON.parse(new TextDecoder().decode(buf));
   };
+  A.caricaGz = caricaGz;
   A.dati = (cod) => cache[cod + '_r'];
   A.caricaNote = (cod) => {
     const i = A.IND[cod];
@@ -395,6 +396,11 @@ window.Atlante = (function () {
     (A.META.archivi || []).forEach((a) => idx.push({ tipo: 'arch', id: a.f, n: a.n, alt: `${a.en} ${a.cod} ${a.fonte}`, sotto: `archivio ${a.fonte.replace(/ \(.*/, '')} · ${A.gruppoArchivio(a)}` }));
     idx.push({ tipo: 'pagina', id: 'scheda-fvg.html', n: 'Scheda: Friuli Venezia Giulia in Europa', alt: 'scheda fvg italia europa confronto', sotto: 'scheda' });
     idx.push({ tipo: 'pagina', id: '#/confronta', n: 'Confronta paesi e regioni', alt: 'confronto confronta', sotto: 'strumento' });
+    // matrici bilaterali FAOSTAT: vista Partner
+    [['TM', 'Partner: commercio di prodotti agricoli per paese partner', 'commercio scambi importazioni esportazioni prodotti agricoli trade matrix TM lotto 31'],
+     ['RFM', 'Partner: commercio di fertilizzanti per paese partner', 'fertilizzanti concimi importazioni esportazioni fertilizers trade matrix RFM lotto 19'],
+     ['EA', 'Partner: flussi di sviluppo verso l’agricoltura per donatore', 'aiuti donatori destinatari cooperazione sviluppo development flows EA lotto 26']]
+      .forEach(([k, n, alt]) => idx.push({ tipo: 'pagina', id: `#/partner/${k}`, n, alt: `partner bilaterale matrice ${alt}`, sotto: 'vista Partner, FAOSTAT' }));
     A.indice = idx.map((v) => Object.assign(v, { nn: A.norm(v.n), na: A.norm(v.alt) }));
   };
   const ORD_TERR = { paese: 0, nuts: 1, agg: 2, agg_eu: 3 };
@@ -409,7 +415,7 @@ window.Atlante = (function () {
     };
     const trov = A.indice.map((v) => ({ v, p: punteggio(v) })).filter((x) => x.p > 0).sort((a, b) => b.p - a.p || a.v.nn.length - b.v.nn.length);
     const per = {}; trov.forEach((x) => { (per[x.v.tipo] = per[x.v.tipo] || []).push(x.v); });
-    const L = limiti || { terr: 6, ind: 7, tema: 3, arch: 3, pagina: 2 };
+    const L = limiti || { terr: 6, ind: 7, tema: 3, arch: 3, pagina: 4 };
     return [['tema', 'Temi'], ['ind', 'Indicatori'], ['terr', 'Territori'], ['arch', 'Archivi'], ['pagina', 'Pagine']].map(([k, titolo]) => ({ titolo, voci: (per[k] || []).slice(0, L[k] || 0) }));
   };
   A.vociRicerca = (gruppi) => gruppi.map((g) => ({ titolo: g.titolo, voci: g.voci.map((v) => ({ id: v.id, v, html: v.tipo === 'terr' ? `<span class="pallino" style="background:${A.coloreRegione(v.id)}"></span><span>${A.esc(v.n)}</span><span class="tipo">${A.esc(v.sotto)}</span>` : v.tipo === 'ind' ? `${A.icona(v.tema, 'icona')}<span>${A.esc(v.n)}<span class="sotto">${A.esc(v.sotto)}</span></span>` : v.tipo === 'tema' ? `${A.icona(v.id, 'icona')}<span>${A.esc(v.n)}</span><span class="tipo">tema</span>` : `${A.icona(v.tipo === 'arch' ? 'arc' : 'cerca', 'icona')}<span>${A.esc(v.n)}<span class="sotto">${A.esc(v.sotto)}</span></span>` })) }));

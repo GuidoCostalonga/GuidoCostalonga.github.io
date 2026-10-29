@@ -126,6 +126,7 @@ LOTTO_ARCHIVIO = {
     19: 'archivio 10 di 26 (paesi e territori)',
     26: 'archivi 18, 49, 67, 81, 84, 103 e 110 di 110 (paesi e territori), 7, 21, 38 e 58 di 61 (aggregati), 19 di 27 (destinatari non classificati)',
 }
+BILATERALI = {(19, 'RFM'), (26, 'EA'), (31, 'TM')}
 FONTE_LOTTO = {5: 'OCSE (Organizzazione per la cooperazione e lo sviluppo economico)'}
 UNITA_IT.update({
     'ha': 'ettari', '100 g/An': 'ettogrammi per capo', 'hg/An': 'ettogrammi per capo', '100 g/ha': 'ettogrammi per ettaro',
@@ -315,6 +316,8 @@ def insiemi(cartella, uscita, territori, arrotonda):
     for percorso in sorted(glob.glob(os.path.join(cartella, 'L*.json'))):
         ds = json.load(open(percorso, encoding='utf-8'))
         lotto, codice, fonte = ds['lotto'], ds['ds'], ds['fonte']
+        if (lotto, codice) in BILATERALI:  # matrici bilaterali: vista Partner (estrai_partner.py, genera_partner.py)
+            continue
         n_serie = len(ds['ind'])
         n_oss = sum(len(t) for x in ds['ind'].values() for t in x['s'].values())
         # insiemi organizzati per indagine o per censimento, con una sola osservazione per serie: non sono serie annuali

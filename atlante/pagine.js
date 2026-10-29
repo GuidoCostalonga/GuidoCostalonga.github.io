@@ -457,10 +457,13 @@
       return;
     }
     document.title = 'Insiemi di dati · Atlante dei dati';
+    const PC = await A.caricaPartner().catch(() => null);
+    const bilaterali = PC ? `<section class="sezione"><div class="sezione__testa"><h2>Matrici bilaterali: vista Partner</h2><p>FAOSTAT · per ogni paese i valori di ciascun partner o donatore, su mappa e in tabella</p></div><div class="archivi-griglia sfalsa">${PC.insiemi.map((x, idx) => `<a class="archivio-card" data-tema="arc" href="#/partner/${esc(x.k)}" style="--i:${idx}"><h3>${esc(x.n)}</h3><p>${esc(x.en)}</p><span class="conta">${x.terr.length} ${x.ruolo === 'destinatario' ? 'destinatari' : 'dichiaranti'} · ${Object.keys(x.partner).length} ${x.ruoloPartner === 'donatore' ? 'donatori' : 'partner'} · ${A.F.int.format(x.oss)} osservazioni · ${x.anni[0]}–${x.anni[1]}</span></a>`).join('')}</div></section>` : '';
     const ordineGruppi = A.GRUPPI_ARCHIVI.map((g) => g[0]).concat(Object.values(A.GRUPPI_FONTI), ['Altri insiemi di dati']);
     const perGruppo = new Map(); elenco.forEach((a) => { const g = A.gruppoArchivio(a); if (!perGruppo.has(g)) perGruppo.set(g, []); perGruppo.get(g).push(a); });
     main.innerHTML = `<div class="entra" data-tema="arc">${briciole([{ n: 'Atlante', href: '#/' }, { n: 'Archivi' }])}
-      <header class="tema-testa"><div class="tema-testa__riga">${A.icona('arc')}<h1>Insiemi di dati</h1></div><p>${A.TEMI.arc.breve} ${elenco.filter((a) => !a.archivio).length} insiemi completi e ${elenco.filter((a) => a.archivio).length} ancora parziali (per questi il repository contiene solo una parte degli archivi della fonte, quindi solo alcuni paesi: la copertura è indicata in ogni scheda). Scegli un argomento e un insieme di dati, poi una serie: si apre su mappa, andamento, classifica e tabella.</p></header>
+      <header class="tema-testa"><div class="tema-testa__riga">${A.icona('arc')}<h1>Insiemi di dati</h1></div><p>${A.TEMI.arc.breve} ${elenco.filter((a) => !a.archivio).length} insiemi completi e ${elenco.filter((a) => a.archivio).length} ancora parziali (per questi il repository contiene solo una parte degli archivi della fonte, quindi solo alcuni paesi: la copertura è indicata in ogni scheda). Scegli un argomento e un insieme di dati, poi una serie: si apre su mappa, andamento, classifica e tabella. Le tre matrici bilaterali FAOSTAT (commercio e fertilizzanti per paese partner, aiuti per donatore) hanno una vista dedicata, la vista Partner.</p></header>
+      ${bilaterali}
       ${ordineGruppi.filter((g) => perGruppo.has(g)).map((g) => { const arr = perGruppo.get(g).slice().sort((x, y) => x.n.localeCompare(y.n)); return `<section class="sezione"><div class="sezione__testa"><h2>${esc(g)}</h2><p>${arr.length === 1 ? 'un insieme di dati' : `${arr.length} insiemi di dati`} · ${esc([...new Set(arr.map((a) => a.fonte.replace(/ \(.*/, '')))].join(', '))}</p></div><div class="archivi-griglia sfalsa">${arr.map((a, idx) => `<a class="archivio-card" data-tema="arc" href="#/archivi/${esc(a.f)}" style="--i:${idx}"><h3>${esc(a.n)}</h3><p>${esc(a.en)}</p><span class="conta">${a.archivio ? 'parziale · ' : ''}${a.terr.length} territori · ${A.F.int.format(a.serie)} serie · ${a.y0}–${a.y1}</span></a>`).join('')}</div></section>`; }).join('')}
     </div>`;
   };
@@ -468,6 +471,7 @@
   /* ---------- fonti e metodo ---------- */
   A.pagine.fonti = async (main) => {
     document.title = 'Fonti e metodo · Atlante dei dati';
+    const PC = await A.caricaPartner().catch(() => null);
     const archivi = (A.META.archivi || []).slice().sort((a, b) => A.gruppoArchivio(a).localeCompare(A.gruppoArchivio(b)) || a.n.localeCompare(b.n));
     const nPaesi = A.PAESI.length, nNuts = A.META.territori.filter((t) => t.k === 'nuts').length;
     const nWb = Object.values(A.IND).filter((i) => i.fam === 'wb').length, nEu = Object.values(A.IND).filter((i) => i.fam === 'eu' && i.lotto !== 'regio').length, nReg = Object.values(A.IND).filter((i) => i.lotto === 'regio').length;
@@ -482,10 +486,10 @@
      descr('WHO', 'speranza di vita, mortalità, fattori di rischio (pressione, glicemia, colesterolo, peso, alcol, attività fisica), personale sanitario, suicidi; per sesso ed età'),
      descr('OECD', 'istruzione degli adulti e personale scolastico'), descr('UNSD', 'tavole dell’annuario statistico delle Nazioni Unite'),
      descr('IMF', 'cruscotto climatico del Fondo monetario internazionale'), descr('DATA_EUROPA', 'dataset comunale di Karlsruhe nel catalogo europeo')].filter(Boolean).forEach((r) => righe.push(r));
+    if (PC) righe.push(['FAOSTAT, matrici bilaterali (vista Partner)', PC.insiemi.map((x) => `${x.n} (${x.k}, lotto ${x.lotto}): ${A.F.int.format(x.oss)} osservazioni dal ${x.anni[0]} al ${x.anni[1]}`).join('; '), `complete: ${PC.insiemi.map((x) => `${x.terr.length} ${x.ruolo === 'destinatario' ? 'destinatari' : 'dichiaranti'} e ${Object.keys(x.partner).length} ${x.ruoloPartner === 'donatore' ? 'donatori' : 'partner'} (${x.k})`).join('; ')}; un file per paese, letto solo quando lo si apre`]);
     const parziali = archivi.filter((a) => a.archivio);
     const soloIndici = [
       'Eurostat: i dati su lavoro e altri temi regionali citati negli indici dei lotti non sono nei lotti; l’Atlante li ha presi direttamente dall’API di Eurostat (tabella qui sopra).',
-      'FAOSTAT: le matrici bilaterali (commercio per paese partner, lotto 31; fertilizzanti per paese partner, lotto 19; aiuti per donatore e destinatario, lotto 26) hanno una struttura per coppie di paesi che le viste dell’Atlante non rappresentano: dei lotti 19 e 26 restano le parti già presenti nel repository, il lotto 31 non è acquisito. Il lotto 25 (FDIQ) contiene indagini della fonte senza valori annuali.',
       'FAOSTAT: apporti alimentari da indagini individuali (FDIQ, lotto 25), organizzati per indagine e non per anno, quindi non rappresentabili nelle viste dell’Atlante.',
     ];
     main.innerHTML = `<div class="entra prosa">${briciole([{ n: 'Atlante', href: '#/' }, { n: 'Fonti e metodo' }])}
@@ -512,6 +516,7 @@
         <li>Per la visualizzazione i valori decimali sono arrotondati a 6 cifre significative; i conteggi interi restano esatti. Il valore originale è negli Excel del repository.</li>
         <li>Le percentuali sono nella scala della fonte: 35 significa 35%.</li>
         <li>Gli aggregati (Mondo, Unione europea, fasce di reddito, regioni FAOSTAT) sono calcolati dalle fonti e non vanno sommati ai paesi.</li>
+        <li>Vista Partner (matrici bilaterali FAOSTAT dei lotti 19, 26 e 31): ogni valore è quello della riga originale per la coppia dichiarante e partner (o destinatario e donatore), con il suo contrassegno sempre visibile. L’Atlante non somma i partner, non calcola saldi fra importazioni ed esportazioni, che restano elementi separati, e non mette a confronto le dichiarazioni dei due paesi della coppia, che possono non coincidere. Donatori che sono organizzazioni o fondazioni e territori storici senza codice ISO3 compaiono solo in tabella.</li>
         <li>Negli insiemi di dati una serie è definita dalle dimensioni originali della fonte (prodotto, elemento, sesso, età, unità) senza il territorio, così da confrontare i paesi; le dimensioni originali sono riportate nella scheda della serie.</li>
       </ul>
       <h2>Mappe</h2>
