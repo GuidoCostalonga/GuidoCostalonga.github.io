@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" width="1600" height="1000" role="img" aria-label="Barca a vela e studenti in mare">
+<title>Barca a vela e studenti in mare</title>
+<defs><linearGradient id="a" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFD8A8"/><stop offset="1" stop-color="#A7C7E7"/></linearGradient><linearGradient id="b" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2B6CB0"/><stop offset="1" stop-color="#0F2D59"/></linearGradient></defs>
+<rect width="1600" height="1000" fill="url(#a)"/><rect y="600" width="1600" height="400" fill="url(#b)"/>
+<g fill="#ffffff"><path d="M760 610 l0 -420 l220 420z"/><path d="M740 610 l0 -340 l-180 340z" opacity=".9"/></g>
+<path d="M560 620 h460 l-60 70 h-340z" fill="#14233A"/>
+<g fill="#C9A227"><circle cx="300" cy="560" r="10"/></g>
+<g stroke="#ffffff" stroke-opacity=".3" stroke-width="3" fill="none"><path d="M120 760 q40 -10 80 0 t80 0"/><path d="M1200 720 q40 -10 80 0 t80 0"/><path d="M1000 860 q40 -10 80 0 t80 0"/></g>
+<g fill="#ffffff"><path d="M1260 600 l26 -90 l0 90z"/><path d="M300 640 l22 -70 l0 70z"/></g>
+<g font-family="Inter, Arial, sans-serif" font-size="26" fill="#ffffff" opacity=".85">
+<rect x="1304" y="927" rx="8" width="276" height="53" fill="#0A1F3E" opacity=".55"/>
+<text x="1442" y="964" text-anchor="middle">Immagine segnaposto</text>
+</g>
+</svg>

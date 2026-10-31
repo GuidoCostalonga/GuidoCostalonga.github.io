@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" width="1600" height="1000" role="img" aria-label="Intelligenza artificiale per la tutela del mare">
+<title>Intelligenza artificiale per la tutela del mare</title>
+<defs><linearGradient id="a" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0A1F3E"/><stop offset="1" stop-color="#1E4A85"/></linearGradient><linearGradient id="b" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#12406B"/><stop offset="1" stop-color="#0A1F3E"/></linearGradient></defs>
+<rect width="1600" height="1000" fill="url(#a)"/><rect y="640" width="1600" height="360" fill="url(#b)"/>
+<g stroke="#52B788" stroke-opacity=".7" stroke-width="2" fill="none">
+<path d="M200 300 L420 220 L620 330 L860 200 L1080 320 L1320 240 L1440 360"/><path d="M420 220 L500 420 L620 330"/><path d="M860 200 L960 420 L1080 320"/><path d="M500 420 L960 420"/></g>
+<g fill="#52B788"><circle cx="200" cy="300" r="10"/><circle cx="420" cy="220" r="12"/><circle cx="620" cy="330" r="10"/><circle cx="860" cy="200" r="14"/><circle cx="1080" cy="320" r="10"/><circle cx="1320" cy="240" r="12"/><circle cx="1440" cy="360" r="9"/><circle cx="500" cy="420" r="9"/><circle cx="960" cy="420" r="11"/></g>
+<g fill="#ffffff"><path d="M760 650 l0 -200 l110 200z"/><path d="M745 650 l0 -160 l-90 160z" opacity=".85"/><path d="M640 660 h250 l-30 40 h-190z" fill="#E6ECF5"/></g>
+<g stroke="#A7C7E7" stroke-opacity=".35" stroke-width="3" fill="none"><path d="M120 780 q40 -10 80 0 t80 0"/><path d="M1180 820 q40 -10 80 0 t80 0"/><path d="M560 880 q40 -10 80 0 t80 0"/></g>
+<g font-family="Inter, Arial, sans-serif" font-size="26" fill="#ffffff" opacity=".85">
+<rect x="1304" y="927" rx="8" width="276" height="53" fill="#0A1F3E" opacity=".55"/>
+<text x="1442" y="964" text-anchor="middle">Immagine segnaposto</text>
+</g>
+</svg>
