@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" width="1600" height="1000" role="img" aria-label="Golfo di Trieste e costa di Barcola">
+<title>Golfo di Trieste e costa di Barcola</title>
+<defs><linearGradient id="c" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F7C59F"/><stop offset="1" stop-color="#A7C7E7"/></linearGradient><linearGradient id="m" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2B6CB0"/><stop offset="1" stop-color="#0F2D59"/></linearGradient></defs>
+<rect width="1600" height="1000" fill="url(#c)"/>
+<circle cx="1180" cy="380" r="90" fill="#FFE8C2" opacity=".9"/>
+<path d="M0 520 C200 470 380 480 560 440 C760 400 900 430 1100 410 C1300 390 1450 420 1600 400 L1600 560 L0 560Z" fill="#6B8BA8" opacity=".6"/>
+<path d="M0 560 C240 520 420 540 640 510 C860 480 1040 520 1600 500 L1600 600 L0 600Z" fill="#4D6E8C" opacity=".7"/>
+<rect y="580" width="1600" height="420" fill="url(#m)"/>
+<g stroke="#ffffff" stroke-opacity=".25" stroke-width="3" fill="none">
+<path d="M80 660 q40 -10 80 0 t80 0"/><path d="M420 720 q40 -10 80 0 t80 0"/><path d="M900 680 q40 -10 80 0 t80 0"/><path d="M1240 760 q40 -10 80 0 t80 0"/><path d="M260 840 q40 -10 80 0 t80 0"/><path d="M1020 880 q40 -10 80 0 t80 0"/></g>
+<g fill="#ffffff"><path d="M700 640 l40 -110 l0 110z"/><path d="M745 640 l28 -80 l0 80z" opacity=".85"/><rect x="690" y="640" width="90" height="10" rx="5" fill="#E6ECF5"/>
+<path d="M1020 700 l30 -84 l0 84z"/><rect x="1012" y="700" width="66" height="8" rx="4" fill="#E6ECF5"/>
+<path d="M360 610 l22 -60 l0 60z" opacity=".9"/></g>
+<path d="M0 820 C200 790 360 800 520 840 L520 1000 L0 1000Z" fill="#D9C7A7"/>
+<path d="M0 860 C160 840 320 850 470 880 L470 1000 L0 1000Z" fill="#C8B28C"/>
+<g fill="#2D6A4F"><circle cx="90" cy="790" r="46"/><circle cx="150" cy="770" r="54"/><circle cx="220" cy="800" r="40"/></g>
+<g font-family="Inter, Arial, sans-serif" font-size="26" fill="#ffffff" opacity=".85">
+<rect x="1304" y="927" rx="8" width="276" height="53" fill="#0A1F3E" opacity=".55"/>
+<text x="1442" y="964" text-anchor="middle">Immagine segnaposto</text>
+</g>
+</svg>
