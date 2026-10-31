@@ -677,3 +677,11 @@ a:hover { text-decoration-color: var(--ep-ink); }
 .riferimento:nth-child(3) .riferimento__icona { background: var(--ep-blue-soft); color: var(--ep-ink); }
 .contatti-rapidi a:first-child { background: var(--ep-primary); color: #FFFFFF; }
 .campo.non-valido input, .campo.non-valido textarea, .campo.non-valido select { box-shadow: 3px 3px 0 var(--ep-error); border-color: var(--ep-error); }
+
+/* ---------- Fotografie reali: punti focali ---------- */
+img[src$="ritratto.jpg"] { object-position: 54% 25%; }
+img[src$="ritratto-primo-piano.jpg"] { object-position: 53% 30%; }
+img[src$="barcola.jpg"] { object-position: 40% 55%; }
+.ritratto__targhetta { bottom: -28px; }
+.bio__foto .ritratto__cornice { aspect-ratio: 347 / 288; }
+.bio__foto .ritratto__cornice img { object-position: 50% 35%; }

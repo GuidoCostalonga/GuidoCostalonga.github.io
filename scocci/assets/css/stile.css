@@ -622,3 +622,11 @@ img[src*="sopralluogo"] { object-position: 50% 50%; }
 .logo__simbolo { flex: 0 0 auto; width: auto; height: 48px; aspect-ratio: 252 / 243; }
 .pie .logo__simbolo { height: 64px; }
 @media (max-width: 640px) { .logo__simbolo { height: 42px; } }
+
+/* ---------- Fotografie reali: punti focali ---------- */
+img[src$="ritratto.jpg"] { object-position: 54% 25%; }
+img[src$="ritratto-primo-piano.jpg"] { object-position: 53% 30%; }
+img[src$="barcola.jpg"] { object-position: 40% 55%; }
+.ritratto__targhetta { bottom: -20px; }
+.bio__foto .ritratto__cornice { aspect-ratio: 347 / 288; }
+.bio__foto .ritratto__cornice img { object-position: 50% 35%; }
