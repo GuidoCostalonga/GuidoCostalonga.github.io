@@ -1,0 +1,1624 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<title>Un amico oltre l'ostacolo</title>
+<meta name="description" content="Gioco di equitazione per bambini: Ginevra e il suo cavallo affrontano sei percorsi a ostacoli. Calma, cura e intesa contano più della vittoria. Gratis, senza pubblicità, funziona anche su telefono.">
+<link rel="canonical" href="https://costalonga.org/amico-oltre-l-ostacolo/">
+<meta name="theme-color" content="#2a6fc0">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="it_IT">
+<meta property="og:site_name" content="Guido Costalonga">
+<meta property="og:url" content="https://costalonga.org/amico-oltre-l-ostacolo/">
+<meta property="og:title" content="Un amico oltre l'ostacolo">
+<meta property="og:description" content="Gioco di equitazione per bambini: Ginevra e il suo cavallo affrontano sei percorsi a ostacoli. Calma, cura e intesa contano più della vittoria. Gratis, senza pubblicità, funziona anche su telefono.">
+<meta property="og:image" content="https://costalonga.org/amico-oltre-l-ostacolo/anteprima.jpg">
+<meta property="og:image:type" content="image/jpeg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Ginevra, bambina con la treccia bionda, salta un ostacolo in sella al suo cavallo sauro in un prato fiorito">
+<meta name="twitter:card" content="summary_large_image">
+<style>
+:root{
+  --fondo1:#2a6fc0; --fondo2:#173f78;
+  --crema:#fff8e8; --crema2:#fdebc8; --legno:#7a4a24; --legnoScuro:#4a2a12;
+  --testo:#2a1a0c; --arancio:#b8420c; --blu:#1b5aa0; --verde:#1e7a3e; --rosa:#b62a63; --giallo:#ffd54a;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:linear-gradient(var(--fondo1),var(--fondo2));background-attachment:fixed;color:var(--testo);
+  font-family:"Trebuchet MS","Segoe UI",Verdana,system-ui,sans-serif;font-size:17px;line-height:1.45}
+body{overscroll-behavior:none;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+button,input{font:inherit}
+button{cursor:pointer}
+:focus-visible{outline:4px solid var(--giallo);outline-offset:2px}
+.solo-lettori{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;margin:-1px}
+.btn{border:3px solid var(--legnoScuro);background:var(--crema);color:var(--testo);border-radius:14px;padding:9px 14px;min-height:48px;
+  font-weight:700;box-shadow:0 4px 0 rgba(0,0,0,.28);touch-action:manipulation;user-select:none;-webkit-user-select:none}
+.btn:active{transform:translateY(2px);box-shadow:0 2px 0 rgba(0,0,0,.28)}
+.btn.primario{background:var(--arancio);color:#fff;border-color:#6a2405}
+.btn.blu{background:var(--blu);color:#fff;border-color:#0c2f57}
+.btn.verde{background:var(--verde);color:#fff;border-color:#0d4423}
+.btn.rosa{background:var(--rosa);color:#fff;border-color:#6d1238}
+.btn:disabled{opacity:.62;cursor:not-allowed;transform:none}
+h1,h2,h3{line-height:1.2}
+
+/* SCUDERIA */
+#schermataScuderia{max-width:1200px;margin:0 auto;padding:14px 16px 40px}
+.testata{text-align:center;color:#fff;margin-bottom:12px}
+.testata h1{font-size:clamp(30px,5.4vw,52px);margin:6px 0 2px;text-shadow:0 4px 0 #0b1a33;letter-spacing:.5px}
+.testata p{margin:0;font-size:clamp(15px,2.2vw,19px);text-shadow:0 2px 0 #0b1a33}
+.griglia{display:grid;grid-template-columns:1.3fr 1fr;gap:16px;align-items:start}
+@media (max-width:880px){.griglia{grid-template-columns:1fr}}
+.pannello{background:var(--crema);border:4px solid var(--legnoScuro);border-radius:18px;padding:14px;box-shadow:0 6px 0 rgba(0,0,0,.25)}
+.pannello h2{margin:0 0 10px;font-size:22px;color:var(--legnoScuro)}
+.colonna{display:grid;gap:16px}
+.scena-scuderia{position:relative}
+#telaScuderia{width:100%;height:auto;aspect-ratio:16/9;image-rendering:pixelated;image-rendering:crisp-edges;border-radius:10px;border:3px solid var(--legnoScuro);display:block;background:#8d5f33}
+.targa{position:absolute;left:31%;top:7%;transform:translateX(-50%);background:#f3d58c;border:3px solid #6b4423;border-radius:8px;padding:1px 12px;
+  font-weight:800;color:#3b2410;font-size:clamp(13px,2.4vw,20px);box-shadow:0 3px 0 rgba(0,0,0,.3);white-space:nowrap}
+.targa.bimba{left:63.5%;top:56%;font-size:clamp(11px,1.9vw,16px);background:#ffe3ef;border-color:#a8336a;color:#5a1030}
+.riga-nome{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:12px 0}
+.riga-nome label{font-weight:700}
+.riga-nome input{flex:1;min-width:140px;min-height:48px;border:3px solid var(--legnoScuro);border-radius:12px;padding:6px 10px;background:#fff;color:var(--testo)}
+.indicatori{display:grid;gap:8px;margin:8px 0 12px}
+.indicatore{display:grid;grid-template-columns:96px 1fr 70px;align-items:center;gap:8px;font-weight:700}
+.barra{height:22px;border:3px solid var(--legnoScuro);border-radius:12px;background:#fff;overflow:hidden}
+.barra>span{display:block;height:100%;width:0;transition:width .5s}
+.barra.fiducia>span{background:linear-gradient(90deg,#ff7aa8,#e23d74)}
+.barra.energia>span{background:linear-gradient(90deg,#8fe06a,#2f9e44)}
+.etichetta-intesa{font-weight:700;color:var(--rosa);margin:-4px 0 8px}
+.cure{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+@media (max-width:540px){.cure{grid-template-columns:repeat(2,1fr)}}
+.cure .btn{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 6px}
+.cure .icona{font-size:26px;line-height:1}
+.fumetto{background:#fff;border:3px solid var(--legnoScuro);border-radius:14px;padding:10px 12px;min-height:3.2em;margin:12px 0 0;font-weight:600}
+.percorsi{list-style:none;padding:0;margin:0;display:grid;gap:8px}
+.percorsi .btn{width:100%;text-align:left;display:flex;gap:12px;align-items:center}
+.percorsi .num{flex:none;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:var(--legnoScuro);color:#fff;font-size:18px}
+.percorsi .fatto .num{background:var(--verde)}
+.percorsi .info{display:flex;flex-direction:column}
+.percorsi .info small{font-weight:600;color:#5a4330}
+.percorsi .btn:disabled .info small{color:#5a4330}
+.amici-lista{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:0;padding:0;list-style:none}
+.amici-lista li{display:flex;gap:8px;align-items:center;background:#fff;border:2px solid #d9c39a;border-radius:12px;padding:6px}
+.amici-lista canvas{width:96px;height:auto;image-rendering:pixelated;flex:none}
+.amici-lista strong{display:block}
+.amici-lista span{font-size:14px}
+@media (max-width:540px){.amici-lista{grid-template-columns:1fr}}
+.avviso{background:#e7f1ff;border:2px solid #2a5fa8;border-radius:12px;padding:8px 10px;margin:10px 0 0;font-size:15px}
+.istruzioni ul{padding-left:20px;margin:6px 0}
+.istruzioni li{margin:4px 0}
+.tasti{display:inline-block;border:2px solid #6b4423;border-bottom-width:4px;border-radius:6px;padding:0 6px;background:#fff;font-weight:700;font-size:15px}
+.riga-pulsanti{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+details{margin-top:10px}
+summary{cursor:pointer;font-weight:700;min-height:32px}
+table.verifica{border-collapse:collapse;width:100%;font-size:14px;margin-top:6px}
+table.verifica th,table.verifica td{border:1px solid #c9b48c;padding:4px 6px;text-align:left}
+table.verifica th{background:#f3e2bd}
+.memoria-avviso{color:#8a1c1c;font-weight:700}
+
+/* CORSA */
+#schermataCorsa{position:fixed;inset:0;display:flex;flex-direction:column;background:#10223f;color:#fff}
+.barra-alta{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;justify-content:space-between;padding:6px 10px;background:#0c1a33}
+.hud{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;font-weight:700}
+.hud .pillola{background:#1d3a66;border:2px solid #4c78b8;border-radius:999px;padding:2px 12px}
+.hud-pulsanti{display:flex;gap:6px}
+.hud-pulsanti .btn{min-height:44px;padding:6px 12px;font-size:15px}
+.contenitore-scena{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;padding:4px}
+.scena{position:relative;width:min(100%, calc((100vh - 170px) * 16 / 9));width:min(100%, calc((100dvh - 170px) * 16 / 9));aspect-ratio:16/9}
+#tela{position:absolute;inset:0;width:100%;height:100%;display:block;border-radius:8px;touch-action:none;image-rendering:pixelated;outline-offset:-4px}
+.suggerimento{position:absolute;left:46%;top:2%;transform:translateX(-50%);max-width:54%;background:rgba(255,248,232,.95);color:var(--testo);
+  border:3px solid var(--legnoScuro);border-radius:14px;padding:6px 12px;font-weight:700;text-align:center;font-size:clamp(13px,1.9vw,19px);pointer-events:none}
+.pista-amici{position:absolute;right:1%;top:2%;background:rgba(12,26,51,.78);border:2px solid #4c78b8;border-radius:10px;padding:4px 8px;
+  font-size:clamp(10px,1.35vw,13px);width:clamp(160px,32%,280px);pointer-events:none;opacity:.92}
+.pista-amici .titolo{font-weight:800;margin-bottom:2px}
+.pista-amici .riga{display:grid;grid-template-columns:5.6em 1fr 3.4em;gap:5px;align-items:center;line-height:1.35}
+.pista-amici .binario{height:7px;background:rgba(255,255,255,.25);border-radius:4px;position:relative}
+.pista-amici .binario span{position:absolute;left:0;top:0;bottom:0;border-radius:4px}
+.comandi{display:flex;justify-content:space-between;gap:12px;padding:8px 12px calc(8px + env(safe-area-inset-bottom))}
+.comandi .btn{min-height:70px;width:min(44%,300px);font-size:clamp(20px,3.2vw,28px);letter-spacing:1px}
+.comandi .btn.premuto{transform:translateY(3px);filter:brightness(1.15)}
+.gira{display:none;text-align:center;margin:0;padding:4px 8px;font-size:14px;background:#24467a}
+@media (orientation:portrait) and (max-width:700px){.gira{display:block}}
+@media (max-height:520px){
+  .scena{width:min(100%, calc((100vh - 62px) * 16 / 9));width:min(100%, calc((100dvh - 62px) * 16 / 9))}
+  .comandi{position:fixed;left:0;right:0;bottom:0;pointer-events:none;padding:6px 10px calc(6px + env(safe-area-inset-bottom))}
+  .comandi{align-items:flex-end}
+  .comandi .btn{pointer-events:auto;opacity:.9;min-height:56px;height:46vh;font-size:17px;padding:6px;
+    width:max(108px, calc((100vw - (100vh - 62px) * 16 / 9) / 2 - 14px));width:max(108px, calc((100vw - (100dvh - 62px) * 16 / 9) / 2 - 14px));
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;white-space:normal}
+  .barra-alta{padding:3px 8px}
+}
+#schermataCorsa.senza-amici .pista-amici{display:none}
+@media (orientation:portrait) and (max-width:760px){
+  .contenitore-scena{align-items:flex-start;padding-top:12px}
+  .suggerimento{top:calc(100% + 10px);left:50%;max-width:96%;width:max-content;font-size:14px;background:#fff8e8}
+}
+@media (max-height:520px), (max-width:760px){
+  .suggerimento{left:50%;font-size:12px;line-height:1.25;padding:3px 8px;border-width:2px;border-radius:10px;max-width:48%;background:rgba(255,248,232,.88)}
+  .pista-amici{font-size:10px;width:150px;padding:2px 6px;opacity:.85}
+  .pista-amici .titolo{display:none}
+  .pista-amici .riga{grid-template-columns:4.6em 1fr 2.4em;line-height:1.2}
+  .hud{gap:4px 6px}
+  .hud .pillola{font-size:12px;padding:1px 8px;border-width:1px}
+  .hud-pulsanti{gap:4px}
+  .hud-pulsanti .btn{min-height:38px;min-width:42px;padding:4px 8px;font-size:15px;border-width:2px}
+  .hud-pulsanti .etichetta{display:none}
+}
+
+/* MODALI */
+.modale{position:fixed;inset:0;background:rgba(8,18,38,.62);display:flex;align-items:center;justify-content:center;padding:14px;z-index:30}
+.modale .scheda{background:var(--crema);color:var(--testo);border:4px solid var(--legnoScuro);border-radius:18px;padding:16px 18px;max-width:600px;width:100%;
+  max-height:calc(100vh - 28px);max-height:calc(100dvh - 28px);overflow:auto;box-shadow:0 8px 0 rgba(0,0,0,.3)}
+.modale h2{margin:0 0 8px;color:var(--legnoScuro)}
+.modale ul{padding-left:20px;margin:6px 0}
+.sbloccato{background:#e3f7e6;border:2px solid var(--verde);border-radius:12px;padding:6px 10px;font-weight:700}
+
+/* RICORDO */
+#schermataRicordo{max-width:1000px;margin:0 auto;padding:16px}
+#telaRicordo{width:100%;height:auto;display:block;border:4px solid var(--legnoScuro);border-radius:14px;background:#fff}
+.racconto{font-size:18px}
+@media (prefers-reduced-motion:reduce){.barra>span{transition:none}}
+</style>
+</head>
+<body>
+
+<!-- ===================== SCUDERIA ===================== -->
+<main id="schermataScuderia" aria-labelledby="titoloGioco">
+  <header class="testata">
+    <h1 id="titoloGioco">Un amico oltre l'ostacolo</h1>
+    <p>Ginevra, dieci anni e una lunga treccia bionda, e il suo cavallo: prima di vincere, conta capirsi.</p>
+  </header>
+
+  <div class="griglia">
+    <div class="colonna">
+      <section class="pannello" aria-labelledby="titoloScuderia">
+        <h2 id="titoloScuderia">La scuderia</h2>
+        <div class="scena-scuderia">
+          <canvas id="telaScuderia" width="640" height="360" role="img" aria-label="La scuderia: Ginevra, la bambina con la treccia bionda, accanto al suo cavallo sauro"></canvas>
+          <div class="targa bimba" aria-hidden="true">Ginevra</div>
+          <div class="targa" id="targa" aria-hidden="true">Luna</div>
+        </div>
+        <form class="riga-nome" id="moduloNome">
+          <label for="nomeCavallo">Nome del cavallo</label>
+          <input id="nomeCavallo" maxlength="14" autocomplete="off" spellcheck="false">
+          <button class="btn verde" type="submit">Conferma il nome</button>
+        </form>
+        <div class="indicatori">
+          <div class="indicatore"><span id="lblFiducia">Fiducia</span>
+            <div class="barra fiducia" role="progressbar" aria-labelledby="lblFiducia" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="barraFiducia"><span></span></div>
+            <span id="numFiducia">0</span></div>
+          <div class="indicatore"><span id="lblEnergia">Energia</span>
+            <div class="barra energia" role="progressbar" aria-labelledby="lblEnergia" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="barraEnergia"><span></span></div>
+            <span id="numEnergia">0</span></div>
+        </div>
+        <p class="etichetta-intesa" id="etichettaIntesa"></p>
+        <div class="cure" role="group" aria-label="Cure per il cavallo">
+          <button class="btn" type="button" data-cura="spazzola"><span class="icona" aria-hidden="true">🪮</span>Spazzola</button>
+          <button class="btn" type="button" data-cura="acqua"><span class="icona" aria-hidden="true">💧</span>Acqua</button>
+          <button class="btn" type="button" data-cura="spuntino"><span class="icona" aria-hidden="true">🥕</span>Spuntino</button>
+          <button class="btn" type="button" data-cura="riposo"><span class="icona" aria-hidden="true">🌙</span>Riposo</button>
+        </div>
+        <p class="fumetto" id="fumetto" aria-live="polite"></p>
+      </section>
+
+      <section class="pannello istruzioni" aria-labelledby="titoloIstruzioni">
+        <h2 id="titoloIstruzioni">Come si gioca</h2>
+        <ul>
+          <li>Il cavallo galoppa da solo verso destra: tu scegli il momento giusto.</li>
+          <li><strong>Saltare:</strong> <span class="tasti">Spazio</span>, <span class="tasti">↑</span>, il pulsante <strong>SALTA</strong> oppure un tocco sulla pista.</li>
+          <li><strong>Rallentare:</strong> tieni premuto <span class="tasti">↓</span> o il pulsante <strong>RALLENTA</strong>. Arrivando con calma hai più tempo per decidere e la fiducia cresce.</li>
+          <li>La <strong>striscia gialla</strong> sulla pista è la zona di salto: salta quando gli zoccoli anteriori ci sono dentro. Il centro più chiaro è il punto ideale.</li>
+          <li>Se una barriera cade non succede niente di brutto: si prosegue e il percorso vale lo stesso.</li>
+          <li><strong>Pausa:</strong> pulsante Pausa, <span class="tasti">P</span> o <span class="tasti">Esc</span>. Il gioco si ferma da solo anche quando cambi finestra.</li>
+          <li>In scuderia spazzola, acqua, spuntino e riposo fanno crescere fiducia ed energia. L'energia non blocca mai il gioco.</li>
+        </ul>
+        <div class="riga-pulsanti">
+          <button class="btn" type="button" id="suoniScuderia" aria-pressed="false">🔇 Suoni: spenti</button>
+          <button class="btn rosa" type="button" id="ricomincia">Ricomincia da capo</button>
+        </div>
+        <p id="avvisoMemoria" class="memoria-avviso" hidden>Il salvataggio non è disponibile in questo browser: i progressi restano finché la pagina rimane aperta.</p>
+        <details>
+          <summary>Per i genitori: verifica dei percorsi</summary>
+          <p id="verificaTesto"></p>
+          <table class="verifica" id="verificaTabella"></table>
+        </details>
+      </section>
+    </div>
+
+    <div class="colonna">
+      <section class="pannello" aria-labelledby="titoloPercorsi">
+        <h2 id="titoloPercorsi">I percorsi</h2>
+        <ol class="percorsi" id="elencoPercorsi"></ol>
+        <div class="riga-pulsanti"><button class="btn rosa" type="button" id="apriRicordo" hidden>💝 Il vostro ricordo</button></div>
+      </section>
+
+      <section class="pannello" aria-labelledby="titoloAmici">
+        <h2 id="titoloAmici">Gli amici del club</h2>
+        <ul class="amici-lista" id="elencoAmici"></ul>
+        <p class="avviso"><strong>Da sapere:</strong> Sofia, Leo, Emma e Tommaso sono amici virtuali guidati dal computer. Il gioco è per una sola persona: non ci sono partite in rete né altri giocatori collegati.</p>
+      </section>
+    </div>
+  </div>
+</main>
+
+<!-- ===================== CORSA ===================== -->
+<section id="schermataCorsa" hidden aria-label="Percorso in corso">
+  <div class="barra-alta">
+    <div class="hud">
+      <span class="pillola" id="hudLivello">Primo prato</span>
+      <span class="pillola" id="hudOstacoli">Ostacoli: 0 di 5</span>
+      <span class="pillola" id="hudFiducia">❤ Fiducia 0</span>
+    </div>
+    <div class="hud-pulsanti">
+      <button class="btn" type="button" id="tastoAmici" aria-pressed="true" aria-label="Mostra o nascondi gli amici in pista">👥 <span class="etichetta">Amici</span></button>
+      <button class="btn" type="button" id="tastoPausa" aria-label="Pausa">⏸ <span class="etichetta">Pausa</span></button>
+      <button class="btn" type="button" id="tastoScuderia" aria-label="Torna alla scuderia">🏠 <span class="etichetta">Scuderia</span></button>
+      <button class="btn" type="button" id="suoniCorsa" aria-pressed="false">🔇 Suoni</button>
+    </div>
+  </div>
+  <p class="gira">Gira il telefono in orizzontale per vedere meglio la pista.</p>
+  <div class="contenitore-scena">
+    <div class="scena">
+      <canvas id="tela" tabindex="0" role="img" aria-label="Pista di gioco: il cavallo galoppa verso destra e gli ostacoli arrivano da destra. Una striscia luminosa sulla pista indica dove saltare."></canvas>
+      <div class="suggerimento" id="suggerimento" aria-live="polite" hidden></div>
+      <div class="pista-amici" id="pistaAmici" aria-hidden="true"></div>
+    </div>
+  </div>
+  <div class="comandi">
+    <button class="btn blu" type="button" id="tastoRallenta" aria-label="Rallenta: tieni premuto, oppure tieni premuta la freccia giù">🐢 RALLENTA</button>
+    <button class="btn primario" type="button" id="tastoSalta" aria-label="Salta: oppure barra spaziatrice o freccia su">SALTA ⤴</button>
+  </div>
+  <p class="solo-lettori" id="stato" aria-live="polite"></p>
+</section>
+
+<!-- ===================== RICORDO ===================== -->
+<section id="schermataRicordo" hidden aria-labelledby="titoloRicordo">
+  <div class="pannello">
+    <h2 id="titoloRicordo">Il ricordo del vostro percorso</h2>
+    <canvas id="telaRicordo" width="960" height="640" role="img" aria-label="Cartolina ricordo: Ginevra e il suo cavallo in salto, con la coccarda dell'intesa"></canvas>
+    <div class="racconto" id="racconto"></div>
+    <div class="riga-pulsanti">
+      <button class="btn verde" type="button" id="scaricaRicordo">⬇ Scarica l'immagine</button>
+      <button class="btn" type="button" id="chiudiRicordo">🏠 Torna alla scuderia</button>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== MODALI ===================== -->
+<div class="modale" id="modalePausa" hidden role="dialog" aria-modal="true" aria-labelledby="titoloPausa">
+  <div class="scheda">
+    <h2 id="titoloPausa">In pausa</h2>
+    <p id="testoPausa">Prendetevi tutto il tempo che serve.</p>
+    <div class="riga-pulsanti">
+      <button class="btn primario" type="button" id="riprendi">▶ Riprendi</button>
+      <button class="btn" type="button" id="pausaScuderia">🏠 Torna alla scuderia</button>
+    </div>
+  </div>
+</div>
+
+<div class="modale" id="modaleFine" hidden role="dialog" aria-modal="true" aria-labelledby="titoloFine">
+  <div class="scheda">
+    <h2 id="titoloFine">Percorso concluso!</h2>
+    <div id="corpoFine"></div>
+    <div class="riga-pulsanti" id="pulsantiFine"></div>
+  </div>
+</div>
+
+<div class="modale" id="modaleConferma" hidden role="alertdialog" aria-modal="true" aria-labelledby="titoloConferma" aria-describedby="testoConferma">
+  <div class="scheda">
+    <h2 id="titoloConferma">Ricominciare da capo?</h2>
+    <p id="testoConferma">Il nome del cavallo, la fiducia, l'energia, i percorsi conclusi e il ricordo torneranno come il primo giorno.</p>
+    <div class="riga-pulsanti">
+      <button class="btn" type="button" id="confermaNo">No, torna indietro</button>
+      <button class="btn rosa" type="button" id="confermaSi">Sì, ricomincia</button>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+(() => {
+// =============================================================
+//  UTILITÀ
+// =============================================================
+const $ = s => document.querySelector(s);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const lerp = (a, b, t) => a + (b - a) * t;
+function rng(seed) { let a = seed >>> 0; return () => { a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+function hash(s) { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
+function nuovaTela(w, h) { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; }
+function rgb(hex) { const n = parseInt(hex.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
+function mescola(a, b, t) { const x = rgb(a), y = rgb(b); return '#' + x.map((v, i) => Math.round(lerp(v, y[i], t)).toString(16).padStart(2, '0')).join(''); }
+const scegli = arr => arr[Math.floor(Math.random() * arr.length)];
+const scegliR = (r, arr) => arr[Math.floor(r() * arr.length)];
+
+// Pennello per pixel art: solo rettangoli interi.
+class Pennello {
+  constructor(ctx) { this.c = ctx; }
+  r(x, y, w, h, col) { const X = Math.round(x), Y = Math.round(y), W = Math.round(x + w) - X, H = Math.round(y + h) - Y; if (W <= 0 || H <= 0) return; this.c.fillStyle = col; this.c.fillRect(X, Y, W, H); }
+  p(x, y, col) { this.c.fillStyle = col; this.c.fillRect(Math.round(x), Math.round(y), 1, 1); }
+  ell(cx, cy, rx, ry, col, yMax = Infinity) {
+    if (rx <= 0 || ry <= 0) return; const c = this.c; c.fillStyle = col;
+    for (let y = Math.floor(cy - ry); y <= Math.ceil(cy + ry); y++) {
+      if (y > yMax) break; const dy = (y + 0.5 - cy) / ry; const k = 1 - dy * dy; if (k <= 0) continue;
+      const hw = rx * Math.sqrt(k); const xa = Math.round(cx - hw), xb = Math.round(cx + hw); if (xb > xa) c.fillRect(xa, y, xb - xa, 1);
+    }
+  }
+  poly(pts, col) {
+    const c = this.c; c.fillStyle = col; let y0 = Infinity, y1 = -Infinity;
+    for (const pt of pts) { if (pt[1] < y0) y0 = pt[1]; if (pt[1] > y1) y1 = pt[1]; }
+    for (let y = Math.floor(y0); y <= Math.ceil(y1); y++) {
+      const yc = y + 0.5, xs = [];
+      for (let i = 0; i < pts.length; i++) { const a = pts[i], b = pts[(i + 1) % pts.length]; if ((a[1] <= yc && b[1] > yc) || (b[1] <= yc && a[1] > yc)) xs.push(a[0] + (yc - a[1]) * (b[0] - a[0]) / (b[1] - a[1])); }
+      xs.sort((a, b) => a - b);
+      for (let k = 0; k + 1 < xs.length; k += 2) { const xa = Math.round(xs[k]), xb = Math.round(xs[k + 1]); if (xb > xa) c.fillRect(xa, y, xb - xa, 1); }
+    }
+  }
+  linea(x0, y0, x1, y1, s, col) {
+    const c = this.c; c.fillStyle = col; const n = Math.ceil(Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0))); const o = Math.floor(s / 2);
+    for (let i = 0; i <= n; i++) { const t = n ? i / n : 0; c.fillRect(Math.round(x0 + (x1 - x0) * t) - o, Math.round(y0 + (y1 - y0) * t) - o, s, s); }
+  }
+}
+// Pennello in scala: coordinate di progetto moltiplicate per E (più pixel, più dettaglio).
+class PS {
+  constructor(ctx, E, ox = 0, oy = 0) { this.b = new Pennello(ctx); this.E = E; this.ox = ox; this.oy = oy; }
+  X(x) { return (x + this.ox) * this.E; } Y(y) { return (y + this.oy) * this.E; }
+  r(x, y, w, h, col) { this.b.r(this.X(x), this.Y(y), w * this.E, h * this.E, col); }
+  ell(cx, cy, rx, ry, col, yMax) { this.b.ell(this.X(cx), this.Y(cy), rx * this.E, ry * this.E, col, yMax === undefined ? Infinity : this.Y(yMax)); }
+  poly(pts, col) { this.b.poly(pts.map(q => [this.X(q[0]), this.Y(q[1])]), col); }
+  seg(x0, y0, x1, y1, w0, w1, col) {
+    const dx = x1 - x0, dy = y1 - y0, l = Math.hypot(dx, dy) || 1, nx = -dy / l, ny = dx / l;
+    this.poly([[x0 + nx * w0 / 2, y0 + ny * w0 / 2], [x1 + nx * w1 / 2, y1 + ny * w1 / 2], [x1 - nx * w1 / 2, y1 - ny * w1 / 2], [x0 - nx * w0 / 2, y0 - ny * w0 / 2]], col);
+    this.ell(x0, y0, w0 / 2, w0 / 2, col); this.ell(x1, y1, w1 / 2, w1 / 2, col);
+  }
+  linea(x0, y0, x1, y1, w, col) { this.b.linea(this.X(x0), this.Y(y0), this.X(x1), this.Y(y1), Math.max(1, Math.round(w * this.E)), col); }
+  lpx(x0, y0, x1, y1, px, col) { this.b.linea(this.X(x0), this.Y(y0), this.X(x1), this.Y(y1), px, col); }
+  pl(pts, px, col) { for (let i = 0; i + 1 < pts.length; i++) this.lpx(pts[i][0], pts[i][1], pts[i + 1][0], pts[i + 1][1], px, col); }
+  dot(x, y, px, col) { this.b.r(Math.round(this.X(x) - px / 2), Math.round(this.Y(y) - px / 2), px, px, col); }
+}
+function contorna(cv, col) {
+  const w = cv.width, h = cv.height, ctx = cv.getContext('2d');
+  const im = ctx.getImageData(0, 0, w, h), d = im.data, o = new Uint8ClampedArray(d); const [r, g, b] = rgb(col);
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+    const i = (y * w + x) * 4; if (d[i + 3] > 40) continue;
+    if ((x > 0 && d[i - 1] > 40) || (x < w - 1 && d[i + 7] > 40) || (y > 0 && d[i - w * 4 + 3] > 40) || (y < h - 1 && d[i + w * 4 + 3] > 40)) { o[i] = r; o[i + 1] = g; o[i + 2] = b; o[i + 3] = 255; }
+  }
+  im.data.set(o); ctx.putImageData(im, 0, 0);
+}
+function cuorePix(pn, x, y, col, cella = 1) {
+  const m = ['.xx.xx.', 'xxxxxxx', 'xxxxxxx', '.xxxxx.', '..xxx..', '...x...'];
+  pn.c.fillStyle = col;
+  m.forEach((r, j) => { for (let i = 0; i < r.length; i++) if (r[i] === 'x') pn.c.fillRect(Math.round(x + i * cella), Math.round(y + j * cella), cella, cella); });
+  pn.c.fillStyle = '#ffd0e0'; pn.c.fillRect(Math.round(x + cella), Math.round(y + cella), cella, cella);
+}
+
+// =============================================================
+//  COSTANTI DI GIOCO E FISICA (unità logiche)
+// =============================================================
+const VW = 352, VH = 198;              // vista logica
+const BW = 960, BH = 540, SC = BW / VW; // risoluzione di disegno
+const SUOLO = 162, HX = 96;            // linea degli zoccoli, fronte del cavallo
+const FIS = { vy0: 240, g: 560, TUCK: 4, MARGINE: 2, HB: 24, LENTO: 0.55, ACC: 150, DEC: 210, FINESTRA_MIN: 0.20, REAZIONE: 0.30 };
+const SPR = { W: 70, H: 62, TX: 3, TY: 4, GY: 59, FRONT: 45 };
+
+function o(X, t, h, w) { return { X, t, h, w: w || 6 }; }
+const LIVELLI = [
+  { nome: 'Primo prato', tema: 'prato', v: 92, fine: 2320, descr: 'Cinque barriere basse e tanto spazio: si impara insieme, con calma.',
+    ostacoli: [o(440, 'barriera', 10), o(840, 'barriera', 12), o(1220, 'barriera', 12), o(1600, 'barriera', 14), o(1980, 'barriera', 14)] },
+  { nome: 'Frutteto', tema: 'frutteto', v: 100, fine: 2500, descr: 'Sei verticali di altezze diverse tra meli e fiori.',
+    ostacoli: [o(420, 'verticale', 14), o(780, 'verticale', 20), o(1110, 'verticale', 16), o(1490, 'verticale', 24), o(1810, 'verticale', 18), o(2170, 'verticale', 26)] },
+  { nome: 'Spiaggia', tema: 'spiaggia', v: 110, fine: 2720, descr: 'Sei ostacoli larghi sulla sabbia, con il mare accanto.',
+    ostacoli: [o(440, 'largo', 12, 16), o(840, 'largo', 14, 18), o(1220, 'largo', 14, 18), o(1580, 'largo', 16, 20), o(1980, 'largo', 16, 22), o(2360, 'largo', 18, 24)] },
+  { nome: 'Bosco', tema: 'bosco', v: 104, fine: 2440, descr: 'Sette tronchi morbidi: salti a coppie e pause per respirare.',
+    ostacoli: [o(440, 'tronco', 14, 14), o(800, 'tronco', 16, 12), o(990, 'tronco', 18, 14), o(1350, 'tronco', 16, 14), o(1540, 'tronco', 20, 16), o(1900, 'tronco', 18, 14), o(2090, 'tronco', 22, 16)] },
+  { nome: 'Giardino al tramonto', tema: 'tramonto', v: 108, fine: 2620, descr: 'Sette ostacoli con altezze e distanze che cambiano.',
+    ostacoli: [o(420, 'verticale', 16), o(760, 'largo', 20, 16), o(1000, 'verticale', 14), o(1420, 'verticale', 28), o(1680, 'largo', 20, 18), o(2060, 'verticale', 26), o(2290, 'barriera', 22)] },
+  { nome: 'Festa del club', tema: 'festa', v: 114, fine: 3060, descr: 'Otto ostacoli che uniscono tutto ciò che avete imparato.',
+    ostacoli: [o(420, 'barriera', 16), o(760, 'verticale', 26), o(1100, 'largo', 18, 22), o(1450, 'tronco', 20, 14), o(1650, 'tronco', 18, 14), o(2000, 'verticale', 28), o(2360, 'largo', 20, 24), o(2700, 'verticale', 24)] }
+];
+function finestra(ob, v) {
+  const hn = ob.h - FIS.TUCK + FIS.MARGINE; const disc = FIS.vy0 * FIS.vy0 - 2 * FIS.g * hn; if (disc <= 0) return null;
+  const r = Math.sqrt(disc); const ta = (FIS.vy0 - r) / FIS.g, tb = (FIS.vy0 + r) / FIS.g;
+  const dMin = v * ta, dMax = v * tb - ob.w - FIS.HB; return { dMin, dMax, larg: dMax - dMin };
+}
+function verificaPercorsi() {
+  const T = 2 * FIS.vy0 / FIS.g; const Hmax = FIS.vy0 * FIS.vy0 / (2 * FIS.g); let tuttoOk = true; const righe = [];
+  LIVELLI.forEach((L, i) => {
+    let ok = true, minF = Infinity, minFL = Infinity, minM = Infinity, hMax = 0;
+    const ws = L.ostacoli.map(ob => finestra(ob, L.v));
+    ws.forEach((w, k) => {
+      const ob = L.ostacoli[k]; hMax = Math.max(hMax, ob.h);
+      if (!w || w.larg <= 0) { ok = false; return; }
+      const tf = w.larg / L.v, tl = w.larg / (L.v * FIS.LENTO); minF = Math.min(minF, tf); minFL = Math.min(minFL, tl); if (tf < FIS.FINESTRA_MIN) ok = false;
+      const atterraTardi = ob.X - w.dMin + L.v * T;
+      const prossimo = k + 1 < ws.length ? (ws[k + 1] ? L.ostacoli[k + 1].X - ws[k + 1].dMax : -Infinity) : L.fine;
+      const marg = (prossimo - atterraTardi) / L.v; minM = Math.min(minM, marg); if (marg < FIS.REAZIONE) ok = false;
+      if (k > 0 && ob.X <= L.ostacoli[k - 1].X) ok = false;
+    });
+    if (ws[0] && L.ostacoli[0].X - ws[0].dMax < 200) ok = false;
+    if (hMax - FIS.TUCK + FIS.MARGINE >= Hmax) ok = false;
+    righe.push({ i, nome: L.nome, ok, minF, minFL, minM, n: L.ostacoli.length }); if (!ok) tuttoOk = false;
+  });
+  return { tuttoOk, righe, T, Hmax };
+}
+
+// =============================================================
+//  PALETTE E PERSONAGGI
+// =============================================================
+const PAL = {
+  luna: { base: '#b4521f', luce: '#d0702f', riflesso: '#eaa060', ombra: '#8a3a14', scuro: '#5e240b', lontano: '#7a3210', lontanoScuro: '#55210a',
+    crin: '#4a2210', crinOmbra: '#2a1208', crinLuce: '#74401f', muso: '#8a3e20', occhio: '#140803', zoccolo: '#24201c', contorno: '#2a1206', calze: [] },
+  pepe: { base: '#c6cad2', luce: '#e2e5ec', riflesso: '#f6f7fa', ombra: '#9ba0ac', scuro: '#6f7482', lontano: '#8a8f9b', lontanoScuro: '#6a6f7b',
+    crin: '#6a6f7c', crinOmbra: '#4d5260', crinLuce: '#8f94a1', muso: '#4f535e', occhio: '#14141a', zoccolo: '#2c2c33', contorno: '#33363f', macchie: '#a5aab6', calze: [] },
+  fulmine: { base: '#34303a', luce: '#4b4655', riflesso: '#6a6478', ombra: '#232028', scuro: '#151318', lontano: '#1e1c22', lontanoScuro: '#141216',
+    crin: '#17151a', crinOmbra: '#0b0a0d', crinLuce: '#2e2b33', muso: '#45404c', occhio: '#000000', zoccolo: '#1a1a1a', contorno: '#050506', stella: true, calze: ['av'] },
+  stella: { base: '#8e4b26', luce: '#aa6234', riflesso: '#c98250', ombra: '#6c3518', scuro: '#3a1a0a', lontano: '#5a2c13', lontanoScuro: '#3a1a0a',
+    crin: '#231610', crinOmbra: '#120a06', crinLuce: '#3a2618', muso: '#5a321e', occhio: '#100604', zoccolo: '#1d1612', contorno: '#1a0c06', stella: true, gambeScure: true, calze: [] },
+  biscotto: { base: '#dcaa5c', luce: '#ecc47a', riflesso: '#f8dca0', ombra: '#b88a42', scuro: '#8e6630', lontano: '#a87d3c', lontanoScuro: '#86622c',
+    crin: '#fbf0d2', crinOmbra: '#e0cc98', crinLuce: '#ffffff', muso: '#a87a4a', occhio: '#2a1a0a', zoccolo: '#4a3a2a', contorno: '#5a3a17', lista: true, calze: ['pv'] }
+};
+const CAV = {
+  bimba: { stile: 'treccia', casco: '#18191f', cascoLuce: '#565a6e', pelle: '#f6d0b0', pelleOmbra: '#e0aa86', guancia: '#f29a94', capelli: '#f0c654', capelliOmbra: '#c0902a', capelliLuce: '#fbe39a',
+    giacca: '#1c2a4e', giaccaOmbra: '#111a33', giaccaLuce: '#34497e', pantaloni: '#ece0c0', pantaloniOmbra: '#cdbd94', stivali: '#18181c', occhi: '#2f6fd8', laccio: '#b8822a', sottosella: '#f8f8f4', bordo: '#d6d6ce' },
+  sofia: { stile: 'coda', casco: '#d9548f', cascoLuce: '#f6a0c4', pelle: '#f3c9a6', pelleOmbra: '#dca784', guancia: '#ee9a9a', capelli: '#6b3e1f', capelliOmbra: '#4a2a14', capelliLuce: '#8e5a32',
+    giacca: '#a956c4', giaccaOmbra: '#7f3d95', giaccaLuce: '#c47ad9', pantaloni: '#f4ecda', pantaloniOmbra: '#d8cbae', stivali: '#2a1e1a', occhi: '#5a3a1e', laccio: '#ffd23f', sottosella: '#f29bc0', bordo: '#ffffff' },
+  leo: { stile: 'corti', casco: '#222226', cascoLuce: '#5a5a66', pelle: '#f7d6bd', pelleOmbra: '#e0b394', guancia: '#ef9e8e', capelli: '#c4521b', capelliOmbra: '#93380f', capelliLuce: '#e07a3e',
+    giacca: '#2b9455', giaccaOmbra: '#1d6b3c', giaccaLuce: '#46b870', pantaloni: '#efe6d0', pantaloniOmbra: '#d2c5a5', stivali: '#1c1c1c', occhi: '#3d7a3a', laccio: '#c4521b', sottosella: '#2b9455', bordo: '#ffffff', lentiggini: true },
+  emma: { stile: 'ricci', casco: '#6a3fb5', cascoLuce: '#9c78dc', pelle: '#c48a5f', pelleOmbra: '#a66f48', guancia: '#b06a4e', capelli: '#1d1410', capelliOmbra: '#0a0604', capelliLuce: '#3a2a20',
+    giacca: '#e9b821', giaccaOmbra: '#b98d10', giaccaLuce: '#f6d462', pantaloni: '#f1ead8', pantaloniOmbra: '#d5cbae', stivali: '#2a1a12', occhi: '#3a2010', laccio: '#6a3fb5', sottosella: '#6a3fb5', bordo: '#ffffff' },
+  tommaso: { stile: 'corti', casco: '#e2762e', cascoLuce: '#f6a46a', pelle: '#8d5a3b', pelleOmbra: '#704429', guancia: '#7a4a30', capelli: '#24160f', capelliOmbra: '#120a06', capelliLuce: '#3e2a1e',
+    giacca: '#24508f', giaccaOmbra: '#173866', giaccaLuce: '#3a6cb3', pantaloni: '#ece4cc', pantaloniOmbra: '#cfc3a2', stivali: '#1c1c1c', occhi: '#2a1408', laccio: '#e2762e', sottosella: '#e2762e', bordo: '#ffffff' }
+};
+const AMICI = [
+  { nome: 'Sofia', cavallo: 'Pepe', descr: 'pony grigio pomellato (a macchioline), curioso di tutto', vel: 0.96, abil: 0.86, pal: 'pepe', cav: 'sofia', colore: '#f08ab5', distrazione: 'Pepe si è fermato un attimo ad annusare un fiore.' },
+  { nome: 'Leo', cavallo: 'Fulmine', descr: 'morello (tutto nero) con una stella bianca, sempre di corsa', vel: 1.04, abil: 0.78, pal: 'fulmine', cav: 'leo', colore: '#5fd38d', distrazione: 'Fulmine aveva un po\' di fretta: la prossima volta Leo lo farà respirare prima.' },
+  { nome: 'Emma', cavallo: 'Stella', descr: 'baia (marrone con criniera nera), gentile e con la stella in fronte', vel: 1.0, abil: 0.88, pal: 'stella', cav: 'emma', colore: '#b48cf0', distrazione: 'Stella ha salutato il pubblico e si è distratta un momento.' },
+  { nome: 'Tommaso', cavallo: 'Biscotto', descr: 'isabella (color biscotto), robusto e goloso di mele', vel: 0.94, abil: 0.9, pal: 'biscotto', cav: 'tommaso', colore: '#f3a15e', distrazione: 'Biscotto pensava alla merenda, ma è arrivato tranquillo.' }
+];
+
+// =============================================================
+//  POSE
+// =============================================================
+const RIPOSO = { pl: [-0.15, 0.3], al: [0.02, -0.02], pv: [-0.25, 0.35], av: [0.08, -0.06] };
+function posa(o) { return Object.assign({ gambe: RIPOSO, dy: 0, testa: 0, occhi: 'aperti', coda: 0.15, codaFase: 0, crinFase: 0, orecchie: 1, bocca: false, cav: { lean: 0.15, rise: 0 }, treccia: { vento: 0.15, fase: 0 } }, o); }
+function posaGaloppo(t) {
+  const L = (b, A, B, ph, fb) => { const a = 2 * Math.PI * (t + ph); return [b + A * Math.sin(a), fb - B * Math.max(0, Math.cos(a))]; };
+  return posa({
+    gambe: { pl: L(-0.2, 0.5, 0.9, 0, 0.3), pv: L(-0.2, 0.5, 0.9, 0.1, 0.3), al: L(0.05, 0.62, 1.3, 0.42, -0.05), av: L(0.05, 0.62, 1.3, 0.52, -0.05) },
+    dy: -Math.sin(2 * Math.PI * t) * 0.8, coda: 0.75, codaFase: t * Math.PI * 2, crinFase: t * Math.PI * 2,
+    cav: { lean: 0.35, rise: 0.5 + 0.5 * Math.sin(2 * Math.PI * t) }, treccia: { vento: 0.8, fase: t * Math.PI * 2 }
+  });
+}
+const POSE_SALTO = {
+  su: posa({ gambe: { al: [1.15, -2.0], av: [1.25, -2.1], pl: [-0.7, 0.25], pv: [-0.6, 0.15] }, coda: 0.9, codaFase: 1, crinFase: 1, cav: { lean: 0.9, rise: 3 }, treccia: { vento: 0.6, fase: 1 } }),
+  pi: posa({ gambe: { al: [1.2, -2.1], av: [1.3, -2.2], pl: [0.35, -1.5], pv: [0.45, -1.6] }, coda: 0.65, codaFase: 2, crinFase: 2, cav: { lean: 0.95, rise: 3 }, treccia: { vento: 0.95, fase: 2 } }),
+  sc: posa({ gambe: { al: [0.55, -0.2], av: [0.7, -0.3], pl: [-0.3, -0.9], pv: [-0.2, -1.0] }, coda: 0.5, codaFase: 3, crinFase: 3, cav: { lean: 0.7, rise: 2 }, treccia: { vento: 0.9, fase: 3 } }),
+  at: posa({ gambe: { al: [0.25, 0], av: [0.35, -0.05], pl: [-0.55, 0.3], pv: [-0.45, 0.2] }, dy: 1, coda: 0.45, codaFase: 4, crinFase: 4, cav: { lean: 0.45, rise: 1 }, treccia: { vento: 0.7, fase: 4 } })
+};
+const POSE_FERMO = {
+  i0: posa({}), i1: posa({ codaFase: 2.4, coda: 0.35 }), bl: posa({ occhi: 'chiusi' }), fe: posa({ occhi: 'felici' }),
+  hd: posa({ testa: 1, coda: 0.2 }), zz: posa({ occhi: 'chiusi', testa: 0.35, coda: 0.05, orecchie: 0 }), mn: posa({ bocca: true, testa: 0.08 })
+};
+
+// =============================================================
+//  SPRITE AD ALTA DEFINIZIONE: strati separati, ombre e contorni
+// =============================================================
+function geomGamba(jx, jy, ang) {
+  const L1 = 9, L2 = 8; const kx = jx + L1 * Math.sin(ang[0]), ky = jy + L1 * Math.cos(ang[0]); const a = ang[0] + ang[1];
+  const fx = kx + L2 * Math.sin(a), fy = ky + L2 * Math.cos(a);
+  return { jx, jy, kx, ky, fx, fy, f2x: lerp(kx, fx, 0.76), f2y: lerp(ky, fy, 0.76) };
+}
+function formaGamba(p, g, w0, c, dx) {
+  p.seg(g.jx + dx, g.jy, g.kx + dx, g.ky, w0, 2.6, c.su);
+  p.seg(g.kx + dx, g.ky, g.f2x + dx, g.f2y, 2.3, 1.7, c.giu);
+  p.ell(g.f2x + dx, g.f2y, 1.25, 1.15, c.giu);
+  p.seg(g.f2x + dx, g.f2y, g.fx + dx, g.fy, 1.5, 1.4, c.past);
+}
+function zoccolo(p, g, pal) {
+  p.poly([[g.fx - 1.4, g.fy - 0.3], [g.fx + 1.3, g.fy - 0.3], [g.fx + 1.9, g.fy + 1.5], [g.fx - 1.6, g.fy + 1.5]], pal.zoccolo);
+  p.lpx(g.fx - 0.9, g.fy, g.fx + 0.9, g.fy, 1, '#5a524a');
+}
+function disegnaTesta(p, r, C) {
+  p.seg(C[0] - 0.8, C[1] + 2.4, C[0] - 0.4, C[1] + 4.6, 1.7, 1.7, r.pelle);
+  p.ell(C[0], C[1], 3.4, 3.7, r.pelle); p.ell(C[0] + 3.1, C[1] + 0.9, 0.6, 0.7, r.pelle); p.ell(C[0] + 2.1, C[1] + 2.8, 1.2, 0.9, r.pelle);
+  p.ell(C[0] - 2.3, C[1] + 0.8, 2.4, 3.2, r.capelli);
+  if (r.stile !== 'corti') p.ell(C[0] - 2.6, C[1] + 2.6, 1.8, 1.6, r.capelli);
+  p.ell(C[0] + 1.4, C[1] - 1.1, 2.2, 0.9, r.capelli);
+  p.ell(C[0] - 0.3, C[1] - 1.7, 4.5, 3.7, r.casco, C[1] - 1.1);
+  p.poly([[C[0] + 2.4, C[1] - 2.4], [C[0] + 5.4, C[1] - 1.5], [C[0] + 2.6, C[1] - 1.0]], r.casco);
+}
+function dettagliTesta(p, r, C) {
+  p.ell(C[0] - 0.7, C[1] + 0.8, 0.8, 1.1, r.pelleOmbra);
+  p.ell(C[0] - 1.6, C[1] + 0.4, 0.9, 2.6, r.capelliOmbra);
+  p.lpx(C[0] - 3.4, C[1] - 0.6, C[0] - 2.4, C[1] + 2.6, 1, r.capelliLuce);
+  p.pl([[C[0] - 2.8, C[1] - 3.6], [C[0] - 0.8, C[1] - 4.7], [C[0] + 1.6, C[1] - 4.4]], 2, r.cascoLuce);
+  p.dot(C[0] + 2.4, C[1] - 3.3, 2, r.cascoLuce);
+  p.r(C[0] + 1.3, C[1] - 0.2, 0.9, 1.15, '#1b2347'); p.dot(C[0] + 1.85, C[1] + 0.35, 2, r.occhi); p.dot(C[0] + 1.55, C[1] + 0.05, 1, '#ffffff');
+  p.lpx(C[0] + 1.0, C[1] - 0.95, C[0] + 2.6, C[1] - 1.05, 1, r.capelliOmbra);
+  p.dot(C[0] + 2.7, C[1] + 2.15, 1, '#b5534a'); p.dot(C[0] + 1.5, C[1] + 1.5, 2, r.guancia);
+  p.lpx(C[0] - 0.6, C[1] - 1.0, C[0] + 1.0, C[1] + 3.3, 1, '#2a2a30');
+  if (r.lentiggini) { p.dot(C[0] + 2.2, C[1] + 1.2, 1, '#c87a4a'); p.dot(C[0] + 1.0, C[1] + 1.3, 1, '#c87a4a'); }
+}
+function disegnaTreccia(p, r, punti) {
+  const n = punti.length;
+  for (let i = 0; i < n - 1; i++) {
+    const [x0, y0] = punti[i], [x1, y1] = punti[i + 1]; const dx = x1 - x0, dy = y1 - y0, l = Math.hypot(dx, dy) || 1, nx = -dy / l, ny = dx / l;
+    const lato = i % 2 ? 1 : -1; const rr = lerp(1.55, 1.05, i / n); const cx = (x0 + x1) / 2 + nx * 0.42 * lato, cy = (y0 + y1) / 2 + ny * 0.42 * lato;
+    p.ell(cx, cy, rr, rr * 0.82, r.capelli);
+  }
+  return punti[n - 1];
+}
+function dettagliTreccia(p, r, punti) {
+  const n = punti.length;
+  for (let i = 0; i < n - 1; i++) {
+    const [x0, y0] = punti[i], [x1, y1] = punti[i + 1]; const dx = x1 - x0, dy = y1 - y0, l = Math.hypot(dx, dy) || 1, nx = -dy / l, ny = dx / l;
+    const lato = i % 2 ? 1 : -1; const cx = (x0 + x1) / 2 + nx * 0.42 * lato, cy = (y0 + y1) / 2 + ny * 0.42 * lato;
+    p.dot(cx - nx * 0.5 * lato, cy - ny * 0.5 * lato, 2, r.capelliLuce);
+    p.lpx(x1 - nx * 0.9, y1 - ny * 0.9, x1 + nx * 0.9, y1 + ny * 0.9, 1, r.capelliOmbra);
+  }
+  const [tx, ty] = punti[n - 1], [px, py] = punti[n - 2]; const ang = Math.atan2(ty - py, tx - px);
+  p.ell(tx, ty, 0.75, 0.75, r.laccio);
+  for (let k = -2; k <= 2; k++) { const a = ang + k * 0.28; p.seg(tx, ty, tx + Math.cos(a) * 2.6, ty + Math.sin(a) * 2.6, 0.9, 0.3, k % 2 ? r.capelliOmbra : r.capelli); }
+}
+
+function creaFrame(pal, cav, P, E) {
+  const SW = Math.ceil(SPR.W * E), SH = Math.ceil(SPR.H * E);
+  const out = nuovaTela(SW, SH), oc = out.getContext('2d');
+  const strato = () => { const c = nuovaTela(SW, SH); const x = c.getContext('2d', { willReadFrequently: true }); return { c, x, p: new PS(x, E, SPR.TX, SPR.TY) }; };
+  const metti = (l, col) => { contorna(l.c, col || pal.contorno); oc.drawImage(l.c, 0, 0); };
+  const sopra = (l, fn) => { l.x.globalCompositeOperation = 'source-atop'; fn(l.p); l.x.globalCompositeOperation = 'source-over'; };
+  const dy = P.dy || 0, td = P.testa || 0;
+  const T = (x, y) => { const f = clamp((x - 36) / 14, 0, 1); return [x + 3 * td * f, y + dy + 18 * td * f]; };
+  const B = (x, y) => [x, y + dy];
+
+  // coda
+  { const l = strato(), p = l.p; const cs = P.coda || 0, f = P.codaFase || 0; const cols = [pal.crin, pal.crinOmbra, pal.crinLuce, pal.crin];
+    p.ell(13, 27 + dy, 2.7, 2.5, pal.crin);
+    for (let i = 0; i < 11; i++) {
+      const oo = i / 10 - 0.5; let px = 13 + oo * 0.8, py = 27 + dy + oo * 1.2;
+      for (let k = 1; k <= 8; k++) {
+        const t = k / 8;
+        const x = 13 - (5 + 9 * cs) * t - oo * 2.6 * t + Math.sin(f + t * 4 + i * 0.7) * 1.5 * t;
+        const y = 27 + dy + (19 - 9 * cs) * t + oo * (3 + 3 * cs) * t + Math.cos(f + t * 3 + i) * 0.6 * t * cs;
+        const w = lerp(1.9, 0.5, t); p.seg(px, py, x, y, w + 0.15, w, cols[i % 4]); px = x; py = y;
+      }
+    }
+    metti(l); }
+  // gambe lontane
+  { const l = strato(), p = l.p; const c = { su: pal.lontano, giu: pal.lontanoScuro, past: pal.lontanoScuro };
+    const gp = geomGamba(21, 36 + dy, P.gambe.pl), ga = geomGamba(36, 37 + dy, P.gambe.al);
+    formaGamba(p, gp, 5, c, 0); formaGamba(p, ga, 4, c, 0); zoccolo(p, gp, pal); zoccolo(p, ga, pal); metti(l); }
+  // corpo, collo e testa
+  { const l = strato(), p = l.p; const b = pal.base; const back = P.orecchie === 0;
+    p.ell(19, 31 + dy, 9.5, 8.3, b); p.ell(28, 32.5 + dy, 14, 7.6, b); p.ell(38.5, 32 + dy, 6.8, 7.2, b);
+    p.poly([B(31, 30), T(35, 24), T(40, 17), T(44.5, 12), T(50, 12.5), T(49.5, 18), T(47, 25), B(45, 34), B(37, 37)], b);
+    p.poly([T(45, 11), T(48.5, 8.2), T(52.5, 9.5), T(57, 13.5), T(60.5, 17.5), T(61.6, 19.8), T(60.8, 22.3), T(57.5, 23.4), T(54.5, 22.2), T(51.5, 19.8), T(48, 18.5)], b);
+    p.ell(...T(49.8, 15.2), 3.7, 3.6, b); p.ell(...T(58.8, 20.6), 3, 2.7, b);
+    p.poly([T(45.6, 11), back ? T(42.5, 6.5) : T(45.3, 3.4), T(48.6, 9.6)], b);
+    p.poly([T(47.8, 9.6), back ? T(45.5, 5.5) : T(49.7, 3.2), T(50.9, 10.6)], b);
+    sopra(l, p => {
+      const om = pal.ombra, lu = pal.luce, ri = pal.riflesso;
+      p.ell(28, 39.8 + dy, 13, 3.4, om); p.ell(14, 34 + dy, 4.5, 6.5, om); p.ell(40, 37.8 + dy, 5, 2.6, om);
+      p.poly([B(45, 35), T(47, 25), T(49.5, 18), T(52, 20.2), T(48.6, 25), B(46.6, 35)], om);
+      p.ell(...T(51.2, 19.8), 3, 1.4, om); p.ell(...T(58.8, 21.9), 3, 1.3, pal.muso);
+      if (pal.macchie) [[22, 29], [27, 33], [32, 28], [17, 33], [35, 34], [25, 27], [30, 36], [20, 26], [40, 31], [24, 37]].forEach(([x, y]) => { p.ell(x, y + dy, 1.5, 1.3, pal.macchie); p.ell(x - 0.3, y - 0.3 + dy, 0.7, 0.6, lu); });
+      p.ell(27, 26.2 + dy, 11, 2.4, lu); p.ell(19, 24.6 + dy, 6.5, 2.8, lu); p.ell(38, 26.8 + dy, 3.2, 2.2, lu);
+      p.seg(...T(44.6, 12.6), ...T(36.4, 23.5), 2.6, 3, lu); p.seg(...T(49.3, 9.6), ...T(57.5, 14.8), 1.6, 1.2, lu); p.ell(...T(48.8, 13.8), 1.6, 1.2, lu);
+      p.ell(37.2, 29.5 + dy, 1.2, 3.2, ri); p.ell(21.5, 27.6 + dy, 3, 1.1, ri); p.ell(29, 27.2 + dy, 4, 0.7, ri); p.ell(...T(41.4, 20.5), 0.8, 2.4, ri); p.ell(...T(53, 12.6), 1.4, 0.6, ri);
+      p.pl([B(34.4, 25.5), B(35.8, 30), B(38.2, 34.6)], 1, om); p.pl([B(13.5, 29.5), B(17, 26), B(22, 26.8)], 1, om); p.pl([B(22, 30.5), B(23, 34.5), B(22, 38)], 1, om);
+      p.pl([T(47.4, 17.6), T(50, 19.4), T(53.4, 20.7)], 1, om);
+      p.ell(...(back ? T(44.4, 7.6) : T(46.3, 6.4)), 0.6, 1.6, pal.scuro); p.ell(...(back ? T(46.4, 7) : T(48.9, 6.2)), 0.6, 1.6, pal.scuro);
+      if (pal.lista) p.seg(...T(51.4, 10.4), ...T(58.4, 18.6), 1.6, 1.1, '#fff6ea');
+      if (pal.stella) p.ell(...T(51.4, 10.6), 1.1, 1.1, '#fff6ea');
+    });
+    const [ex, ey] = T(50.7, 12.9);
+    if (P.occhi === 'chiusi') p.pl([[ex - 1.2, ey], [ex, ey + 0.6], [ex + 1.2, ey]], 1, pal.occhio);
+    else if (P.occhi === 'felici') p.pl([[ex - 1.2, ey + 0.5], [ex, ey - 0.6], [ex + 1.2, ey + 0.5]], 2, pal.occhio);
+    else { p.ell(ex, ey, 1.2, 1.0, pal.occhio); p.dot(ex - 0.4, ey - 0.3, 2, '#ffffff'); p.dot(ex + 0.5, ey + 0.4, 1, '#5a3420'); p.pl([[ex - 1.4, ey - 1.0], [ex + 1.3, ey - 1.2]], 1, pal.scuro); p.lpx(ex + 1.1, ey - 1.1, ex + 1.7, ey - 1.7, 1, pal.occhio); }
+    { const [nx, ny] = T(60.2, 19.2); p.ell(nx, ny, 0.75, 0.55, pal.occhio); p.dot(nx - 0.6, ny - 0.8, 1, pal.luce); }
+    p.pl([T(57.2, 22.5), T(59, 22.3), T(60.3, 21.7)], 1, pal.scuro);
+    if (P.bocca) p.ell(...T(58.6, 22.8), 1.4, 0.6, '#4a1a10');
+    metti(l); }
+  // criniera
+  { const l = strato(), p = l.p; const c0 = T(46, 10.6), c1 = T(35.6, 24), cf = P.crinFase || 0; const cols = [pal.crin, pal.crinOmbra, pal.crinLuce];
+    p.seg(c0[0], c0[1], c1[0], c1[1], 2.4, 3, pal.crin);
+    for (let i = 0; i <= 12; i++) {
+      const t = i / 12; const rx = lerp(c0[0], c1[0], t), ry = lerp(c0[1], c1[1], t); const sw = Math.sin(cf + i * 0.8);
+      const mx = rx - 1.8 - 0.8 * sw, my = ry + 1.8, ex = rx - 3.6 - 1.6 * sw, ey = ry + 3.4 + Math.cos(cf + i) * 0.9;
+      p.seg(rx, ry, mx, my, 1.7, 1.3, cols[i % 3]); p.seg(mx, my, ex, ey, 1.3, 0.45, cols[i % 3]);
+    }
+    for (let k = 0; k < 3; k++) { const a = T(47.4 + k * 0.6, 8.8), b2 = T(49.4 + k * 0.7, 13.4 + k * 0.3); p.seg(a[0], a[1], b2[0], b2[1], 1.2, 0.45, cols[k]); }
+    metti(l); }
+  // gambe vicine
+  { const l = strato(), p = l.p; const gp = geomGamba(18, 37 + dy, P.gambe.pv), ga = geomGamba(39, 38 + dy, P.gambe.av);
+    const scure = pal.gambeScure ? { su: pal.ombra, giu: pal.crinOmbra, past: pal.crinOmbra } : { su: pal.ombra, giu: pal.scuro, past: pal.scuro };
+    const chiare = pal.gambeScure ? { su: pal.base, giu: pal.crin, past: pal.crinOmbra } : { su: pal.base, giu: pal.ombra, past: pal.scuro };
+    formaGamba(p, gp, 5.4, scure, 0); formaGamba(p, ga, 4.2, scure, 0);
+    sopra(l, p => {
+      formaGamba(p, gp, 5.4, chiare, 0.75); formaGamba(p, ga, 4.2, chiare, 0.75);
+      p.lpx(gp.jx + 1.6, gp.jy + 0.5, gp.kx + 0.9, gp.ky, 2, pal.luce); p.lpx(ga.jx + 1.3, ga.jy + 0.5, ga.kx + 0.9, ga.ky, 2, pal.luce);
+      [['pv', gp], ['av', ga]].forEach(([k, g]) => { if (pal.calze.includes(k)) { p.seg(g.f2x, g.f2y - 1.5, g.fx, g.fy, 2.6, 2, '#fbf3e6'); } });
+    });
+    zoccolo(p, gp, pal); zoccolo(p, ga, pal); metti(l); }
+  // finimenti e cavaliere
+  let M = null, Aq = null;
+  if (cav) {
+    { const l = strato(), p = l.p; p.poly([B(19.6, 23.4), B(34.6, 23.4), B(35.9, 32.6), B(35, 34), B(21.5, 34), B(20.4, 32.5)], cav.sottosella);
+      sopra(l, p => { p.r(19, 32.4 + dy, 18, 1.8, cav.bordo); p.r(19, 23.2 + dy, 2, 11, cav.bordo); p.lpx(22, 26 + dy, 25, 32 + dy, 1, cav.bordo); p.lpx(25, 25 + dy, 28, 32 + dy, 1, cav.bordo); });
+      metti(l, '#3a3a38'); }
+    { const l = strato(), p = l.p;
+      p.poly([B(21.4, 20.2), B(23.4, 21.4), B(26, 23.4), B(31.5, 23.2), B(33.2, 21.6), B(34.4, 22.4), B(33.6, 25), B(22.6, 25), B(20.8, 22.2)], '#5a3418');
+      p.poly([B(26.5, 24.4), B(33, 24.4), B(33.8, 31), B(27.2, 31)], '#4a2a12'); p.r(29.7, 30.8 + dy, 1.8, 8.4, '#3a2210');
+      sopra(l, p => { p.lpx(23, 21.4 + dy, 26, 23.2 + dy, 2, '#8a5a30'); p.lpx(27, 24.8 + dy, 32.6, 24.8 + dy, 1, '#6e4426'); p.r(29.9, 31 + dy, 0.5, 8, '#5a3a1e'); });
+      metti(l); }
+    const lean = P.cav.lean, rise = P.cav.rise;
+    const Hp = [27, 22 + dy - rise], Sp = [Hp[0] + 2 + 5 * lean, Hp[1] - 10 + 2 * lean], C = [Sp[0] + 1 + 2 * lean, Sp[1] - 4.5];
+    const K = [33, 28.4 + dy], A = [32, 35.2 + dy]; Aq = A;
+    const El = [Sp[0] + 3 + lean, Sp[1] + 5]; M = [37 + 3 * lean, 21 + dy - rise * 0.5];
+    // gamba del cavaliere
+    { const l = strato(), p = l.p;
+      p.seg(Hp[0] + 0.6, Hp[1] + 1.2, K[0], K[1], 3.9, 3.0, cav.pantaloni);
+      p.seg(K[0], K[1] + 0.4, A[0], A[1], 2.9, 2.3, cav.stivali);
+      p.poly([[A[0] - 1.3, A[1] - 0.6], [A[0] + 2.8, A[1] + 0.2], [A[0] + 3, A[1] + 1.4], [A[0] - 1.5, A[1] + 1.4]], cav.stivali);
+      sopra(l, p => { p.seg(Hp[0] + 0.2, Hp[1] + 2.4, K[0] - 0.4, K[1] + 1.1, 1.9, 1.5, cav.pantaloniOmbra); p.lpx(K[0] + 0.9, K[1] + 1, A[0] + 0.8, A[1] - 0.6, 2, '#55566a'); p.dot(K[0] + 0.6, K[1] - 0.4, 2, '#fff8e6'); });
+      metti(l, '#101014'); }
+    // busto e braccio
+    { const l = strato(), p = l.p; const S2 = Sp;
+      p.poly([[Hp[0] - 2.4, Hp[1] + 1.2], [Hp[0] + 3.2, Hp[1] + 1.2], [S2[0] + 2.3, S2[1] + 1.3], [S2[0] + 0.5, S2[1] - 0.6], [S2[0] - 2.2, S2[1] + 0.3]], cav.giacca);
+      p.poly([[Hp[0] - 2.2, Hp[1] - 1.2], [Hp[0] + 0.6, Hp[1] + 0.6], [Hp[0] - 4.4, Hp[1] + 2.2]], cav.giacca);
+      p.ell(S2[0], S2[1] + 1.2, 2.6, 2.1, cav.giacca);
+      sopra(l, p => {
+        p.seg(Hp[0] - 2.1, Hp[1], S2[0] - 1.9, S2[1] + 0.8, 1.5, 1.2, cav.giaccaOmbra);
+        p.lpx(S2[0] + 1.8, S2[1] + 0.4, S2[0] + 1.2, S2[1] + 4.8, 1, cav.giaccaLuce);
+        p.poly([[S2[0] + 0.6, S2[1] - 0.8], [S2[0] + 2.4, S2[1] - 0.1], [S2[0] + 1.6, S2[1] + 1.8]], '#ffffff');
+        p.dot(S2[0] + 1.6, S2[1] + 5.6, 2, '#d8c27a');
+      });
+      metti(l, '#0a0f1e');
+      const l2 = strato(), q = l2.p;
+      q.seg(S2[0] + 0.2, S2[1] + 1.2, El[0], El[1], 2.2, 1.9, cav.giacca); q.seg(El[0], El[1], M[0], M[1], 1.9, 1.6, cav.giacca);
+      sopra(l2, q => { q.lpx(S2[0] - 0.3, S2[1] + 2.2, El[0] - 0.5, El[1] + 0.7, 2, cav.giaccaOmbra); q.lpx(S2[0] + 0.8, S2[1] + 0.6, El[0] + 0.5, El[1] - 0.7, 1, cav.giaccaLuce); q.r(M[0] - 0.9, M[1] - 0.8, 0.7, 1.6, '#ffffff'); });
+      q.ell(M[0] + 0.4, M[1], 1.1, 0.95, cav.pelle);
+      metti(l2, '#0a0f1e'); }
+    // capelli dietro (treccia, coda, ricci)
+    { const l = strato(), p = l.p; const v = P.treccia.vento, f = P.treccia.fase; const N = [C[0] - 3.1, C[1] + 1.6];
+      if (cav.stile === 'treccia') {
+        const pts = []; for (let i = 0; i <= 10; i++) { const t = i / 10; pts.push([N[0] - (2 + 9.5 * v) * t + Math.sin(f + t * 3) * 1.1 * v * t, N[1] + (12.5 - 8.5 * v) * t + Math.cos(f + t * 4) * 0.9 * v * t]); }
+        disegnaTreccia(p, cav, pts); sopra(l, p => dettagliTreccia(p, cav, pts)); const tip = pts[10], pr = pts[9]; const ang = Math.atan2(tip[1] - pr[1], tip[0] - pr[0]);
+        for (let k = -2; k <= 2; k++) { const a = ang + k * 0.28; p.seg(tip[0], tip[1], tip[0] + Math.cos(a) * 2.6, tip[1] + Math.sin(a) * 2.6, 0.9, 0.3, k % 2 ? cav.capelliOmbra : cav.capelli); }
+        p.ell(tip[0], tip[1], 0.75, 0.75, cav.laccio);
+      } else if (cav.stile === 'coda') {
+        for (let i = 0; i <= 6; i++) { const t = i / 6; p.ell(N[0] - (1 + 6 * v) * t, N[1] - 1 + (6.5 - 3 * v) * t + Math.sin(f + t * 3) * 0.6, 2.1 - t * 1.1, 1.6 - t * 0.5, i % 2 ? cav.capelliOmbra : cav.capelli); }
+        p.ell(N[0], N[1] - 1, 0.8, 0.8, cav.laccio);
+      } else if (cav.stile === 'ricci') {
+        p.ell(C[0] - 3.6, C[1] + 2.2, 3, 2.7, cav.capelli); sopra(l, p => { for (let k = 0; k < 6; k++) p.dot(C[0] - 5 + (k % 3) * 1.3, C[1] + 1.2 + Math.floor(k / 3) * 1.6, 2, cav.capelliLuce); });
+      }
+      metti(l, '#2a1a08'); }
+    // testa
+    { const l = strato(), p = l.p; disegnaTesta(p, cav, C); sopra(l, p => dettagliTesta(p, cav, C)); metti(l, '#1a1008'); }
+  }
+  // finimenti senza contorno: briglia, redini, staffa
+  { const p = new PS(oc, E, SPR.TX, SPR.TY); const cu = '#2a1408';
+    if (cav) {
+      const a = T(48.2, 10.6), b = T(55.8, 20.8), n0 = T(54.4, 18.2), n1 = T(60.6, 17.2), f0 = T(46.4, 10.8), f1 = T(49.8, 9.6), g0 = T(48.6, 12), g1 = T(49.6, 17.6);
+      p.lpx(a[0], a[1], b[0], b[1], 2, cu); p.lpx(n0[0], n0[1], n1[0], n1[1], 2, cu); p.lpx(f0[0], f0[1], f1[0], f1[1], 2, cu); p.lpx(g0[0], g0[1], g1[0], g1[1], 1, cu);
+      p.ell(b[0] + 0.4, b[1] + 0.2, 0.65, 0.65, '#c8ccd2'); p.lpx(M[0] + 0.8, M[1], b[0], b[1], 2, '#1e0e05');
+      p.lpx(30.6, 24.6 + dy, Aq[0] + 0.7, Aq[1] + 0.6, 1, '#3a2210'); p.r(Aq[0] - 0.7, Aq[1] + 1.4, 3.2, 0.5, '#b8bec6');
+    }
+  }
+  return out;
+}
+function generaCoppia(pal, cav, completo, E) {
+  const f = {};
+  if (completo) { for (let i = 0; i < 8; i++) f['g' + i] = creaFrame(pal, cav, posaGaloppo(i / 8), E); for (const k in POSE_SALTO) f[k] = creaFrame(pal, cav, POSE_SALTO[k], E); }
+  f.i0 = creaFrame(pal, cav, POSE_FERMO.i0, E);
+  return f;
+}
+function generaStalla(pal, E) { const f = {}; for (const k in POSE_FERMO) f[k] = creaFrame(pal, null, POSE_FERMO[k], E); return f; }
+function creaBambina(r, braccio, E) {
+  const Wd = 24, Hd = 38; const SW = Math.ceil(Wd * E), SH = Math.ceil(Hd * E); const out = nuovaTela(SW, SH), oc = out.getContext('2d');
+  const strato = () => { const c = nuovaTela(SW, SH); const x = c.getContext('2d', { willReadFrequently: true }); return { c, x, p: new PS(x, E, 2, 2) }; };
+  const metti = (l, col) => { contorna(l.c, col); oc.drawImage(l.c, 0, 0); };
+  const sopra = (l, fn) => { l.x.globalCompositeOperation = 'source-atop'; fn(l.p); l.x.globalCompositeOperation = 'source-over'; };
+  const C = [10, 6];
+  { const l = strato(), p = l.p; const pts = []; for (let i = 0; i <= 9; i++) { const t = i / 9; pts.push([6.9 - 1.6 * Math.sin(t * 1.4), 7.6 + 14 * t]); }
+    disegnaTreccia(p, r, pts); sopra(l, p => dettagliTreccia(p, r, pts)); const tip = pts[9]; for (let k = -1; k <= 1; k++) p.seg(tip[0], tip[1], tip[0] + k * 0.8, tip[1] + 2.4, 0.9, 0.3, r.capelli); p.ell(tip[0], tip[1], 0.75, 0.75, r.laccio); metti(l, '#2a1a08'); }
+  { const l = strato(), p = l.p;
+    p.seg(9, 20, 8.8, 27, 3, 2.6, r.pantaloniOmbra); p.seg(11.4, 20, 11.6, 27, 3, 2.6, r.pantaloni);
+    p.seg(8.8, 26.4, 8.8, 33, 2.7, 2.4, r.stivali); p.seg(11.6, 26.4, 11.8, 33, 2.7, 2.4, r.stivali);
+    p.poly([[7.4, 32.4], [11.2, 32.6], [11.2, 34.2], [7.4, 34.2]], r.stivali); p.poly([[10.4, 32.4], [14.4, 32.8], [14.4, 34.2], [10.4, 34.2]], r.stivali);
+    sopra(l, p => { p.lpx(12.4, 27, 12.6, 33, 1, '#55566a'); p.lpx(9.6, 27, 9.6, 33, 1, '#3a3a46'); });
+    metti(l, '#101014'); }
+  { const l = strato(), p = l.p;
+    p.poly([[6.4, 11], [13.4, 11], [14, 21], [5.8, 21]], r.giacca); p.ell(10, 11.6, 3.8, 1.8, r.giacca);
+    sopra(l, p => { p.r(5.8, 11, 1.4, 10, r.giaccaOmbra); p.poly([[11, 10.2], [13, 10.6], [11.8, 13]], '#ffffff'); p.lpx(12.6, 11.4, 12.2, 16.4, 1, r.giaccaLuce); p.dot(12.6, 15.4, 2, '#d8c27a'); p.dot(12.6, 18, 2, '#d8c27a'); });
+    if (braccio === 'avanti') { p.seg(10.8, 12.4, 14.6, 15.6, 2.2, 1.9, r.giacca); p.seg(14.6, 15.6, 18.4, 14.6, 1.9, 1.7, r.giacca); p.ell(19.2, 14.5, 1.1, 1, r.pelle); }
+    else if (braccio === 'su') { p.seg(10.8, 12.4, 14.2, 10, 2.2, 1.9, r.giacca); p.seg(14.2, 10, 16.8, 6.8, 1.9, 1.7, r.giacca); p.ell(17.2, 6.2, 1.1, 1, r.pelle); }
+    else { p.seg(10.6, 12.2, 11, 19, 2.2, 1.9, r.giacca); p.ell(11.1, 20.1, 1.1, 1, r.pelle); }
+    metti(l, '#0a0f1e'); }
+  { const l = strato(), p = l.p; disegnaTesta(p, r, C); sopra(l, p => dettagliTesta(p, r, C)); metti(l, '#1a1008'); }
+  return out;
+}
+
+// =============================================================
+//  SCENARI AD ALTA DEFINIZIONE
+// =============================================================
+const LW = 1920, ORIZ = 430;
+const TEMI = {
+  prato: { cielo: ['#2a84da', '#3c97e4', '#58aaec', '#74bdf3', '#93cef8', '#b4defb'], sole: { x: 800, y: 92, r: 36 }, raggi: true,
+    nuvole: { col: '#ffffff', ombra: '#dcecfa', ombra2: '#b5d3ef', n: 9 },
+    monti: [{ base: 340, amp: 140, col: '#88aee0', ombra: '#6c94c9', foschia: '#a8c6ea' }, { base: 378, amp: 72, col: '#5f94cc', ombra: '#4b7eb6', foschia: '#79a8d8' }],
+    colline: { base: 404, amp: 18, col: '#5aa845', scuro: '#3e8a33', chiaro: '#78c252', verdi: ['#2e6e2a', '#3d8a35', '#56a844', '#7cc456', '#a4dc6a'] },
+    alberi: { tipo: 'tondo', n: 6, verdi: ['#2a6a28', '#3a8a34', '#55a843', '#7cc455', '#a6dc6c'], tronco: '#6b4423', troncoScuro: '#4a2c14' },
+    terreno: { retro: '#4f9e3a', erba: ['#5cb845', '#4fa83c', '#6fc650', '#8ad660'], pista: '#d8b47a', pistaScura: '#bf995e', pistaChiara: '#e9cb95', fiori: ['#ffffff', '#ffffff', '#ffd84a', '#ff9ac8', '#8ec5ff'] },
+    primo: { verdi: ['#24642a', '#327e31', '#4a9c3e', '#6cba4c'], fiori: ['#ff8a2a', '#ffb03a', '#ffffff', '#ff6a8a'] },
+    pali: ['#ffffff', '#e04444'], ritti: '#f4f4f4', rittiOmbra: '#c4c4c4' },
+  frutteto: { cielo: ['#3a90e0', '#4e9fe6', '#68b2ee', '#86c4f4', '#a6d5f8', '#c6e5fb'], sole: { x: 150, y: 96, r: 32 },
+    nuvole: { col: '#ffffff', ombra: '#dcecfa', ombra2: '#b8d4ee', n: 8 },
+    monti: [{ base: 336, amp: 150, col: '#92b2dc', ombra: '#7697c4', foschia: '#b0c9e8', neve: '#f6f9ff' }, { base: 380, amp: 70, col: '#6a9bcd', ombra: '#5584b8', foschia: '#86b0da' }],
+    colline: { base: 402, amp: 20, col: '#7cbc56', scuro: '#5a9c44', chiaro: '#96d066', verdi: ['#3a7a30', '#4c923c', '#68ae4a', '#8ac85c', '#aee072'] },
+    alberi: { tipo: 'melo', n: 11, verdi: ['#2c6c2a', '#3c8a36', '#56a844', '#78c254', '#a0d868'], tronco: '#6b4423', troncoScuro: '#4a2c14', frutto: '#e2302a' },
+    staccionata: { col: '#c99a62', ombra: '#9a6e3e', luce: '#e6c08a' },
+    terreno: { retro: '#58a43e', erba: ['#66bc4a', '#58ae40', '#7aca56', '#94d866'], pista: '#b98c58', pistaScura: '#9c7444', pistaChiara: '#d2a872', fiori: ['#ffffff', '#ffd84a', '#ff8fc7', '#ff8fc7', '#c6a0ff'] },
+    primo: { verdi: ['#2a6a2c', '#3a8634', '#56a444', '#76c054'], fiori: ['#ff8fc7', '#ffffff', '#ffd84a', '#e2302a'] },
+    pali: ['#ffffff', '#2e9e4f'], ritti: '#8b5a2b', rittiOmbra: '#5e3a1a', riempimento: 'cassetta' },
+  spiaggia: { cielo: ['#1ea6e2', '#36b2e8', '#56c0ee', '#78cef3', '#9cdcf7', '#c2ebfa'], sole: { x: 760, y: 84, r: 36 },
+    nuvole: { col: '#ffffff', ombra: '#dff0fa', ombra2: '#b8dcf0', n: 6 },
+    monti: [{ base: 352, amp: 70, col: '#a8c2de', ombra: '#94b0d0', foschia: '#c0d6ec', neve: '#f6f9ff' }],
+    mare: true, alberi: { tipo: 'spiaggia', n: 8 },
+    terreno: { sabbia: true, retro: '#e8cf92', erba: ['#f0d89c', '#e6cb88', '#f6e4b4', '#ead292'], pista: '#f5e2ae', pistaScura: '#e2c98e', pistaChiara: '#fbeecb', fiori: ['#ffffff', '#ffd6c2', '#f7c9a0', '#ffe8de'] },
+    primo: { tipo: 'dune', verdi: ['#7a9a4a', '#92b25a', '#aac86a', '#c4dc84'], fiori: [] },
+    pali: ['#ffffff', '#2a7bd4'], ritti: '#ffffff', rittiOmbra: '#c8d6e6', riempimento: 'onde' },
+  bosco: { cielo: ['#5cb0d6', '#72bcdc', '#88c8e2', '#9fd3e8', '#b6deec', '#cde8ef'], sole: null, raggiBosco: true,
+    nuvole: { col: '#f6fbff', ombra: '#d6e8ee', ombra2: '#b8d4de', n: 5 },
+    monti: [{ base: 350, amp: 110, col: '#4a8a68', ombra: '#3c7558', foschia: '#6aa286' }],
+    pineta: true, alberi: { tipo: 'pino', n: 15, verdi: ['#1c4a2a', '#265e34', '#327640', '#4a9452', '#6cb066'], tronco: '#5a3a20', troncoScuro: '#3a2412' },
+    terreno: { retro: '#3f6b2a', erba: ['#5a8a38', '#4e7c30', '#6a9a44', '#7aaa4e'], pista: '#9a7148', pistaScura: '#7e5a38', pistaChiara: '#b48a5e', fiori: ['#d23b2f', '#f4ead2', '#d23b2f', '#ffffff'] },
+    primo: { tipo: 'felci', verdi: ['#1e4a24', '#2c6230', '#3e7e3c', '#5a9c4c'], fiori: ['#d23b2f'] },
+    pali: ['#8a5a2b', '#a8743c'], ritti: '#6b4423', rittiOmbra: '#4a2c14' },
+  tramonto: { cielo: ['#2e2462', '#4a2c7a', '#7a3a88', '#b44e7e', '#e2706a', '#f8a070', '#ffc888'], sole: { x: 600, y: 352, r: 62, tramonto: true },
+    nuvole: { col: '#f8b0a4', ombra: '#d888a0', ombra2: '#9e6496', n: 7 },
+    monti: [{ base: 372, amp: 110, col: '#5e4282', ombra: '#4a3270', foschia: '#7a5896' }, { base: 396, amp: 50, col: '#45305e', ombra: '#38264e', foschia: '#5a4276' }],
+    colline: { base: 410, amp: 8, col: '#3e4a30', scuro: '#2e3a24', chiaro: '#56603c', verdi: ['#222a1a', '#2e3a24', '#3e4a30', '#566040', '#6e7a4e'] },
+    alberi: { tipo: 'giardino', n: 8 },
+    terreno: { retro: '#4a6a30', erba: ['#6a8a42', '#5e7c3a', '#7a9a4c', '#8eaa58'], pista: '#c99b6a', pistaScura: '#a87e52', pistaChiara: '#deb684', fiori: ['#e8426b', '#ff8fb0', '#ffd0e0', '#ffd84a'] },
+    primo: { verdi: ['#1e3a1e', '#2c4e28', '#3e6634', '#567e42'], fiori: ['#e8426b', '#ff8fb0', '#ffd0e0'] },
+    pali: ['#fff2d6', '#7b4fb8'], ritti: '#3a2a40', rittiOmbra: '#24182a', riempimento: 'fiori' },
+  festa: { cielo: ['#2a90ea', '#3e9eee', '#58b0f2', '#74c0f6', '#94d0f8', '#b8e0fb'], sole: { x: 860, y: 74, r: 30 },
+    nuvole: { col: '#ffffff', ombra: '#dcecfa', ombra2: '#b5d3ef', n: 7 },
+    monti: [{ base: 340, amp: 130, col: '#82a8dc', ombra: '#6890c6', foschia: '#a4c2e8', neve: '#f6f9ff' }, { base: 380, amp: 60, col: '#5c90ca', ombra: '#4a7cb4', foschia: '#78a6d6' }],
+    colline: { base: 404, amp: 14, col: '#64b84e', scuro: '#489a3c', chiaro: '#80cc5c', verdi: ['#2e6e2a', '#3d8a35', '#56a844', '#7cc456', '#a4dc6a'] },
+    alberi: { tipo: 'festa', n: 6 }, palloncini: true,
+    terreno: { retro: '#4a9e3a', erba: ['#5cbc48', '#50ae3e', '#70ca56', '#88d664'], pista: '#e2c48c', pistaScura: '#caa870', pistaChiara: '#f2daa8', righe: true, fiori: ['#ffffff', '#ffd84a', '#ff6a8a', '#8ec5ff'] },
+    primo: { verdi: ['#24642a', '#327e31', '#4a9c3e', '#6cba4c'], fiori: ['#ff4f7a', '#ffd23f', '#2a8bf2', '#ffffff'] },
+    pali: ['#ffffff', '#ff4f7a'], ritti: '#ffffff', rittiOmbra: '#c8c8d8', riempimento: 'colori' }
+};
+const ARCOBALENO = [['#ffffff', '#ff4f7a'], ['#ffffff', '#2a8bf2'], ['#ffd23f', '#ff7a2a'], ['#ffffff', '#2fbf6f'], ['#ffffff', '#9a5af0']];
+function avvolgi(fn, x, w) { const L = w || LW; fn(x); fn(x - L); fn(x + L); }
+function profilo(base, amp, R, armoniche) {
+  const fasi = armoniche.map(() => R() * Math.PI * 2);
+  return x => { let s = 0, tot = 0; armoniche.forEach(([k, a], i) => { s += a * Math.sin(2 * Math.PI * k * x / LW + fasi[i]); tot += a; }); return base - amp * (0.5 + 0.5 * s / tot); };
+}
+function nuvolaHD(p, x, y, w, N, R) {
+  const bl = []; const n = 6 + Math.floor(w / 26);
+  for (let k = 0; k < n; k++) { const t = k / (n - 1); const r = (0.35 + 0.65 * Math.sin(t * Math.PI)) * w * 0.2 + R() * 8; bl.push([x - w / 2 + t * w, y - r * 0.55 + R() * 6, r]); }
+  bl.forEach(([cx, cy, r]) => p.ell(cx, cy + 7, r, r * 0.8, N.ombra2));
+  bl.forEach(([cx, cy, r]) => p.ell(cx, cy + 3, r, r * 0.8, N.ombra));
+  bl.forEach(([cx, cy, r]) => p.ell(cx + r * 0.1, cy - 1, r * 0.92, r * 0.72, N.col));
+  p.r(x - w / 2 - 6, y + 6, w + 12, 6, N.ombra2);
+}
+function chioma(p, x, cy, rx, ry, V, R, n) {
+  const cl = []; for (let k = 0; k < n; k++) { const a = R() * Math.PI * 2, d = Math.sqrt(R()); cl.push([x + Math.cos(a) * d * rx * 0.78, cy + Math.sin(a) * d * ry * 0.78, (0.3 + R() * 0.2) * Math.min(rx, ry) * 1.15]); }
+  cl.sort((a, b) => a[1] - b[1]);
+  cl.forEach(([cx, cy2, r]) => p.ell(cx - 3, cy2 + 4, r, r * 0.9, V[0]));
+  cl.forEach(([cx, cy2, r]) => p.ell(cx, cy2, r, r * 0.9, V[1]));
+  cl.forEach(([cx, cy2, r]) => { if ((cx - x) / rx - (cy2 - cy) / ry > -0.35) p.ell(cx + r * 0.2, cy2 - r * 0.25, r * 0.72, r * 0.6, V[2]); });
+  cl.forEach(([cx, cy2, r]) => { if ((cx - x) / rx - (cy2 - cy) / ry > 0.25) p.ell(cx + r * 0.35, cy2 - r * 0.42, r * 0.36, r * 0.28, V[3]); });
+  for (let k = 0; k < n * 4; k++) { const a = R() * Math.PI * 2, d = Math.sqrt(R()) * 0.85; const px = x + Math.cos(a) * d * rx, py = cy + Math.sin(a) * d * ry; p.r(px, py, 2, 2, ((px - x) / rx - (py - cy) / ry > 0.2) ? V[4] : V[0]); }
+}
+function alberoTondo(p, x, y, R, A, sc, frutti) {
+  const h = (38 + R() * 30) * sc, rx = (46 + R() * 20) * sc, ry = rx * 0.82, cy = y - h - ry * 0.55;
+  p.ell(x, y + 2, rx * 0.8, 6, 'rgba(20,60,20,0.25)');
+  p.poly([[x - 7 * sc, y + 1], [x + 7 * sc, y + 1], [x + 4 * sc, y - h - 10], [x - 4 * sc, y - h - 10]], A.tronco);
+  p.r(x - 7 * sc, y - h, 4 * sc, h, A.troncoScuro);
+  p.linea(x, y - h * 0.7, x - rx * 0.5, cy + ry * 0.2, Math.max(3, 5 * sc), A.tronco); p.linea(x, y - h * 0.8, x + rx * 0.45, cy + ry * 0.1, Math.max(3, 5 * sc), A.tronco);
+  for (let k = 0; k < 5; k++) p.r(x - 3 * sc + R() * 5 * sc, y - R() * h, 1, 4, A.troncoScuro);
+  chioma(p, x, cy, rx, ry, A.verdi, R, Math.round(18 + rx / 4));
+  if (frutti) for (let k = 0; k < 16; k++) { const a = R() * Math.PI * 2, d = Math.sqrt(R()) * 0.8; const fx = x + Math.cos(a) * d * rx, fy = cy + Math.sin(a) * d * ry; p.ell(fx, fy, 3.5, 3.5, A.frutto); p.r(fx - 1.5, fy - 2, 2, 2, '#ffb0a0'); p.r(fx, fy - 5, 1, 2, '#4a3010'); }
+}
+function pinoHD(p, x, y, h, V, tr, R) {
+  p.r(x - 4, y - h * 0.16, 8, h * 0.16, tr); p.r(x - 4, y - h * 0.16, 3, h * 0.16, '#3a2412');
+  const tiers = 5;
+  for (let k = 0; k < tiers; k++) {
+    const t = k / tiers; const yb = y - h * 0.1 - h * 0.78 * t; const w = (1 - t * 0.8) * h * 0.3; const ht = h * 0.32;
+    p.poly([[x - w, yb], [x + w, yb], [x, yb - ht]], V[1]);
+    p.poly([[x, yb - ht], [x + w, yb], [x + w * 0.1, yb]], V[2]);
+    p.poly([[x + w * 0.35, yb - ht * 0.6], [x + w, yb], [x + w * 0.6, yb]], V[3]);
+    for (let i = -w; i < w; i += 7) p.poly([[x + i, yb - 1], [x + i + 7, yb - 1], [x + i + 3.5, yb + 4]], i < 0 ? V[1] : V[2]);
+    p.poly([[x - w * 0.9, yb], [x - w * 0.2, yb], [x - w * 0.5, yb - ht * 0.35]], V[0]);
+  }
+  for (let k = 0; k < 12; k++) p.r(x - h * 0.2 + R() * h * 0.4, y - h * 0.2 - R() * h * 0.7, 2, 2, V[4]);
+}
+function cespuglioHD(p, x, y, r, V, F, R) {
+  const n = 7 + Math.floor(r / 7); const cl = []; for (let k = 0; k < n; k++) cl.push([x + (R() * 2 - 1) * r, y - R() * r * 0.8, r * (0.35 + R() * 0.3)]);
+  cl.sort((a, b) => a[1] - b[1]);
+  cl.forEach(([cx, cy, rr]) => p.ell(cx - 2, cy + 3, rr, rr * 0.9, V[0]));
+  cl.forEach(([cx, cy, rr]) => p.ell(cx, cy, rr, rr * 0.88, V[1]));
+  cl.forEach(([cx, cy, rr]) => p.ell(cx + rr * 0.22, cy - rr * 0.3, rr * 0.6, rr * 0.5, V[2]));
+  cl.forEach(([cx, cy, rr]) => p.ell(cx + rr * 0.38, cy - rr * 0.5, rr * 0.26, rr * 0.2, V[3]));
+  if (F && F.length) for (let k = 0; k < n * 2; k++) { const a = R() * Math.PI * 2, d = Math.sqrt(R()) * 0.8; const fx = x + Math.cos(a) * d * r, fy = y - r * 0.4 + Math.sin(a) * d * r * 0.6; const c = scegliR(R, F); p.r(fx - 2, fy - 1, 5, 3, c); p.r(fx - 1, fy - 2, 3, 5, c); p.r(fx, fy, 1, 1, '#ffe27a'); }
+}
+function generaStrati(nome) {
+  const T = TEMI[nome]; const R = rng(hash(nome)); const s = {};
+  // cielo
+  s.cielo = nuovaTela(BW, BH); {
+    const p = new Pennello(s.cielo.getContext('2d')); const cols = T.cielo; const n = 24, bh = Math.ceil(ORIZ / n);
+    for (let i = 0; i < n; i++) {
+      const t = i / (n - 1) * (cols.length - 1); const a = Math.floor(t), b = Math.min(cols.length - 1, a + 1); const col = mescola(cols[a], cols[b], t - a);
+      p.r(0, i * bh, BW, bh, col);
+      if (i > 0) { const prec = (() => { const t2 = (i - 1) / (n - 1) * (cols.length - 1); const a2 = Math.floor(t2), b2 = Math.min(cols.length - 1, a2 + 1); return mescola(cols[a2], cols[b2], t2 - a2); })(); for (let x = 0; x < BW; x += 2) p.p(x + (i % 2), i * bh, prec); }
+    }
+    p.r(0, ORIZ, BW, BH - ORIZ, cols[cols.length - 1]);
+    if (T.sole) {
+      const so = T.sole;
+      if (T.raggi) { const g = s.cielo.getContext('2d'); g.fillStyle = 'rgba(255,255,235,0.07)'; for (let k = 0; k < 9; k++) { const a = k / 9 * Math.PI * 2 + 0.2; g.beginPath(); g.moveTo(so.x, so.y); g.lineTo(so.x + Math.cos(a) * 600, so.y + Math.sin(a) * 600); g.lineTo(so.x + Math.cos(a + 0.12) * 600, so.y + Math.sin(a + 0.12) * 600); g.closePath(); g.fill(); } }
+      const al = so.tramonto ? ['rgba(255,190,110,0.18)', 'rgba(255,200,120,0.28)', 'rgba(255,220,150,0.4)'] : ['rgba(255,255,235,0.14)', 'rgba(255,255,235,0.24)', 'rgba(255,255,240,0.45)'];
+      p.ell(so.x, so.y, so.r * 2.6, so.r * 2.6, al[0]); p.ell(so.x, so.y, so.r * 1.8, so.r * 1.8, al[1]); p.ell(so.x, so.y, so.r * 1.3, so.r * 1.3, al[2]);
+      p.ell(so.x, so.y, so.r, so.r, so.tramonto ? '#ffb45a' : '#fff6c4'); p.ell(so.x - so.r * 0.15, so.y - so.r * 0.15, so.r * 0.78, so.r * 0.78, so.tramonto ? '#ffd27a' : '#fffbe6');
+    }
+  }
+  // nuvole
+  s.nuvole = nuovaTela(LW, 330); {
+    const p = new Pennello(s.nuvole.getContext('2d'));
+    for (let k = 0; k < T.nuvole.n; k++) { const x = (k + R() * 0.6) * LW / T.nuvole.n, y = 50 + R() * 230, w = 110 + R() * 170; const seme = R() * 1e9; avvolgi(xx => nuvolaHD(p, xx, y, w, T.nuvole, rng(seme)), x); }
+  }
+  // montagne
+  s.monti = nuovaTela(LW, BH); {
+    const p = new Pennello(s.monti.getContext('2d'));
+    T.monti.forEach(M => {
+      const f = profilo(M.base, M.amp, R, [[2, 1], [5, 0.45], [9, 0.22], [17, 0.08]]);
+      const tops = new Float32Array(LW + 200); for (let x = 0; x < LW + 200; x++) tops[x] = f(x);
+      for (let x = 0; x < LW; x++) {
+        const top = Math.round(tops[x]); let y = top, stato0 = null, inizio = top;
+        for (; y <= ORIZ + 10; y++) {
+          let ombra = false; for (let d = 4; d <= 120; d += 6) { if (tops[(x + d) % LW] < y - d * 0.9) { ombra = true; break; } }
+          if (stato0 === null) stato0 = ombra;
+          if (ombra !== stato0) { p.r(x, inizio, 1, y - inizio, stato0 ? M.ombra : M.col); inizio = y; stato0 = ombra; }
+        }
+        p.r(x, inizio, 1, y - inizio, stato0 ? M.ombra : M.col);
+        const luce = !stato0;
+        if (M.neve && top < M.base - M.amp * 0.72) p.r(x, top, 1, Math.round((M.base - M.amp * 0.72 - top) * 0.7) + 2, luce ? M.neve : '#d6e2f2');
+        const hz = Math.max(top + 2, M.base - 14); p.r(x, hz, 1, ORIZ + 10 - hz, M.foschia);
+        if (x % 3 === 0 && hz === M.base - 14) p.p(x, hz - 1, M.foschia);
+      }
+    });
+  }
+  // colline, mare o pineta lontana
+  s.colline = nuovaTela(LW, BH); {
+    const p = new Pennello(s.colline.getContext('2d'));
+    if (T.mare) {
+      const bande = ['#1a78c0', '#1f82c8', '#2890d2', '#349ed9', '#44ace0', '#58bae6', '#70c8ec'];
+      bande.forEach((c, i) => p.r(0, 356 + i * 10, LW, 11, c)); p.r(0, 356, LW, 2, '#9fdcf6');
+      for (let k = 0; k < 260; k++) { const x = R() * LW, y = 360 + R() * 62; p.r(x, y, 4 + R() * 10, 1, R() < 0.5 ? '#a8e4fa' : '#ffffff'); }
+      for (let k = 0; k < 5; k++) { const x = R() * LW, y = 364 + R() * 10; avvolgi(xx => { p.poly([[xx - 12, y + 6], [xx + 14, y + 6], [xx + 9, y + 11], [xx - 8, y + 11]], '#ffffff'); p.poly([[xx, y - 22], [xx, y + 4], [xx + 14, y + 4]], '#ffffff'); p.poly([[xx - 2, y - 16], [xx - 2, y + 4], [xx - 11, y + 4]], '#ffe08a'); p.r(xx - 1, y - 22, 1, 28, '#6a6a6a'); }, x); }
+      for (let x = 0; x < LW; x += 2) { const yy = 418 + Math.round(Math.sin(x / 18) * 2); p.r(x, yy, 2, 3, '#ffffff'); p.r(x, yy + 3, 2, 6, '#bfeefc'); }
+    } else if (T.pineta) {
+      for (let k = 0; k < 120; k++) { const x = R() * LW, h = 50 + R() * 70, y = 412; const c = k % 2 ? '#2a5a40' : '#346a4c'; avvolgi(xx => { p.poly([[xx - h * 0.22, y], [xx + h * 0.22, y], [xx, y - h]], c); p.poly([[xx, y - h], [xx + h * 0.22, y], [xx + h * 0.04, y]], '#3e7a58'); }, x); }
+      p.r(0, 404, LW, BH - 404, '#2a5a40');
+    } else {
+      const C = T.colline; const f = profilo(C.base, C.amp, R, [[3, 1], [7, 0.4], [13, 0.15]]);
+      for (let x = 0; x < LW; x++) { const top = Math.round(f(x)); p.r(x, top, 1, BH - top, C.col); p.r(x, top, 1, 3, C.chiaro); }
+      for (let x = 0; x < LW; x += 16 + R() * 26) { const seme = R() * 1e9; const yy = f(x) + 6; avvolgi(xx => cespuglioHD(p, xx, yy, 10 + rng(seme)() * 12, C.verdi, null, rng(seme)), x); }
+    }
+  }
+  // alberi e oggetti
+  s.alberi = nuovaTela(LW, BH); {
+    const g = s.alberi.getContext('2d'); const p = new Pennello(g); const yb = 414; const A = T.alberi; const n = A.n;
+    const pos = []; for (let k = 0; k < n; k++) pos.push((k + R() * 0.7) * LW / n);
+    if (A.tipo === 'festa') {
+      for (let x = 80; x < LW; x += 320) {
+        p.r(x, 230, 4, yb - 230, '#e8e8e8'); p.r(x + 160, 230, 4, yb - 230, '#e8e8e8');
+        for (let k = 0; k <= 18; k++) { const t = k / 18; const xx = x + 2 + 160 * t, yy = 236 + Math.sin(t * Math.PI) * 24; const c = ARCOBALENO[k % 5][1]; p.poly([[xx - 5, yy], [xx + 5, yy], [xx, yy + 12]], c); }
+        p.linea(x + 2, 236, x + 82, 260, 1, '#555555'); p.linea(x + 82, 260, x + 162, 236, 1, '#555555');
+      }
+    }
+    pos.forEach((x, idx) => {
+      const seme = R() * 1e9;
+      avvolgi(xx => {
+        const r2 = rng(seme);
+        if (A.tipo === 'tondo') alberoTondo(p, xx, yb, r2, A, 0.7 + r2() * 0.6, false);
+        else if (A.tipo === 'melo') alberoTondo(p, xx, yb, r2, A, 0.55 + r2() * 0.25, true);
+        else if (A.tipo === 'pino') pinoHD(p, xx, yb, 120 + r2() * 110, A.verdi, A.tronco, r2);
+        else if (A.tipo === 'spiaggia') ombrellone(g, xx, yb, r2, idx);
+        else if (A.tipo === 'giardino') giardino(g, xx, yb, r2);
+        else if (A.tipo === 'festa') tenda(g, xx, yb, r2);
+      }, x);
+    });
+    if (T.staccionata) { const F = T.staccionata; for (let x = 0; x < LW; x += 70) { p.r(x + 4, yb - 46, 8, 50, F.col); p.r(x + 4, yb - 46, 3, 50, F.ombra); p.r(x + 10, yb - 46, 2, 50, F.luce); } [yb - 38, yb - 20].forEach(y => { p.r(0, y, LW, 7, F.col); p.r(0, y, LW, 2, F.luce); p.r(0, y + 5, LW, 2, F.ombra); }); }
+  }
+  // terreno: piastrella 960 x 168 a partire da y = 372
+  s.terreno = nuovaTela(960, 168); {
+    const tw = 960; const p = new Pennello(s.terreno.getContext('2d')); const G = T.terreno; const r2 = rng(hash(nome + 't'));
+    const YG = 38, YP = 50, YP2 = 96, Hh = 168; const av = (fn, x) => avvolgi(fn, x, tw);
+    p.r(0, YG, tw, YP - YG, G.retro);
+    if (!G.sabbia) for (let x = 0; x < tw; x += 2) { const h = 2 + r2() * 7; p.r(x, YG - h, 1, h + 1, scegliR(r2, G.erba)); }
+    p.r(0, YP, tw, YP2 - YP, G.pista); p.r(0, YP, tw, 3, G.pistaScura); p.r(0, YP2 - 3, tw, 3, G.pistaScura);
+    for (let k = 0; k < 1500; k++) p.r(Math.floor(r2() * tw), YP + 3 + Math.floor(r2() * (YP2 - YP - 6)), 2, 2, r2() < 0.55 ? G.pistaScura : G.pistaChiara);
+    for (let k = 0; k < 50; k++) { const x = r2() * tw, y = YP + 5 + r2() * (YP2 - YP - 10); av(xx => { p.ell(xx, y, 3, 2, G.pistaChiara); p.r(xx - 2, y + 1, 4, 1, G.pistaScura); }, x); }
+    for (let k = 0; k < 40; k++) { const x = r2() * tw, y = YP + 8 + r2() * (YP2 - YP - 16); av(xx => { p.r(xx, y, 5, 1, G.pistaScura); p.r(xx - 1, y - 1, 1, 2, G.pistaScura); p.r(xx + 5, y - 1, 1, 2, G.pistaScura); }, x); }
+    if (G.righe) { p.r(0, YP + 1, tw, 2, '#ffffff'); p.r(0, YP2 - 3, tw, 2, '#ffffff'); }
+    p.r(0, YP2, tw, Hh - YP2, G.erba[0]);
+    for (let x0 = 0; x0 < tw; x0 += 120) p.poly([[x0, YP2], [x0 + 60, YP2], [x0 + 60 - 72, Hh], [x0 - 72, Hh]], G.erba[1]);
+    p.poly([[tw, YP2], [tw + 60, YP2], [tw - 12, Hh], [tw - 72, Hh]], G.erba[1]);
+    if (!G.sabbia) {
+      for (let k = 0; k < 3200; k++) { const x = Math.floor(r2() * tw), y = YP2 + 3 + Math.floor(r2() * (Hh - YP2)); p.r(x, y - 3, 1, 2 + r2() * 4, scegliR(r2, G.erba)); }
+      for (let x = 0; x < tw; x += 2) { const h = 3 + r2() * 8; p.r(x, YP2 - h + 3, 1, h, r2() < 0.5 ? G.erba[0] : G.erba[2]); }
+      for (let x = 0; x < tw; x += 3) { const h = r2() * 6; p.r(x, YP, 1, h, G.retro); }
+      for (let k = 0; k < 55; k++) { const x = r2() * tw, y = YP2 + 8 + r2() * (Hh - YP2 - 10); const c = scegliR(r2, G.fiori); av(xx => { p.r(xx - 3, y, 7, 2, c); p.r(xx, y - 3, 2, 7, c); p.r(xx - 1, y - 1, 3, 3, '#ffd23f'); }, x); }
+    } else {
+      for (let k = 0; k < 900; k++) p.r(Math.floor(r2() * tw), YP2 + Math.floor(r2() * (Hh - YP2)), 2, 1, scegliR(r2, G.erba));
+      for (let k = 0; k < 50; k++) { const x = r2() * tw, y = YP2 + 6 + r2() * (Hh - YP2 - 10); const c = scegliR(r2, G.fiori); av(xx => { p.ell(xx, y, 4, 3, c); p.r(xx - 2, y, 4, 1, '#c8a080'); }, x); }
+    }
+  }
+  // primo piano
+  s.primo = nuovaTela(LW, 120); {
+    const p = new Pennello(s.primo.getContext('2d')); const P0 = T.primo; const yb = 128;
+    for (let x = 0; x < LW; x += 70 + R() * 110) {
+      const seme = R() * 1e9;
+      avvolgi(xx => {
+        const r2 = rng(seme);
+        if (P0.tipo === 'dune') { for (let k = 0; k < 14; k++) { const bx = xx + (r2() * 2 - 1) * 26; p.linea(bx, yb, bx + (r2() * 2 - 1) * 12, yb - 30 - r2() * 40, 2, scegliR(r2, P0.verdi)); } }
+        else if (P0.tipo === 'felci') { for (let k = 0; k < 7; k++) { const a = -Math.PI / 2 + (k - 3) * 0.32; const L = 40 + r2() * 30; const ex = xx + Math.cos(a) * L, ey = yb - 6 + Math.sin(a) * L; p.linea(xx, yb - 6, ex, ey, 2, P0.verdi[1]); for (let j = 1; j < 8; j++) { const t = j / 8; const qx = lerp(xx, ex, t), qy = lerp(yb - 6, ey, t); p.linea(qx, qy, qx - 8 * (1 - t), qy + 4, 2, P0.verdi[j % 2 ? 2 : 3]); p.linea(qx, qy, qx + 8 * (1 - t), qy + 4, 2, P0.verdi[j % 2 ? 2 : 3]); } } if (r2() < 0.5) { p.r(xx + 22, yb - 14, 4, 12, '#f4ead2'); p.ell(xx + 24, yb - 15, 8, 5, '#d23b2f', yb - 15); p.r(xx + 20, yb - 18, 2, 2, '#ffffff'); } }
+        else cespuglioHD(p, xx, yb, 34 + r2() * 26, P0.verdi, P0.fiori, r2);
+      }, x);
+    }
+  }
+  return s;
+}
+function ombrellone(g, x, y, R, idx) {
+  const p = new Pennello(g); const cols = [['#ff5a5a', '#ffffff'], ['#2a7bd4', '#ffffff'], ['#ffc83a', '#ff7a2a'], ['#2fbf8f', '#ffffff']]; const c = cols[idx % cols.length];
+  if (idx % 3 === 1) {
+    const w = 46; p.r(x - w / 2, y - 48, w, 48, '#ffffff'); for (let s = 0; s < w; s += 10) p.r(x - w / 2 + s, y - 48, 5, 48, '#3a8fd8');
+    p.poly([[x - w / 2 - 6, y - 48], [x + w / 2 + 6, y - 48], [x, y - 68]], '#e04848'); p.poly([[x, y - 68], [x + w / 2 + 6, y - 48], [x + 4, y - 48]], '#f06a6a');
+    p.r(x - 8, y - 30, 16, 30, '#7a4a24'); p.r(x - 8, y - 30, 4, 30, '#5a3418'); return;
+  }
+  p.r(x - 1, y - 62, 3, 62, '#f2f2f2'); p.r(x - 1, y - 62, 1, 62, '#c8c8c8');
+  for (let k = 0; k < 6; k++) p.poly([[x, y - 78], [x - 36 + k * 12, y - 60], [x - 36 + (k + 1) * 12, y - 60]], k % 2 ? c[0] : c[1]);
+  for (let k = 0; k < 6; k++) p.poly([[x - 36 + k * 12, y - 60], [x - 24 + k * 12, y - 60], [x - 30 + k * 12, y - 56]], k % 2 ? c[0] : c[1]);
+  p.ell(x - 14, y - 4, 22, 5, 'rgba(0,0,0,0.12)'); p.r(x - 30, y - 6, 28, 6, c[0]); p.r(x - 30, y - 6, 28, 2, '#ffffff');
+}
+function giardino(g, x, y, R) {
+  const p = new Pennello(g);
+  p.ell(x, y - 16, 36, 18, '#2e4a2a'); p.ell(x + 4, y - 22, 26, 10, '#3e5e34'); p.ell(x + 10, y - 26, 12, 4, '#56763e');
+  for (let k = 0; k < 10; k++) p.ell(x - 28 + R() * 56, y - 24 + R() * 16, 3, 3, R() < 0.5 ? '#e66b8a' : '#ffc0d4');
+  p.ell(x + 56, y - 60, 10, 58, '#1e3420'); p.ell(x + 59, y - 66, 5, 46, '#2e4a2a');
+  p.r(x + 96, y - 76, 3, 76, '#2a2030'); p.r(x + 90, y - 88, 15, 12, '#3a2a40'); p.r(x + 93, y - 85, 9, 7, '#ffd27a');
+  p.ell(x + 97, y - 82, 22, 22, 'rgba(255,210,120,0.18)'); p.ell(x + 97, y - 82, 12, 12, 'rgba(255,220,140,0.25)');
+}
+function tenda(g, x, y, R) {
+  const p = new Pennello(g); const c = ARCOBALENO[Math.floor(R() * ARCOBALENO.length)][1]; const w = 64;
+  p.r(x - w / 2, y - 40, w, 40, '#ffffff'); for (let s = 0; s < w; s += 14) p.r(x - w / 2 + s, y - 40, 7, 40, c);
+  p.r(x - w / 2, y - 40, w, 3, 'rgba(0,0,0,0.12)');
+  p.poly([[x - w / 2 - 8, y - 40], [x + w / 2 + 8, y - 40], [x, y - 74]], c); p.poly([[x, y - 74], [x + w / 2 + 8, y - 40], [x + 6, y - 40]], '#ffffff');
+  for (let k = 0; k < 7; k++) p.poly([[x - w / 2 - 8 + k * 11.4, y - 40], [x - w / 2 + 3.4 + k * 11.4, y - 40], [x - w / 2 - 2 + k * 11.4, y - 32]], k % 2 ? c : '#ffffff');
+  p.r(x - 10, y - 26, 20, 26, '#4a3020'); p.r(x - 1, y - 92, 2, 18, '#555555'); p.poly([[x + 1, y - 92], [x + 16, y - 87], [x + 1, y - 82]], '#ffd23f');
+}
+const cacheStrati = {};
+function strati(nome) { if (!cacheStrati[nome]) { for (const k in cacheStrati) if (k !== 'prato' && k !== nome) delete cacheStrati[k]; cacheStrati[nome] = generaStrati(nome); } return cacheStrati[nome]; }
+
+// =============================================================
+//  STATO SALVATO
+// =============================================================
+const CHIAVE = 'unAmicoOltreLOstacolo.v1';
+function statoIniziale() { return { nome: 'Luna', fiducia: 20, energia: 80, fatti: [false, false, false, false, false, false], migliori: [0, 0, 0, 0, 0, 0], saltiSereni: 0, cure: 0, ricordo: null }; }
+const memoria = { ok: false };
+function provaMemoria() { try { const k = '__prova_amico'; localStorage.setItem(k, '1'); localStorage.removeItem(k); return true; } catch (e) { return false; } }
+function pulisciNome(s) { const t = String(s || '').replace(/[<>"`]/g, '').replace(/\s+/g, ' ').trim().slice(0, 14); return t || 'Luna'; }
+function carica() {
+  const base = statoIniziale(); if (!memoria.ok) return base;
+  try {
+    const t = localStorage.getItem(CHIAVE); if (!t) return base; const o = JSON.parse(t);
+    base.nome = pulisciNome(o.nome);
+    base.fiducia = clamp(Number(o.fiducia) || 0, 0, 100); base.energia = clamp(Number.isFinite(Number(o.energia)) ? Number(o.energia) : 80, 0, 100);
+    if (Array.isArray(o.fatti)) base.fatti = base.fatti.map((_, i) => !!o.fatti[i]);
+    if (Array.isArray(o.migliori)) base.migliori = base.migliori.map((_, i) => clamp(Number(o.migliori[i]) || 0, 0, 10));
+    base.saltiSereni = Math.max(0, Number(o.saltiSereni) || 0); base.cure = Math.max(0, Number(o.cure) || 0);
+    base.ricordo = typeof o.ricordo === 'string' ? o.ricordo.slice(0, 40) : null;
+    return base;
+  } catch (e) { return base; }
+}
+function salva() { if (!memoria.ok) return; try { localStorage.setItem(CHIAVE, JSON.stringify(stato)); } catch (e) { memoria.ok = false; $('#avvisoMemoria').hidden = false; } }
+memoria.ok = provaMemoria();
+let stato = carica();
+
+// =============================================================
+//  SUONI SINTETIZZATI (spenti all'avvio)
+// =============================================================
+const Suoni = {
+  on: false, ac: null,
+  attiva(v) {
+    if (v) { try { if (!this.ac) { const A = window.AudioContext || window.webkitAudioContext; if (!A) { this.on = false; return false; } this.ac = new A(); } if (this.ac.state === 'suspended') this.ac.resume(); } catch (e) { this.on = false; return false; } }
+    this.on = v; return v;
+  },
+  tono(f, d, tipo = 'sine', v = 0.12, rit = 0, f2 = null) {
+    if (!this.on || !this.ac) return;
+    const t0 = this.ac.currentTime + rit; const o = this.ac.createOscillator(), g = this.ac.createGain();
+    o.type = tipo; o.frequency.setValueAtTime(f, t0); if (f2) o.frequency.exponentialRampToValueAtTime(f2, t0 + d);
+    g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(v, t0 + 0.015); g.gain.exponentialRampToValueAtTime(0.0001, t0 + d);
+    o.connect(g); g.connect(this.ac.destination); o.start(t0); o.stop(t0 + d + 0.05);
+  },
+  fruscio(d, v = 0.08, freq = 1200, rit = 0) {
+    if (!this.on || !this.ac) return;
+    const t0 = this.ac.currentTime + rit; const n = Math.floor(this.ac.sampleRate * d); const buf = this.ac.createBuffer(1, n, this.ac.sampleRate); const ch = buf.getChannelData(0);
+    for (let i = 0; i < n; i++) ch[i] = (Math.random() * 2 - 1) * (1 - i / n);
+    const s = this.ac.createBufferSource(); s.buffer = buf; const f = this.ac.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = freq; const g = this.ac.createGain(); g.gain.value = v;
+    s.connect(f); f.connect(g); g.connect(this.ac.destination); s.start(t0);
+  },
+  suona(n) {
+    if (!this.on) return;
+    switch (n) {
+      case 'salto': this.tono(330, 0.22, 'triangle', 0.09, 0, 620); break;
+      case 'atterra': this.fruscio(0.09, 0.08, 280); break;
+      case 'sereno': this.tono(784, 0.15, 'sine', 0.09); this.tono(1047, 0.24, 'sine', 0.09, 0.1); break;
+      case 'perfetto': [784, 988, 1175].forEach((f, i) => this.tono(f, 0.2, 'sine', 0.09, i * 0.08)); break;
+      case 'barriera': this.tono(300, 0.1, 'triangle', 0.07); this.tono(250, 0.14, 'triangle', 0.06, 0.08); break;
+      case 'zoccolo': this.fruscio(0.03, 0.03, 650); break;
+      case 'fine': [523, 659, 784, 1047, 784, 1047].forEach((f, i) => this.tono(f, 0.22, 'triangle', 0.08, i * 0.12)); break;
+      case 'spazzola': for (let i = 0; i < 4; i++) this.fruscio(0.09, 0.05, 3200, i * 0.13); break;
+      case 'acqua': for (let i = 0; i < 5; i++) this.tono(500 + Math.random() * 400, 0.07, 'sine', 0.06, i * 0.1, 900 + Math.random() * 300); break;
+      case 'spuntino': for (let i = 0; i < 4; i++) this.fruscio(0.05, 0.09, 1800, i * 0.16); break;
+      case 'riposo': [523, 440, 392, 330].forEach((f, i) => this.tono(f, 0.45, 'sine', 0.05, i * 0.32)); break;
+      case 'clic': this.tono(660, 0.05, 'square', 0.025); break;
+    }
+  }
+};
+function aggiornaPulsantiSuoni() {
+  ['#suoniScuderia', '#suoniCorsa'].forEach(id => {
+    const b = $(id); b.setAttribute('aria-pressed', String(Suoni.on));
+    if (id === '#suoniCorsa') b.innerHTML = (Suoni.on ? '🔊' : '🔇') + ' <span class="etichetta">Suoni</span>'; else b.textContent = Suoni.on ? '🔊 Suoni: accesi' : '🔇 Suoni: spenti';
+    if (id === '#suoniCorsa') b.setAttribute('aria-label', Suoni.on ? 'Suoni accesi: premi per spegnerli' : 'Suoni spenti: premi per accenderli');
+  });
+}
+function cambiaSuoni() { Suoni.attiva(!Suoni.on); aggiornaPulsantiSuoni(); Suoni.suona('clic'); }
+
+// =============================================================
+//  GENERAZIONE GRAFICA INIZIALE
+// =============================================================
+const FR = { prot: generaCoppia(PAL.luna, CAV.bimba, true, SC), stalla: generaStalla(PAL.luna, SC), amici: AMICI.map(a => generaCoppia(PAL[a.pal], CAV[a.cav], false, 2)) };
+const BIMBA = { giu: creaBambina(CAV.bimba, 'giu', SC), avanti: creaBambina(CAV.bimba, 'avanti', SC), su: creaBambina(CAV.bimba, 'su', SC) };
+
+// =============================================================
+//  INTERFACCIA: SCUDERIA
+// =============================================================
+function etichettaIntesa(f) { return f < 25 ? 'Vi state conoscendo' : f < 45 ? 'Amici in crescita' : f < 65 ? 'Bella intesa' : f < 85 ? 'Grande intesa' : 'Amici per sempre'; }
+function aggiornaIndicatori() {
+  const f = Math.round(stato.fiducia), e = Math.round(stato.energia);
+  $('#barraFiducia span').style.width = f + '%'; $('#barraFiducia').setAttribute('aria-valuenow', f); $('#numFiducia').textContent = f + '/100';
+  $('#barraEnergia span').style.width = e + '%'; $('#barraEnergia').setAttribute('aria-valuenow', e); $('#numEnergia').textContent = e + '/100';
+  $('#etichettaIntesa').textContent = '❤ ' + etichettaIntesa(f); $('#targa').textContent = stato.nome; $('#hudFiducia').textContent = '❤ Fiducia ' + f;
+}
+function aggiornaPercorsi() {
+  const ol = $('#elencoPercorsi'); ol.textContent = '';
+  LIVELLI.forEach((L, i) => {
+    const aperto = i === 0 || stato.fatti[i - 1];
+    const li = document.createElement('li'); if (stato.fatti[i]) li.className = 'fatto';
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'btn'; b.disabled = !aperto;
+    const num = document.createElement('span'); num.className = 'num'; num.setAttribute('aria-hidden', 'true'); num.textContent = stato.fatti[i] ? '✓' : (aperto ? String(i + 1) : '🔒');
+    const info = document.createElement('span'); info.className = 'info'; const tit = document.createElement('span'); tit.textContent = (i + 1) + '. ' + L.nome;
+    const sm = document.createElement('small');
+    if (!aperto) sm.textContent = 'Si apre concludendo il percorso precedente.';
+    else if (stato.fatti[i]) sm.textContent = 'Concluso · miglior risultato: ' + stato.migliori[i] + ' salti sereni su ' + L.ostacoli.length + ' · si può rigiocare';
+    else sm.textContent = L.descr;
+    info.append(tit, sm); b.append(num, info); b.setAttribute('aria-label', (i + 1) + ', ' + L.nome + '. ' + sm.textContent);
+    b.addEventListener('click', () => { Suoni.suona('clic'); iniziaLivello(i); });
+    li.appendChild(b); ol.appendChild(li);
+  });
+  $('#apriRicordo').hidden = !stato.fatti[5];
+}
+function popolaAmici() {
+  const ul = $('#elencoAmici'); ul.textContent = '';
+  AMICI.forEach((a, k) => {
+    const li = document.createElement('li'); const src = FR.amici[k].i0; const cv = nuovaTela(src.width, src.height); cv.getContext('2d').drawImage(src, 0, 0); cv.setAttribute('aria-hidden', 'true');
+    const d = document.createElement('div'); const s = document.createElement('strong'); s.textContent = a.nome + ' e ' + a.cavallo;
+    const sp = document.createElement('span'); sp.textContent = a.cavallo + ': ' + a.descr + '.'; d.append(s, sp); li.append(cv, d); ul.appendChild(li);
+  });
+}
+function fumetto(t) { $('#fumetto').textContent = t; }
+function aggiungiFiducia(n) { const prima = stato.fiducia; stato.fiducia = clamp(stato.fiducia + n, 0, 100); if (corsa) corsa.fiduciaGuadagnata += stato.fiducia - prima; aggiornaIndicatori(); }
+
+const cureDaUltimaCorsa = { spazzola: 0, acqua: 0, spuntino: 0, riposo: 0 };
+const scud = { t: 0, azione: null, tAzione: 0, part: [], prossimoBattito: 2.5, battito: 0 };
+function cura(tipo) {
+  const n = stato.nome; const volte = cureDaUltimaCorsa[tipo]++; let msg = ''; stato.cure++;
+  if (tipo === 'spazzola') {
+    aggiungiFiducia(volte === 0 ? 4 : volte < 3 ? 1 : 0);
+    msg = volte === 0 ? scegli([`${n} chiude gli occhi: che bella sensazione! Il mantello ora brilla come il sole.`, `Spazzolata dopo spazzolata, ${n} si appoggia a te. È il suo modo di dirti grazie.`])
+      : volte < 3 ? `${n} si gode ancora qualche carezza con la spazzola.` : `Il mantello di ${n} è già lucidissimo: ora basta una carezza sul muso.`;
+  } else if (tipo === 'acqua') {
+    stato.energia = clamp(stato.energia + 15, 0, 100); if (volte === 0) aggiungiFiducia(1);
+    msg = volte < 2 ? `${n} beve a piccoli sorsi. Ahh, che fresco!` : `${n} ha bevuto abbastanza e ti guarda con occhi sereni.`;
+  } else if (tipo === 'spuntino') {
+    if (volte === 0) { stato.energia = clamp(stato.energia + 10, 0, 100); aggiungiFiducia(3); msg = `Crunch! ${n} sgranocchia una carota e poi ti annusa la mano, per sicurezza.`; }
+    else msg = `${n} ha già avuto il suo spuntino: uno alla volta fa bene alla pancia. Adesso preferisce una carezza.`;
+  } else if (tipo === 'riposo') {
+    stato.energia = clamp(stato.energia + 40, 0, 100); if (volte === 0) aggiungiFiducia(1);
+    msg = `${n} sonnecchia sulla paglia morbida. Basta un attimo e l'energia torna piena di voglia di galoppare.`;
+  }
+  scud.azione = tipo; scud.tAzione = 0; Suoni.suona(tipo);
+  for (let k = 0; k < (tipo === 'spuntino' && volte > 0 ? 1 : 3); k++) scud.part.push({ x: 230 + Math.random() * 60, y: 190, vy: -30 - Math.random() * 16, vita: 1.6, tipo: 'cuore' });
+  aggiornaIndicatori(); fumetto(msg); salva();
+}
+
+// scuderia: tela 640 x 360
+const SCU = { W: 640, H: 360, pav: 336, hx: 96 };
+const SFONDO_SCUD = (() => {
+  const c = nuovaTela(SCU.W, SCU.H), g = c.getContext('2d'), p = new Pennello(g); const R = rng(77);
+  for (let x = 0; x < SCU.W; x += 32) {
+    const col = (x / 32) % 2 ? '#9a6a3a' : '#8f6034'; p.r(x, 0, 32, 268, col); p.r(x, 0, 2, 268, '#5e3a1c'); p.r(x + 2, 0, 2, 268, '#b07e48');
+    for (let k = 0; k < 6; k++) { const y = R() * 260; p.r(x + 6 + R() * 18, y, 1, 10 + R() * 30, '#7a5028'); }
+    p.ell(x + 12 + R() * 8, 60 + R() * 160, 3, 2, '#6b4423');
+  }
+  p.r(0, 28, SCU.W, 10, '#6b4423'); p.r(0, 28, SCU.W, 2, '#8a5a30'); p.r(0, 248, SCU.W, 20, '#6b4423'); p.r(0, 248, SCU.W, 2, '#a87843');
+  p.r(472, 52, 128, 92, '#5a3a1c'); p.r(480, 60, 112, 76, '#8fd0f7'); p.r(480, 60, 112, 20, '#7cc4f2');
+  nuvolaHD(p, 522, 84, 46, { col: '#ffffff', ombra: '#dcecfa', ombra2: '#b5d3ef' }, rng(3));
+  p.r(480, 112, 112, 24, '#62b44c'); p.ell(570, 112, 12, 10, '#3b8a34'); p.ell(573, 108, 6, 5, '#5cb845');
+  p.r(534, 60, 4, 76, '#5a3a1c'); p.r(480, 96, 112, 4, '#5a3a1c');
+  p.ell(444, 80, 12, 14, '#9aa0a8'); p.ell(444, 80, 7, 9, '#8f6034'); p.r(432, 82, 24, 12, '#8f6034'); p.r(436, 70, 3, 3, '#c8ccd2');
+  p.r(12, 212, 96, 56, '#e2b850'); p.r(12, 212, 96, 6, '#f0cd6a'); p.r(12, 230, 96, 2, '#c99a3a'); p.r(12, 248, 96, 2, '#c99a3a'); p.r(40, 212, 4, 56, '#b5862e'); p.r(80, 212, 4, 56, '#b5862e');
+  for (let k = 0; k < 120; k++) p.r(12 + R() * 96, 214 + R() * 52, 4, 1, R() < 0.5 ? '#f0d070' : '#c99a3a');
+  p.r(0, 268, SCU.W, 92, '#e3bf63');
+  for (let k = 0; k < 900; k++) { const x = R() * SCU.W, y = 270 + R() * 88; p.r(x, y, 4 + R() * 8, 1, R() < 0.5 ? '#cfa548' : '#f3d988'); }
+  p.r(300, 38, 2, 22, '#3a2a1a'); p.r(292, 60, 18, 20, '#3a2a1a'); p.r(296, 64, 10, 12, '#ffd87a'); p.ell(301, 70, 26, 26, 'rgba(255,220,130,0.12)');
+  return c;
+})();
+function disegnaScuderia(dt) {
+  const cv = $('#telaScuderia'); const ctx = cv.getContext('2d'); ctx.imageSmoothingEnabled = false; const p = new Pennello(ctx);
+  scud.t += dt; if (scud.azione) { scud.tAzione += dt; if (scud.tAzione > 2.2) scud.azione = null; }
+  ctx.drawImage(SFONDO_SCUD, 0, 0);
+  let fr = FR.stalla.i0;
+  if (!scud.azione) {
+    scud.prossimoBattito -= dt; if (scud.prossimoBattito < 0) { scud.battito = 0.16; scud.prossimoBattito = 2 + Math.random() * 3; }
+    if (scud.battito > 0) { scud.battito -= dt; fr = FR.stalla.bl; } else if ((scud.t % 5) > 4.3) fr = FR.stalla.i1;
+  } else fr = { spazzola: FR.stalla.fe, acqua: FR.stalla.hd, spuntino: (Math.floor(scud.tAzione * 6) % 2 ? FR.stalla.mn : FR.stalla.i0), riposo: FR.stalla.zz }[scud.azione];
+  const oy = Math.round(SCU.pav - SPR.GY * SC);
+  ctx.fillStyle = 'rgba(80,50,10,0.25)'; ctx.beginPath(); ctx.ellipse(SCU.hx + 32 * SC, SCU.pav + 2, 70, 7, 0, 0, Math.PI * 2); ctx.fill();
+  if (scud.azione === 'acqua') { p.r(262, 292, 44, 44, '#8e98a3'); p.r(262, 292, 44, 5, '#c8d2dc'); p.r(266, 297, 36, 6, '#4aa8e8'); p.r(262, 292, 6, 44, '#6a737d'); }
+  ctx.drawImage(fr, SCU.hx, oy);
+  const bf = scud.azione === 'spuntino' ? BIMBA.avanti : scud.azione === 'spazzola' ? BIMBA.su : BIMBA.giu;
+  ctx.save(); ctx.translate(372 + bf.width, 0); ctx.scale(-1, 1); ctx.drawImage(bf, 0, Math.round(SCU.pav - 36.4 * SC)); ctx.restore();
+  if (scud.azione === 'spazzola') {
+    const bx = 160 + Math.sin(scud.tAzione * 9) * 40, by = 250 + Math.cos(scud.tAzione * 4.5) * 6;
+    p.r(bx, by, 26, 10, '#8a5a2b'); p.r(bx, by, 26, 3, '#a8743c'); p.r(bx, by + 10, 26, 4, '#3a2a1a'); p.r(bx + 7, by - 6, 12, 6, '#c0392b');
+    if (Math.random() < 0.35) scud.part.push({ x: bx + Math.random() * 26, y: by, vy: -24, vita: 0.6, tipo: 'scintilla' });
+  }
+  if (scud.azione === 'spuntino' && scud.tAzione < 1.4) { const s = 1 - scud.tAzione / 1.4; p.r(352 - 24 * s, 242, Math.max(2, 24 * s), 7, '#f07a1a'); p.r(352 - 24 * s, 242, Math.max(2, 24 * s), 2, '#ffa04a'); p.r(352, 238, 6, 4, '#3a9a3a'); }
+  if (scud.azione === 'riposo') {
+    const a = Math.min(1, scud.tAzione * 2) * Math.min(1, (2.2 - scud.tAzione) * 2) * 0.45; ctx.fillStyle = `rgba(20,30,70,${a})`; ctx.fillRect(0, 0, SCU.W, SCU.H);
+    if (Math.random() < 0.05) scud.part.push({ x: 300, y: 200, vy: -24, vita: 1.4, tipo: 'z' });
+  }
+  for (const q of scud.part) {
+    q.vita -= dt; q.y += q.vy * dt; if (q.vita <= 0) continue;
+    if (q.tipo === 'cuore') cuorePix(p, q.x, q.y, '#ff4f8a', 3);
+    else if (q.tipo === 'scintilla') { p.r(q.x, q.y, 2, 2, '#ffffff'); p.r(q.x + 2, q.y, 2, 2, '#fff6a0'); }
+    else if (q.tipo === 'z') { const x = q.x + (1.4 - q.vita) * 16; p.r(x, q.y, 10, 2, '#ffffff'); p.r(x + 6, q.y + 2, 2, 2, '#ffffff'); p.r(x + 4, q.y + 4, 2, 2, '#ffffff'); p.r(x + 2, q.y + 6, 2, 2, '#ffffff'); p.r(x, q.y + 8, 10, 2, '#ffffff'); }
+  }
+  scud.part = scud.part.filter(q => q.vita > 0);
+}
+
+// =============================================================
+//  CORSA
+// =============================================================
+const tela = $('#tela'); const ctx = tela.getContext('2d');
+const buffer = nuovaTela(BW, BH); const bctx = buffer.getContext('2d'); bctx.imageSmoothingEnabled = false;
+const pb = new Pennello(bctx); const pe = new PS(bctx, SC);
+let schermo = 'scuderia'; let corsa = null;
+const input = { tastoGiu: false, puntatoreGiu: false };
+
+function mostra(nome) {
+  $('#schermataScuderia').hidden = nome !== 'scuderia';
+  $('#schermataCorsa').hidden = !(nome === 'corsa' || nome === 'pausa' || nome === 'fine');
+  $('#schermataRicordo').hidden = nome !== 'ricordo';
+  $('#modalePausa').hidden = nome !== 'pausa'; $('#modaleFine').hidden = nome !== 'fine';
+  schermo = nome; if (nome === 'corsa') adattaTela();
+}
+function adattaTela() {
+  const r = tela.getBoundingClientRect(); const dpr = Math.min(2.5, window.devicePixelRatio || 1);
+  const w = Math.max(320, Math.round(r.width * dpr)), h = Math.max(180, Math.round(r.height * dpr));
+  if (tela.width !== w || tela.height !== h) { tela.width = w; tela.height = h; }
+  ctx.imageSmoothingEnabled = false;
+}
+window.addEventListener('resize', () => { if (!$('#schermataCorsa').hidden) adattaTela(); });
+function annuncia(t) { $('#stato').textContent = t; }
+let timerSugg = 0;
+const tocco = window.matchMedia('(pointer: coarse)').matches;
+function suggerisci(t, durata) { const el = $('#suggerimento'); el.textContent = t; el.hidden = false; const parole = t.split(/\s+/).length; timerSugg = Math.max(durata || 4, 2.5 + parole * 0.55); }
+
+function iniziaLivello(i) {
+  const L = LIVELLI[i];
+  corsa = {
+    i, L, P: 0, vel: 0, y: 0, vy: 0, tAria: 0, inAria: false, atterraggio: 0, passo: 0, t: 0, ultimoZoccolo: 0,
+    ostacoli: L.ostacoli.map(ob => Object.assign({}, ob, finestra(ob, L.v), { abbattuto: false, superato: false, caduta: 0, calmo: false })),
+    sereni: 0, perfetti: 0, abbattuti: 0, calmi: 0, fiduciaGuadagnata: 0, arrivato: false, tArrivo: 0, concluso: false,
+    part: [], testi: [], ultimoStacco: -9999, sugg: 0, tPannello: 0,
+    amici: AMICI.map(a => ({ a, P: 0, salti: 0, prossimo: 0, finito: false, fase: Math.random() * 6 }))
+  };
+  for (const k in cureDaUltimaCorsa) cureDaUltimaCorsa[k] = 0;
+  strati(L.tema); input.tastoGiu = input.puntatoreGiu = false;
+  mostra('corsa'); $('#hudLivello').textContent = (i + 1) + '. ' + L.nome;
+  aggiornaHud(); aggiornaIndicatori(); costruisciPannelloAmici();
+  if (i === 0) suggerisci('Si parte! Il galoppo è automatico: tu scegli il momento giusto per saltare.', 4.5);
+  else suggerisci(L.nome + ': ' + L.descr, 4);
+  if (stato.energia < 30) setTimeout(() => { if (corsa && corsa.i === i) suggerisci(`${stato.nome} ha poca energia oggi, ma galoppa volentieri. Dopo il giro, un bel riposo in scuderia.`, 4.5); }, 4800);
+  annuncia('Percorso ' + L.nome + ' iniziato. ' + L.ostacoli.length + ' ostacoli.');
+  if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+  try { tela.focus({ preventScroll: true }); } catch (e) { tela.focus(); }
+}
+function aggiornaHud() { if (!corsa) return; const n = corsa.ostacoli.filter(o => o.superato).length; $('#hudOstacoli').textContent = 'Ostacoli: ' + n + ' di ' + corsa.ostacoli.length; }
+function costruisciPannelloAmici() {
+  const el = $('#pistaAmici'); el.textContent = '';
+  const t = document.createElement('div'); t.className = 'titolo'; t.textContent = 'Le coppie in pista (amici guidati dal computer)'; el.appendChild(t);
+  [{ nome: 'Ginevra', colore: '#ffd54a' }].concat(AMICI.map(a => ({ nome: a.nome, colore: a.colore }))).forEach(r => {
+    const d = document.createElement('div'); d.className = 'riga'; const n = document.createElement('span'); n.textContent = r.nome;
+    const b = document.createElement('div'); b.className = 'binario'; const s = document.createElement('span'); s.style.background = r.colore; b.appendChild(s);
+    const c = document.createElement('span'); d.append(n, b, c); el.appendChild(d);
+  });
+  aggiornaPannelloAmici();
+}
+function aggiornaPannelloAmici() {
+  const c = corsa; if (!c) return; const righe = $('#pistaAmici').querySelectorAll('.riga');
+  const dati = [{ P: c.P, salti: c.sereni }].concat(c.amici.map(a => ({ P: a.P, salti: a.salti })));
+  righe.forEach((r, k) => { r.querySelector('.binario span').style.width = (clamp(dati[k].P / c.L.fine, 0, 1) * 100).toFixed(1) + '%'; r.lastChild.textContent = '✓ ' + dati[k].salti; });
+}
+function salta() {
+  const c = corsa; if (schermo !== 'corsa' || !c || c.inAria || c.arrivato || c.vel < 15) return;
+  c.inAria = true; c.tAria = 0; c.vy = FIS.vy0; c.vel = c.L.v; c.ultimoStacco = c.P; Suoni.suona('salto');
+}
+function pausa() { if (schermo !== 'corsa') return; input.tastoGiu = input.puntatoreGiu = false; $('#tastoRallenta').classList.remove('premuto'); mostra('pausa'); $('#riprendi').focus(); annuncia('Gioco in pausa.'); }
+function riprendi() { if (schermo !== 'pausa') return; mostra('corsa'); if (document.activeElement) document.activeElement.blur(); try { tela.focus({ preventScroll: true }); } catch (e) {} annuncia('Si riparte.'); }
+function tornaScuderia() {
+  corsa = null; input.tastoGiu = input.puntatoreGiu = false; mostra('scuderia'); aggiornaPercorsi(); aggiornaIndicatori();
+  if (stato.energia < 30) fumetto(`${stato.nome} ha poca energia: un po' di riposo e un sorso d'acqua faranno miracoli.`);
+  else fumetto(scegli([`${stato.nome} ti aspettava e ti saluta con un nitrito. Una spazzolata?`, `Bentornati in scuderia! ${stato.nome} annusa la tua tasca: forse spera in una carota.`]));
+  salva();
+}
+const INCORAGGIA = ['Nessun problema: la barriera si rimette a posto in un attimo.', 'Capita anche ai campioni. Respira e guarda la prossima striscia gialla.', 'Tutto bene! Insieme si impara un salto alla volta.', 'Tranquillità prima di tutto: prova a tenere premuto RALLENTA prima della striscia.'];
+function testoVolante(t, col) { corsa.testi.push({ t, col, x: HX - 6, y: SUOLO - 78 - corsa.testi.length * 11, vita: 1.6 }); }
+function cuori(n) { for (let k = 0; k < n; k++) corsa.part.push({ sx: HX - 8 + (Math.random() * 20 - 10), y: SUOLO - 62 - corsa.y, vx: (Math.random() * 2 - 1) * 10, vy: -25 - Math.random() * 20, vita: 1.3, tipo: 'cuore' }); }
+function polvere(n) { for (let k = 0; k < n; k++) corsa.part.push({ wx: corsa.P - 18 + Math.random() * 20, y: SUOLO - 1, vx: -10 - Math.random() * 20, vy: -10 - Math.random() * 15, vita: 0.5 + Math.random() * 0.3, tipo: 'polvere' }); }
+function coriandoli(n) { const cols = ['#ff4f7a', '#ffd23f', '#2a8bf2', '#2fbf6f', '#9a5af0', '#ff7a2a']; for (let k = 0; k < n; k++) corsa.part.push({ sx: Math.random() * VW, y: -10 - Math.random() * 80, vx: (Math.random() * 2 - 1) * 15, vy: 30 + Math.random() * 40, vita: 3.5, tipo: 'coriandolo', col: scegli(cols), f: Math.random() * 6 }); }
+
+function esito(ob) {
+  const c = corsa;
+  if (ob.abbattuto) { testoVolante('Tutto bene!', '#bfe1ff'); annuncia(scegli(INCORAGGIA)); }
+  else {
+    c.sereni++; let pts = 2; const d = ob.X - c.ultimoStacco; const m = (ob.dMax - ob.dMin) * 0.22; const perf = d >= ob.dMin + m && d <= ob.dMax - m; if (perf) c.perfetti++;
+    if (ob.calmo) { c.calmi++; pts += 1; }
+    aggiungiFiducia(pts); cuori(perf ? 4 : 2); testoVolante(perf ? 'Salto perfetto!' : 'Bel salto!', perf ? '#ffe36b' : '#b9f5a8');
+    if (ob.calmo) testoVolante('Che calma!', '#ffc2dc');
+    Suoni.suona(perf ? 'perfetto' : 'sereno'); annuncia((perf ? 'Salto perfetto' : 'Salto sereno') + (ob.calmo ? ', con un avvicinamento calmo.' : '.'));
+  }
+  aggiornaHud();
+  if (c.i === 0) { const n = c.ostacoli.filter(o => o.superato).length;
+    if (n === 1) suggerisci(tocco ? 'Prova a tenere premuto RALLENTA prima della striscia: così hai più tempo.' : 'Prova a tenere premuta la freccia giù prima della striscia: così hai più tempo.', 6);
+    if (n === 3) suggerisci('Che bella intesa! Continua così, senza fretta.', 3.5); }
+}
+function aggiorna(dt) {
+  const c = corsa; if (!c) return; const L = c.L; c.t += dt; const lento = input.tastoGiu || input.puntatoreGiu;
+  if (c.inAria) {
+    c.tAria += dt; const y = FIS.vy0 * c.tAria - 0.5 * FIS.g * c.tAria * c.tAria; c.vy = FIS.vy0 - FIS.g * c.tAria; c.vel = L.v;
+    if (y <= 0) { c.y = 0; c.inAria = false; c.atterraggio = 0.16; Suoni.suona('atterra'); polvere(6); } else c.y = y;
+  } else { const target = c.arrivato ? 0 : (lento ? L.v * FIS.LENTO : L.v); if (c.vel < target) c.vel = Math.min(target, c.vel + FIS.ACC * dt); else c.vel = Math.max(target, c.vel - FIS.DEC * dt); }
+  if (c.atterraggio > 0) c.atterraggio -= dt;
+  const dP = c.vel * dt; c.P += dP; c.passo += dP;
+  if (!c.inAria && c.vel > 20 && c.passo - c.ultimoZoccolo > 28) { c.ultimoZoccolo = c.passo; Suoni.suona('zoccolo'); if (Math.random() < 0.6) polvere(1); }
+  const hb0 = c.P - FIS.HB, hb1 = c.P; const basso = c.inAria ? c.y + FIS.TUCK : 0;
+  for (const ob of c.ostacoli) {
+    if (ob.abbattuto) ob.caduta = Math.min(1, ob.caduta + dt * 1.6);
+    if (ob.superato) continue;
+    if (!c.inAria && lento && c.vel < L.v * 0.85 && c.P >= ob.X - ob.dMax - 150 && c.P <= ob.X - ob.dMin) ob.calmo = true;
+    if (!ob.abbattuto && hb1 > ob.X && hb0 < ob.X + ob.w && basso < ob.h) { ob.abbattuto = true; c.abbattuti++; Suoni.suona('barriera'); }
+    if (hb0 >= ob.X + ob.w) { ob.superato = true; esito(ob); }
+  }
+  if (c.i === 0 && c.sugg === 0) { const ob = c.ostacoli[0]; if (HX + (ob.X - ob.dMax - c.P) < VW - 30) { c.sugg = 1; suggerisci(tocco ? `Vedi la striscia gialla sulla pista? Quando gli zoccoli di ${stato.nome} ci entrano, tocca SALTA.` : `Vedi la striscia gialla sulla pista? Quando gli zoccoli di ${stato.nome} ci entrano, premi la barra spaziatrice.`, 6.5); } }
+  if (!c.arrivato && c.P >= L.fine) { c.arrivato = true; c.tArrivo = 0; coriandoli(L.tema === 'festa' ? 110 : 45); Suoni.suona('fine'); suggerisci(L.tema === 'festa' ? 'Traguardo! Il club intero festeggia la vostra intesa!' : 'Traguardo! Che bel percorso insieme.', 2.5); annuncia('Traguardo raggiunto.'); }
+  if (c.arrivato) { c.tArrivo += dt; if (c.tArrivo > 2.2 && !c.concluso) { c.concluso = true; concludiLivello(); } }
+  const avvio = Math.min(1, c.t / 1.5);
+  for (const a of c.amici) {
+    if (a.finito) continue;
+    a.P += L.v * a.a.vel * (1 + 0.06 * Math.sin(c.t * 0.8 + a.fase)) * avvio * dt;
+    while (a.prossimo < c.ostacoli.length && a.P >= c.ostacoli[a.prossimo].X + c.ostacoli[a.prossimo].w) { if (Math.random() < a.a.abil) a.salti++; a.prossimo++; }
+    if (a.P >= L.fine) { a.P = L.fine; a.finito = true; }
+  }
+  for (const q of c.part) { q.vita -= dt; q.y += q.vy * dt; if (q.tipo === 'polvere') { q.wx += q.vx * dt; q.vy += 40 * dt; } else if (q.tipo === 'coriandolo') q.sx += (q.vx + Math.sin(c.t * 3 + q.f) * 20) * dt; else q.sx += q.vx * dt; }
+  c.part = c.part.filter(q => q.vita > 0 && q.y < VH + 10);
+  for (const t of c.testi) { t.vita -= dt; t.y -= 16 * dt; } c.testi = c.testi.filter(t => t.vita > 0);
+  if (timerSugg > 0) { timerSugg -= dt; if (timerSugg <= 0) $('#suggerimento').hidden = true; }
+  c.tPannello -= dt; if (c.tPannello <= 0) { c.tPannello = 0.25; aggiornaPannelloAmici(); }
+}
+function concludiLivello() {
+  const c = corsa, L = c.L, i = c.i;
+  for (const a of c.amici) { while (a.prossimo < c.ostacoli.length) { if (Math.random() < a.a.abil) a.salti++; a.prossimo++; } a.P = L.fine; a.finito = true; }
+  aggiornaPannelloAmici();
+  const primaVolta = !stato.fatti[i]; aggiungiFiducia(3);
+  stato.fatti[i] = true; stato.migliori[i] = Math.max(stato.migliori[i], c.sereni); stato.saltiSereni += c.sereni; stato.energia = clamp(stato.energia - 12, 10, 100);
+  if (i === 5 && !stato.ricordo) stato.ricordo = new Date().toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' });
+  salva();
+  const n = stato.nome, tot = c.ostacoli.length; const corpo = $('#corpoFine'); corpo.textContent = '';
+  $('#titoloFine').textContent = L.nome + ': percorso concluso!';
+  const add = (tag, testo, cls) => { const e = document.createElement(tag); e.textContent = testo; if (cls) e.className = cls; corpo.appendChild(e); return e; };
+  add('p', `Ginevra e ${n}: ${c.sereni} salti sereni su ${tot}.`).style.fontWeight = '800';
+  const ul = document.createElement('ul');
+  [c.perfetti ? `Salti perfetti, proprio al centro della zona: ${c.perfetti}.` : null,
+   c.calmi ? `Avvicinamenti con calma: ${c.calmi}. ${n} lo ha apprezzato tanto.` : `Prova anche RALLENTA prima della striscia: la calma fa crescere la fiducia.`,
+   c.abbattuti ? `Barriere cadute: ${c.abbattuti}, e va benissimo così: si impara anche da questo.` : 'Nessuna barriera caduta: che intesa!',
+   `Fiducia guadagnata: +${Math.round(c.fiduciaGuadagnata)} (ora ${Math.round(stato.fiducia)} su 100).`
+  ].filter(Boolean).forEach(t => { const li = document.createElement('li'); li.textContent = t; ul.appendChild(li); });
+  corpo.appendChild(ul);
+  add('p', c.abbattuti === 0 ? `${n} ti cerca con il muso: oggi vi siete capiti al volo.` : `${n} ti dà una spintarella affettuosa con il muso: l'importante è arrivare insieme.`);
+  add('h3', 'Anche gli amici hanno concluso il percorso');
+  const ua = document.createElement('ul');
+  c.amici.forEach(a => { const li = document.createElement('li'); li.textContent = a.salti === tot ? `${a.a.nome} e ${a.a.cavallo}: ${a.salti} salti riusciti su ${tot}, che festa!` : `${a.a.nome} e ${a.a.cavallo}: ${a.salti} salti riusciti su ${tot}. ${a.a.distrazione}`; ua.appendChild(li); });
+  corpo.appendChild(ua);
+  add('p', 'Gli amici sono guidati dal computer: non c\'è nessuna classifica, ognuno corre con il proprio ritmo.').style.fontSize = '15px';
+  if (primaVolta && i < 5) add('p', `Si apre un nuovo percorso: ${LIVELLI[i + 1].nome}!`, 'sbloccato');
+  if (stato.energia < 30) add('p', `${n} ha poca energia: in scuderia un po' di riposo e un sorso d'acqua la faranno tornare. Puoi comunque continuare a giocare.`);
+  const pul = $('#pulsantiFine'); pul.textContent = '';
+  const btn = (t, cls, fn) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'btn ' + (cls || ''); b.textContent = t; b.addEventListener('click', () => { Suoni.suona('clic'); fn(); }); pul.appendChild(b); return b; };
+  let primo;
+  if (i === 5 && primaVolta) primo = btn('💝 Guarda il vostro ricordo', 'rosa', () => { corsa = null; apriRicordo(); });
+  if (i < 5) { const b = btn('▶ Prossimo percorso', 'primario', () => iniziaLivello(i + 1)); primo = primo || b; }
+  const b2 = btn('↻ Rigioca', '', () => iniziaLivello(i)); primo = primo || b2;
+  btn('🏠 Torna alla scuderia', '', tornaScuderia);
+  mostra('fine'); setTimeout(() => primo.focus(), 30);
+  annuncia('Percorso concluso. ' + c.sereni + ' salti sereni su ' + tot + '.');
+}
+
+// ---------- disegno della corsa (unità logiche, pennello in scala) ----------
+function piastra(img, par, y, camB) { const w = img.width; const off = Math.round(((camB * par) % w + w) % w); for (let x = -off; x < BW; x += w) bctx.drawImage(img, x, y); }
+function colorePali(T, k) { return T.riempimento === 'colori' ? ARCOBALENO[k % ARCOBALENO.length] : T.pali; }
+function palo(x, hh, col) {
+  const x0 = x, y0 = SUOLO + 5 - hh, x1 = x + 9, y1 = SUOLO - 5 - hh;
+  pe.seg(x0, y0, x1, y1, 2.5, 2.5, '#2a2018');
+  for (let s = 0; s < 4; s++) { const a = s / 4, b = (s + 1) / 4; pe.seg(lerp(x0, x1, a), lerp(y0, y1, a), lerp(x0, x1, b), lerp(y0, y1, b), 1.8, 1.8, col[s % 2]); }
+  pe.lpx(x0 + 0.3, y0 - 0.5, x1 - 0.3, y1 - 0.5, 1, 'rgba(255,255,255,0.7)'); pe.lpx(x0 + 0.3, y0 + 0.6, x1, y1 + 0.6, 1, 'rgba(0,0,0,0.25)');
+}
+function ritto(x, base, hp, T, col) {
+  pe.r(x - 1.7, base - hp - 0.5, 3.4, hp + 0.5, '#2a2018'); pe.r(x - 1.3, base - hp, 2.6, hp, T.ritti); pe.r(x - 1.3, base - hp, 0.8, hp, T.rittiOmbra);
+  pe.r(x - 1.8, base - hp - 0.9, 3.6, 1.7, col[1]); pe.r(x - 2.4, base - 1.2, 4.8, 1.2, T.rittiOmbra);
+}
+function caduta(e) { if (e < 0.6) { const t = e / 0.6; return t * t; } const t = (e - 0.6) / 0.4; return 1 - 0.12 * Math.sin(t * Math.PI); }
+function riempimento(x, T) {
+  const tipo = T.riempimento; if (!tipo || tipo === 'colori') return;
+  const pts = h => [[x, SUOLO + 6], [x + 9, SUOLO - 5], [x + 9, SUOLO - 5 - h], [x, SUOLO + 6 - h]];
+  if (tipo === 'cassetta') { pe.poly(pts(7.5), '#2a1a0c'); pe.poly(pts(7), '#a0662f'); pe.lpx(x, SUOLO + 2.5, x + 9, SUOLO - 8.5, 1, '#7a4a20'); [[2, -4], [5, -7], [3.5, -6.5], [6.5, -9]].forEach(([dx, dy2], k) => { pe.ell(x + dx, SUOLO + dy2, 0.9, 0.9, k % 2 ? '#ffd23f' : '#e2302a'); }); }
+  else if (tipo === 'onde') { pe.poly(pts(6.5), '#1a3a5a'); pe.poly(pts(6), '#ffffff'); pe.lpx(x + 1, SUOLO + 2, x + 8, SUOLO - 6.5, 2, '#2a7bd4'); }
+  else if (tipo === 'fiori') { pe.poly(pts(5.5), '#2a1a0c'); pe.poly(pts(5), '#6b4423'); for (let k = 0; k < 4; k++) { pe.ell(x + 1.2 + k * 2, SUOLO - 0.2 - k * 2.4, 0.8, 0.8, k % 2 ? '#ff8fb0' : '#ffd23f'); pe.dot(x + 2 + k * 2, SUOLO - 1.3 - k * 2.4, 2, '#3a8a3a'); } }
+}
+function disegnaRecinto(x, hTop, hh, ob, T, fase, k) {
+  const col = colorePali(T, k); const hp = hTop + 9;
+  if (fase === 'dietro') {
+    ritto(x + 9.5, SUOLO - 5, hp, T, col); riempimento(x, T);
+    const altezze = ob.t === 'verticale' ? (hTop >= 18 ? [hTop * 0.3, hTop * 0.62] : [hTop * 0.5]) : ob.t === 'largo' ? [hTop * 0.5] : [3];
+    altezze.forEach(a => palo(x, a, col)); palo(x, hh, col);
+  } else { ritto(x - 0.5, SUOLO + 6, hp, T, col); if (T.riempimento === 'colori') pe.poly([[x + 0.5, SUOLO + 6 - hp], [x + 6, SUOLO + 8 - hp], [x + 0.5, SUOLO + 10 - hp]], col[1]); }
+}
+function disegnaTronchi(x, ob, e) {
+  const n = ob.h >= 20 ? 3 : ob.h >= 15 ? 2 : 1; const d = ob.h / n;
+  for (let k = 0; k < n; k++) {
+    let yc = d * (k + 0.5), dx = 0; if (k === n - 1 && ob.abbattuto) { dx = 16 * e; yc = lerp(yc, d / 2, Math.min(1, e * 1.3)); }
+    const cx = x + ob.w * 0.3 + dx, cy = SUOLO + 3 - yc;
+    pe.seg(cx, cy, cx + 9, cy - 10, d + 0.8, d + 0.8, '#2a1a0c'); pe.seg(cx, cy, cx + 9, cy - 10, d, d, '#8a5a2b');
+    pe.lpx(cx + 0.6, cy - d / 2 + 0.6, cx + 9.4, cy - 10 - d / 2 + 0.6, 2, '#b07c44');
+    for (let j = 1; j < 5; j++) pe.lpx(cx + j * 1.8, cy - j * 2 + d * 0.1, cx + j * 1.8 + 1.4, cy - j * 2 - 1.2, 1, '#5e3a1a');
+    pe.ell(cx + 4.5, cy - 5 - d / 2 + 0.4, 2.2, 0.9, '#6aa84f'); pe.ell(cx + 4.2, cy - 5.2 - d / 2 + 0.2, 1.2, 0.5, '#8ccc6a');
+    pe.ell(cx, cy, d / 2 + 0.45, d / 2 + 0.45, '#2a1a0c'); pe.ell(cx, cy, d / 2, d / 2, '#e2bd86'); pe.ell(cx, cy, d / 2.8, d / 2.8, '#c89a5e'); pe.ell(cx, cy, d / 4.5, d / 4.5, '#e2bd86'); pe.dot(cx, cy, 2, '#8a5a2b');
+  }
+}
+function disegnaOstacolo(ob, sx, fase, T, k) {
+  if (ob.t === 'tronco') { if (fase === 'dietro') disegnaTronchi(sx, ob, caduta(ob.caduta)); return; }
+  const recinti = ob.t === 'largo' ? [sx, sx + ob.w - 6] : [sx];
+  recinti.forEach((x, j) => { const hTop = ob.t === 'largo' && j === 0 ? ob.h - 2 : ob.h; const hh = ob.abbattuto ? Math.max(1.5, hTop * (1 - caduta(ob.caduta))) : hTop; disegnaRecinto(x, hTop, hh, ob, T, fase, k); });
+}
+function disegnaZona(ob, sx, t, forte) {
+  if (ob.superato || ob.abbattuto) return;
+  const z0 = sx - ob.dMax, z1 = sx - ob.dMin; if (z1 < -5 || z0 > VW + 5) return;
+  const c = corsa; const dentro = !c.inAria && c.P >= ob.X - ob.dMax && c.P <= ob.X - ob.dMin;
+  const a = dentro ? 0.85 : 0.4 + 0.14 * Math.sin(t * 6);
+  bctx.fillStyle = `rgba(255,232,100,${a})`; bctx.fillRect(Math.round(z0 * SC), Math.round((SUOLO - 4) * SC), Math.round((z1 - z0) * SC), Math.round(8 * SC));
+  const m = (z1 - z0) * 0.22; bctx.fillStyle = `rgba(255,255,255,${a * 0.85})`; bctx.fillRect(Math.round((z0 + m) * SC), Math.round((SUOLO - 2) * SC), Math.round((z1 - z0 - 2 * m) * SC), Math.round(4 * SC));
+  pe.r(z0 - 0.3, SUOLO - 6, 0.6, 12, '#fff3a0'); pe.r(z1 - 0.3, SUOLO - 6, 0.6, 12, '#fff3a0');
+  if (forte) { const ax = (z0 + z1) / 2, ay = SUOLO - 24 + Math.sin(t * 7) * 2; pe.poly([[ax - 4, ay], [ax + 4, ay], [ax, ay + 5]], '#3a2a00'); pe.poly([[ax - 3, ay + 0.4], [ax + 3, ay + 0.4], [ax, ay + 4]], '#ffd23f'); }
+}
+function disegnaArrivo(sx, festa) {
+  if (sx < -30 || sx > VW + 30) return;
+  pe.r(sx + 9.2, SUOLO - 52, 2.6, 47, '#ffffff'); pe.r(sx + 9.2, SUOLO - 52, 0.8, 47, '#c8c8c8'); pe.r(sx - 1.3, SUOLO - 42, 2.6, 48, '#ffffff'); pe.r(sx - 1.3, SUOLO - 42, 0.8, 48, '#c8c8c8');
+  for (let k = 0; k < 6; k++) { const x0 = sx + 1 + k * 1.75, y0 = SUOLO - 44 - k * 1.75; pe.r(x0, y0, 1.75, 6, k % 2 ? '#1a1a1a' : '#ffffff'); pe.r(x0, y0 + 6, 1.75, 6, k % 2 ? '#ffffff' : '#1a1a1a'); }
+  if (festa) [['#ff4f7a', -6], ['#ffd23f', 0], ['#2a8bf2', 6]].forEach(([c, d]) => { pe.lpx(sx + 10.5 + d, SUOLO - 58, sx + 10.5, SUOLO - 52, 1, '#777777'); pe.ell(sx + 10.5 + d, SUOLO - 62, 3, 4, c); pe.dot(sx + 9.5 + d, SUOLO - 63.5, 2, '#ffffff'); });
+}
+function disegna() {
+  const c = corsa; if (!c) return; const L = c.L, T = TEMI[L.tema], St = strati(L.tema), cam = c.P, camB = cam * SC, t = c.t;
+  bctx.drawImage(St.cielo, 0, 0);
+  piastra(St.nuvole, 0.05, 0, camB + t * 14);
+  piastra(St.monti, 0.1, 0, camB); piastra(St.colline, 0.25, 0, camB);
+  if (T.mare) for (let k = 0; k < 22; k++) { const x = ((k * 97 - camB * 0.25 + t * 20) % BW + BW) % BW; pb.r(x, 366 + (k % 6) * 9, 8, 2, (Math.floor(t * 3 + k) % 2) ? '#ffffff' : '#b6ecff'); }
+  if (T.palloncini) { const cols = ['#ff4f7a', '#ffd23f', '#2a8bf2', '#2fbf6f', '#9a5af0']; for (let k = 0; k < 7; k++) { const x = ((k * 151 - camB * 0.15) % BW + BW) % BW, y = 380 - ((t * 30 + k * 97) % 420); pb.linea(x, y + 10, x + 3, y + 30, 1, '#777777'); pb.ell(x, y, 8, 10, cols[k % 5]); pb.ell(x - 3, y - 4, 2, 3, '#ffffff'); } }
+  piastra(St.alberi, 0.5, 0, camB);
+  if (T.raggiBosco) { bctx.fillStyle = 'rgba(255,250,200,0.09)'; for (let k = 0; k < 4; k++) { const x = ((k * 340 - camB * 0.45) % 1400 + 1400) % 1400 - 150; bctx.beginPath(); bctx.moveTo(x, 0); bctx.lineTo(x + 60, 0); bctx.lineTo(x + 230, 430); bctx.lineTo(x + 150, 430); bctx.closePath(); bctx.fill(); } }
+  piastra(St.terreno, 1, 372, camB);
+  const vis = []; c.ostacoli.forEach((ob, k) => { const sx = HX + (ob.X - cam); if (sx > -60 && sx < VW + 60) vis.push([ob, sx, k]); });
+  vis.forEach(([ob, sx]) => disegnaZona(ob, sx, t, c.i === 0));
+  disegnaArrivo(HX + (L.fine - cam), L.tema === 'festa');
+  vis.forEach(([ob, sx, k]) => disegnaOstacolo(ob, sx, 'dietro', T, k));
+  // indicatore dell'ostacolo in arrivo
+  const prossimo = c.ostacoli.find(o => !o.superato); if (prossimo) { const sx = HX + (prossimo.X - cam); if (sx > VW + 4 && sx < VW + 260) { const a = 0.55 + 0.35 * Math.sin(t * 6); bctx.globalAlpha = a; pe.poly([[VW - 4, SUOLO - 18], [VW - 12, SUOLO - 24], [VW - 12, SUOLO - 12]], '#ffd23f'); pe.r(VW - 22, SUOLO - 24, 1.4, 12, '#ffffff'); pe.r(VW - 16, SUOLO - 26, 1.4, 12, '#ffffff'); pe.lpx(VW - 22, SUOLO - 18, VW - 15, SUOLO - 21, 3, '#e04444'); bctx.globalAlpha = 1; } }
+  // ombra
+  const rs = 17 * (1 - Math.min(0.6, c.y / 90)); bctx.fillStyle = 'rgba(30,20,0,0.25)'; bctx.beginPath(); bctx.ellipse((HX - 18) * SC, (SUOLO + 0.6) * SC, rs * SC, 2.4 * SC, 0, 0, Math.PI * 2); bctx.fill();
+  const f = FR.prot; let img, ang = 0;
+  if (c.inAria) { if (c.vy > 70) { img = f.su; ang = -0.1; } else if (c.vy < -70) { img = f.sc; ang = 0.1; } else img = f.pi; }
+  else if (c.atterraggio > 0) img = f.at; else if (c.vel < 12) img = f.i0; else img = f['g' + (Math.floor(c.passo / 7) % 8)];
+  const bx = Math.round((HX - SPR.FRONT) * SC), by = Math.round((SUOLO - SPR.GY - c.y) * SC);
+  if (ang) { bctx.save(); bctx.translate(bx + 35 * SC, by + 40 * SC); bctx.rotate(ang); bctx.drawImage(img, Math.round(-35 * SC), Math.round(-40 * SC)); bctx.restore(); } else bctx.drawImage(img, bx, by);
+  vis.forEach(([ob, sx, k]) => disegnaOstacolo(ob, sx, 'davanti', T, k));
+  for (const q of c.part) {
+    if (q.tipo === 'polvere') { bctx.fillStyle = `rgba(230,210,170,${Math.min(1, q.vita * 1.6)})`; bctx.fillRect(Math.round((HX + q.wx - cam) * SC), Math.round(q.y * SC), 5, 5); }
+    else if (q.tipo === 'cuore') cuorePix(pb, q.sx * SC, q.y * SC, '#ff4f8a', 3);
+    else if (q.tipo === 'coriandolo') pb.r(q.sx * SC, q.y * SC, 5, Math.sin(t * 8 + q.f) > 0 ? 5 : 2, q.col);
+  }
+  piastra(St.primo, 1.3, BH - 120, camB);
+  ctx.imageSmoothingEnabled = false; ctx.drawImage(buffer, 0, 0, BW, BH, 0, 0, tela.width, tela.height);
+  const vg = ctx.createRadialGradient(tela.width / 2, tela.height / 2, tela.height * 0.45, tela.width / 2, tela.height / 2, tela.width * 0.65);
+  vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,10,30,0.28)'); ctx.fillStyle = vg; ctx.fillRect(0, 0, tela.width, tela.height);
+  const k = tela.width / VW; ctx.textAlign = 'center'; ctx.lineJoin = 'round';
+  for (const tx of c.testi) {
+    ctx.globalAlpha = Math.min(1, tx.vita * 2); ctx.font = `bold ${Math.round(10 * k)}px "Trebuchet MS", Verdana, sans-serif`;
+    ctx.lineWidth = Math.max(2, 2.4 * k); ctx.strokeStyle = '#1a1030'; ctx.strokeText(tx.t, tx.x * k, tx.y * k); ctx.fillStyle = tx.col; ctx.fillText(tx.t, tx.x * k, tx.y * k);
+  }
+  ctx.globalAlpha = 1;
+}
+
+// =============================================================
+//  RICORDO FINALE
+// =============================================================
+function apriRicordo() {
+  mostra('ricordo'); disegnaRicordo();
+  const n = stato.nome; const r = $('#racconto'); r.textContent = '';
+  [`Il primo giorno, nel prato, ${n} guardava Ginevra con curiosità e un pizzico di timidezza. Poi sono arrivate la spazzola, l'acqua fresca, una carota sgranocchiata insieme.`,
+   `Fra i meli del frutteto avete trovato il passo giusto. Sulla sabbia, vicino al mare, avete imparato a respirare insieme. Nel bosco avete contato i tronchi a due a due. Nel giardino al tramonto vi bastava uno sguardo.`,
+   `Alla festa del club non contava la barriera più alta. Contava arrivare insieme, con il cuore leggero. E Sofia, Leo, Emma e Tommaso applaudivano.`,
+   `In tutto avete fatto ${stato.saltiSereni} salti sereni. In scuderia ci sono state ${stato.cure} cure piene di affetto. Oggi ${n} riconosce i passi di Ginevra da lontano. La vostra coccarda più bella si chiama intesa.`
+  ].forEach(t => { const p = document.createElement('p'); p.textContent = t; r.appendChild(p); });
+  $('#scaricaRicordo').focus();
+}
+function disegnaRicordo() {
+  const cv = $('#telaRicordo'), g = cv.getContext('2d'); g.imageSmoothingEnabled = false; const St = strati('prato'); const p = new Pennello(g);
+  g.drawImage(St.cielo, 0, 0); g.drawImage(St.nuvole, 300, 0, 960, 330, 0, 0, 960, 330); g.drawImage(St.monti, 200, 0, 960, 540, 0, 0, 960, 540);
+  g.drawImage(St.colline, 200, 0, 960, 540, 0, 0, 960, 540); g.drawImage(St.alberi, 420, 0, 960, 540, 0, 0, 960, 540);
+  g.drawImage(St.terreno, 0, 372); g.fillStyle = '#5cb845'; g.fillRect(0, 540, 960, 100); g.drawImage(St.terreno, 0, 96, 960, 72, 0, 540, 960, 72);
+  g.drawImage(St.primo, 0, 0, 960, 120, 0, 530, 960, 120);
+  const pe2 = new PS(g, SC * 1.55); const B0 = 105;
+  pe2.r(85.3, B0 - 5 - 23, 2.6, 23, '#2a2018'); pe2.r(85.6, B0 - 5 - 22.6, 2, 22.6, '#f4f4f4'); pe2.r(85.3, B0 - 5 - 23.6, 2.6, 1.6, '#e04444');
+  pe2.seg(77, B0 + 5 - 14, 86, B0 - 5 - 14, 2.5, 2.5, '#2a2018'); for (let s = 0; s < 4; s++) pe2.seg(lerp(77, 86, s / 4), lerp(B0 - 9, B0 - 19, s / 4), lerp(77, 86, (s + 1) / 4), lerp(B0 - 9, B0 - 19, (s + 1) / 4), 1.8, 1.8, s % 2 ? '#e04444' : '#ffffff');
+  pe2.seg(77, B0 + 5 - 3, 86, B0 - 5 - 3, 2.5, 2.5, '#2a2018'); pe2.seg(77, B0 + 2, 86, B0 - 8, 1.8, 1.8, '#ffffff');
+  pe2.r(75.6, B0 + 6 - 23, 2.6, 23, '#2a2018'); pe2.r(75.9, B0 + 6 - 22.6, 2, 22.6, '#f4f4f4'); pe2.r(75.6, B0 + 6 - 23.6, 2.6, 1.6, '#e04444');
+  const img = FR.prot.pi; g.drawImage(img, 0, 0, img.width, img.height, 210, 110, Math.round(img.width * 1.55), Math.round(img.height * 1.55));
+  const rx = 800, ry = 250; p.linea(rx - 12, ry + 20, rx - 26, ry + 84, 12, '#2a8bf2'); p.linea(rx + 12, ry + 20, rx + 26, ry + 84, 12, '#2a8bf2');
+  p.ell(rx, ry, 58, 58, '#c0305a'); p.ell(rx, ry, 54, 54, '#ff4f7a'); p.ell(rx, ry, 44, 44, '#ffd23f'); p.ell(rx, ry, 34, 34, '#ffffff');
+  for (let k = 0; k < 14; k++) { const a = k / 14 * Math.PI * 2; p.ell(rx + Math.cos(a) * 52, ry + Math.sin(a) * 52, 9, 9, '#ff4f7a'); }
+  cuorePix(p, rx - 10, ry - 22, '#ff4f8a', 3);
+  g.lineWidth = 14; g.strokeStyle = '#7a4a24'; g.strokeRect(7, 7, 946, 626); g.lineWidth = 4; g.strokeStyle = '#f3d58c'; g.strokeRect(18, 18, 924, 604);
+  g.textAlign = 'center'; g.lineJoin = 'round';
+  const scrivi = (t, x, y, size, fill) => { g.font = `bold ${size}px "Trebuchet MS", Verdana, sans-serif`; g.lineWidth = Math.max(4, size / 6); g.strokeStyle = '#1f2a44'; g.strokeText(t, x, y); g.fillStyle = fill; g.fillText(t, x, y); };
+  scrivi('Un amico oltre l\'ostacolo', 480, 82, 52, '#ffffff');
+  scrivi(`Ginevra e ${stato.nome}: amici oltre ogni ostacolo`, 480, 130, 30, '#ffe36b');
+  scrivi('Intesa', rx, ry + 30, 22, '#ffffff');
+  scrivi(`6 percorsi conclusi · ${stato.saltiSereni} salti sereni · fiducia ${Math.round(stato.fiducia)} su 100`, 480, 572, 26, '#ffffff');
+  if (stato.ricordo) scrivi(stato.ricordo, 480, 608, 20, '#fff8e8');
+}
+$('#scaricaRicordo').addEventListener('click', () => {
+  const cv = $('#telaRicordo');
+  try { cv.toBlob(b => { if (!b) return; const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'ricordo-un-amico-oltre-l-ostacolo.png'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 3000); }); }
+  catch (e) { fumetto('Non è stato possibile scaricare l\'immagine in questo browser.'); }
+});
+$('#chiudiRicordo').addEventListener('click', tornaScuderia);
+$('#apriRicordo').addEventListener('click', apriRicordo);
+
+// =============================================================
+//  COMANDI
+// =============================================================
+function eTastoSalto(e) { return e.code === 'Space' || e.key === ' ' || e.code === 'ArrowUp'; }
+window.addEventListener('keydown', e => {
+  if (schermo === 'corsa') {
+    if (eTastoSalto(e)) { e.preventDefault(); if (!e.repeat) salta(); }
+    else if (e.code === 'ArrowDown') { e.preventDefault(); input.tastoGiu = true; $('#tastoRallenta').classList.add('premuto'); }
+    else if (e.code === 'Escape' || e.code === 'KeyP') { e.preventDefault(); pausa(); }
+  } else if (schermo === 'pausa' && (e.code === 'Escape' || e.code === 'KeyP')) { e.preventDefault(); riprendi(); }
+  else if (!$('#modaleConferma').hidden && e.code === 'Escape') chiudiConferma();
+});
+window.addEventListener('keyup', e => {
+  if (e.code === 'ArrowDown') { input.tastoGiu = false; $('#tastoRallenta').classList.remove('premuto'); }
+  if (schermo === 'corsa' && (eTastoSalto(e) || e.code === 'ArrowDown')) e.preventDefault();
+});
+const tSalta = $('#tastoSalta'), tRall = $('#tastoRallenta');
+[tSalta, tRall].forEach(b => { b.addEventListener('mousedown', e => e.preventDefault()); b.addEventListener('contextmenu', e => e.preventDefault()); });
+tSalta.addEventListener('pointerdown', e => { e.preventDefault(); salta(); tSalta.classList.add('premuto'); });
+['pointerup', 'pointercancel', 'pointerleave'].forEach(ev => tSalta.addEventListener(ev, () => tSalta.classList.remove('premuto')));
+tSalta.addEventListener('click', e => { if (e.detail === 0) salta(); });
+tRall.addEventListener('pointerdown', e => { e.preventDefault(); input.puntatoreGiu = true; tRall.classList.add('premuto'); try { tRall.setPointerCapture(e.pointerId); } catch (_) {} });
+const rilascia = () => { input.puntatoreGiu = false; tRall.classList.remove('premuto'); };
+['pointerup', 'pointercancel', 'lostpointercapture'].forEach(ev => tRall.addEventListener(ev, rilascia));
+tela.addEventListener('pointerdown', e => { e.preventDefault(); salta(); });
+tela.addEventListener('contextmenu', e => e.preventDefault());
+$('#tastoPausa').addEventListener('click', () => { Suoni.suona('clic'); if (schermo === 'corsa') pausa(); else if (schermo === 'pausa') riprendi(); });
+const schermoPiccolo = () => window.matchMedia('(max-height:520px), (max-width:760px)').matches;
+let amiciVisibili = !schermoPiccolo();
+function applicaAmici() { $('#schermataCorsa').classList.toggle('senza-amici', !amiciVisibili); $('#tastoAmici').setAttribute('aria-pressed', String(amiciVisibili)); }
+applicaAmici();
+$('#tastoAmici').addEventListener('click', () => { amiciVisibili = !amiciVisibili; applicaAmici(); Suoni.suona('clic'); if (document.activeElement) document.activeElement.blur(); });
+$('#tastoScuderia').addEventListener('click', () => { Suoni.suona('clic'); tornaScuderia(); });
+$('#riprendi').addEventListener('click', riprendi);
+$('#pausaScuderia').addEventListener('click', tornaScuderia);
+$('#suoniScuderia').addEventListener('click', cambiaSuoni);
+$('#suoniCorsa').addEventListener('click', cambiaSuoni);
+window.addEventListener('blur', () => { input.tastoGiu = input.puntatoreGiu = false; tRall.classList.remove('premuto'); if (schermo === 'corsa') pausa(); });
+document.addEventListener('visibilitychange', () => { if (document.hidden && schermo === 'corsa') pausa(); });
+window.addEventListener('pagehide', () => { if (schermo === 'corsa') pausa(); salva(); });
+document.querySelectorAll('[data-cura]').forEach(b => b.addEventListener('click', () => cura(b.dataset.cura)));
+$('#moduloNome').addEventListener('submit', e => {
+  e.preventDefault(); const v = pulisciNome($('#nomeCavallo').value); stato.nome = v; $('#nomeCavallo').value = v; salva(); aggiornaIndicatori(); aggiornaPercorsi();
+  fumetto(`Che bel nome! ${v} drizza le orecchie: lo ha già imparato.`); Suoni.suona('clic');
+});
+let focusPrimaConferma = null;
+function chiudiConferma() { $('#modaleConferma').hidden = true; if (focusPrimaConferma) focusPrimaConferma.focus(); }
+$('#ricomincia').addEventListener('click', () => { focusPrimaConferma = $('#ricomincia'); $('#modaleConferma').hidden = false; $('#confermaNo').focus(); });
+$('#confermaNo').addEventListener('click', chiudiConferma);
+$('#confermaSi').addEventListener('click', () => {
+  stato = statoIniziale(); for (const k in cureDaUltimaCorsa) cureDaUltimaCorsa[k] = 0;
+  if (memoria.ok) { try { localStorage.removeItem(CHIAVE); } catch (e) {} }
+  salva(); $('#nomeCavallo').value = stato.nome; aggiornaIndicatori(); aggiornaPercorsi(); chiudiConferma();
+  fumetto('Si ricomincia da capo: Luna ti aspetta in scuderia, pronta a conoscerti.');
+});
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Tab') return; const m = ['#modalePausa', '#modaleFine', '#modaleConferma'].map(s => $(s)).find(x => !x.hidden); if (!m) return;
+  const f = m.querySelectorAll('button'); if (!f.length) return; const a = f[0], z = f[f.length - 1];
+  if (e.shiftKey && document.activeElement === a) { e.preventDefault(); z.focus(); } else if (!e.shiftKey && document.activeElement === z) { e.preventDefault(); a.focus(); }
+});
+
+// =============================================================
+//  VERIFICA MATEMATICA DEI PERCORSI
+// =============================================================
+const VERIFICA = verificaPercorsi();
+(() => {
+  $('#verificaTesto').textContent = (VERIFICA.tuttoOk ? 'Tutti i percorsi sono superabili. ' : 'Attenzione: un percorso non supera la verifica. ') +
+    `Ogni salto dura ${VERIFICA.T.toFixed(2).replace('.', ',')} secondi e arriva a ${VERIFICA.Hmax.toFixed(0)} unità di altezza. ` +
+    'Per ogni ostacolo la zona luminosa è calcolata dalla fisica del salto; fra un ostacolo e il successivo resta sempre tempo per atterrare e prepararsi.';
+  const tb = $('#verificaTabella');
+  const th = document.createElement('tr'); ['Percorso', 'Ostacoli', 'Zona più stretta a galoppo', 'Con RALLENTA', 'Tempo minimo fra atterraggio e zona successiva', 'Esito'].forEach(t => { const e = document.createElement('th'); e.textContent = t; th.appendChild(e); }); tb.appendChild(th);
+  const s = v => v.toFixed(2).replace('.', ',') + ' s';
+  VERIFICA.righe.forEach(r => { const tr = document.createElement('tr'); [r.nome, r.n, s(r.minF), s(r.minFL), s(r.minM), r.ok ? '✓ superabile' : '✗ da rivedere'].forEach(t => { const e = document.createElement('td'); e.textContent = t; tr.appendChild(e); }); tb.appendChild(tr); });
+  if (!VERIFICA.tuttoOk) console.error('Verifica dei percorsi non superata', VERIFICA);
+})();
+
+// =============================================================
+//  AVVIO E CICLO PRINCIPALE
+// =============================================================
+$('#nomeCavallo').value = stato.nome;
+if (!memoria.ok) $('#avvisoMemoria').hidden = false;
+aggiornaIndicatori(); aggiornaPercorsi(); popolaAmici(); aggiornaPulsantiSuoni();
+fumetto(stato.fatti.some(Boolean) ? `Bentornati! ${stato.nome} ti riconosce e muove le orecchie verso di te.` : `Ciao Ginevra! Questo è ${stato.nome}. Prima di saltare, perché non vi conoscete con una spazzolata?`);
+let ultimo = null;
+function ciclo(ts) {
+  const dt = ultimo === null ? 0 : Math.min(0.033, Math.max(0, (ts - ultimo) / 1000)); ultimo = ts;
+  if (schermo === 'corsa' || schermo === 'fine') aggiorna(dt);
+  if (schermo === 'corsa' || schermo === 'pausa' || schermo === 'fine') disegna();
+  else if (schermo === 'scuderia') disegnaScuderia(dt);
+  requestAnimationFrame(ciclo);
+}
+requestAnimationFrame(ciclo);
+window.__gioco = { get corsa() { return corsa; }, get schermo() { return schermo; }, get stato() { return stato; }, VERIFICA, iniziaLivello, salta, LIVELLI, FIS };
+})();
+</script>
+</body>
+</html>
