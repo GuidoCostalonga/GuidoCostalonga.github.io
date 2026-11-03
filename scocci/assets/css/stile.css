@@ -629,3 +629,7 @@ img[src*="sopralluogo"] { object-position: 50% 50%; }
 .bio__foto .ritratto__cornice img { object-position: 50% 35%; }
 img[src$="ritratto.jpg"] { object-position: 54% 25%; }
 img[src$="barcola.jpg"] { object-position: 40% 55%; }
+
+/* ---------- Immagine principale: foto in Vespa ---------- */
+.apertura .ritratto__cornice { background: #CCE1F4; }
+.apertura .ritratto__cornice img { object-fit: cover; object-position: 50% 100%; }

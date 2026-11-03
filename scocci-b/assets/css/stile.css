@@ -685,3 +685,7 @@ img[src$="barcola.jpg"] { object-position: 40% 55%; }
 .ritratto__targhetta { bottom: -28px; }
 .bio__foto .ritratto__cornice { aspect-ratio: 347 / 288; }
 .bio__foto .ritratto__cornice img { object-position: 50% 35%; }
+
+/* ---------- Immagine principale: foto in Vespa ---------- */
+.apertura .ritratto__cornice { background: #CCE1F4; }
+.apertura .ritratto__cornice img { object-fit: cover; object-position: 50% 100%; }

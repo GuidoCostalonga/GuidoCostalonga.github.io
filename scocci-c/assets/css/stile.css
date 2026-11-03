@@ -14,7 +14,7 @@
   --blu-tenue: #CFE0F2;      /* al posto del rosa tenue #ffd8dc */
   --nero: #1A1A1A;            /* solo per fondi e bordi */
   --inchiostro: #084270;      /* tutte le scritte nel blu di Fratelli d'Italia */
-  --grigio: #5A5A5A;
+  --grigio: #3A5A7C;          /* testi secondari: blu FdI attenuato */
   --chiaro: #F4F4F4;
   --bianco: #FFFFFF;
   --linea: #E6E6E6;
@@ -425,3 +425,11 @@ h1, h2, h3, h4 { color: var(--inchiostro); }
 .apertura h1, .testata h1, .invito h2, .pie h4, .sezione--blu h2 { color: #fff; }
 .pilastro p, .scheda__corpo p, .percorso p, .canale__flusso, .scheda__meta, .riferimento small, .consenso { color: #3A5A7C; }
 .numeri, .numero__valore { color: #fff; }
+
+/* Testo dei campi e bordi dei controlli nel blu FdI */
+.campo input, .campo select, .campo textarea, .ricerca input, .filtro, .scelta-tipo label, .pulsante--contorno-blu { color: var(--inchiostro); border-color: var(--inchiostro); }
+.filtro:hover, .pulsante--contorno-blu:hover { background: var(--inchiostro); border-color: var(--inchiostro); color: #fff; }
+.scelta-tipo label:has(input:checked) { color: #fff; }
+.campo input::placeholder, .ricerca input::placeholder { color: #6A86A3; }
+.interruttore-menu span, .interruttore-menu span::before, .interruttore-menu span::after { background: var(--inchiostro); }
+.interruttore-menu[aria-expanded="true"] span { background: transparent; }
