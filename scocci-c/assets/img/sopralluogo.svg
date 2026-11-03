@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" width="1600" height="1000" role="img" aria-label="Sopralluogo sul territorio">
+<title>Sopralluogo sul territorio</title>
+<defs><linearGradient id="a" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#CFE3D6"/><stop offset="1" stop-color="#F4F6F8"/></linearGradient><linearGradient id="b" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#A7C7E7"/><stop offset="1" stop-color="#2B6CB0"/></linearGradient></defs>
+<rect width="1600" height="1000" fill="url(#a)"/><rect y="620" width="1600" height="380" fill="url(#b)"/>
+<path d="M0 620 C300 560 600 600 900 570 C1200 540 1400 580 1600 560 L1600 640 L0 640Z" fill="#2D6A4F"/>
+<g fill="#14233A"><circle cx="620" cy="440" r="40"/><path d="M560 620 C566 520 590 500 620 500 C650 500 674 520 680 620Z"/>
+<circle cx="760" cy="430" r="44"/><path d="M694 620 C700 512 726 490 760 490 C794 490 820 512 826 620Z"/>
+<circle cx="900" cy="445" r="38"/><path d="M844 620 C850 525 872 506 900 506 C928 506 950 525 956 620Z"/></g>
+<rect x="800" y="520" width="70" height="50" rx="6" fill="#ffffff"/>
+<g font-family="Inter, Arial, sans-serif" font-size="26" fill="#ffffff" opacity=".85">
+<rect x="1304" y="927" rx="8" width="276" height="53" fill="#0A1F3E" opacity=".55"/>
+<text x="1442" y="964" text-anchor="middle">Immagine segnaposto</text>
+</g>
+</svg>

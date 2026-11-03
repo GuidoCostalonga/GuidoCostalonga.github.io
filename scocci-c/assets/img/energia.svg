@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" width="1600" height="1000" role="img" aria-label="Energia rinnovabile e impianti produttivi">
+<title>Energia rinnovabile e impianti produttivi</title>
+<defs><linearGradient id="a" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#A7C7E7"/><stop offset="1" stop-color="#E6ECF5"/></linearGradient><linearGradient id="b" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#52B788"/><stop offset="1" stop-color="#2D6A4F"/></linearGradient></defs>
+<rect width="1600" height="1000" fill="url(#a)"/><circle cx="1300" cy="220" r="80" fill="#FFE08A"/>
+<rect y="680" width="1600" height="320" fill="url(#b)"/>
+<g stroke="#ffffff" stroke-width="10" stroke-linecap="round"><path d="M420 680 V330"/><path d="M820 680 V380"/></g>
+<g fill="#ffffff"><path d="M420 330 l-14 -170 l28 0z"/><path d="M420 330 l150 80 l-14 24z"/><path d="M420 330 l-150 80 l14 24z"/>
+<path d="M820 380 l-12 -140 l24 0z"/><path d="M820 380 l124 66 l-12 20z"/><path d="M820 380 l-124 66 l12 20z"/></g>
+<g fill="#0F2D59"><path d="M1000 760 l120 -80 h300 l-120 80z"/><path d="M1020 860 l120 -80 h300 l-120 80z" opacity=".85"/></g>
+<g stroke="#5DA0E8" stroke-width="3" opacity=".6"><path d="M1060 720 l300 0"/><path d="M1080 820 l300 0"/></g>
+<g font-family="Inter, Arial, sans-serif" font-size="26" fill="#ffffff" opacity=".85">
+<rect x="1304" y="927" rx="8" width="276" height="53" fill="#0A1F3E" opacity=".55"/>
+<text x="1442" y="964" text-anchor="middle">Immagine segnaposto</text>
+</g>
+</svg>
