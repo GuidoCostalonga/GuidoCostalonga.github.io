@@ -1,5 +1,5 @@
 /* ==========================================================
-   Fabio Scoccimarro · sito istituzionale
+   Fabio Scoccimarro · variante A (istituzionale FdI)
    Restyling editoriale: superfici chiare, blu profondo,
    giallo come accento, Montserrat per i titoli,
    Source Sans 3 per il testo.
@@ -12,8 +12,8 @@
   --accent: #F8F06D;
   --background: #FFFFFF;
   --surface: #F7F7F2;
-  --text: #18232D;
-  --text-muted: #4A5865;
+  --text: #084270;               /* scritte nel blu di Fratelli d'Italia */
+  --text-muted: #3A5A7C;
   --border: #DCE3E8;
   --border-strong: #7B8A97;      /* bordi dei campi: almeno 3:1 sul bianco */
   --primary-tint: #E8EFF6;
@@ -623,10 +623,9 @@ img[src*="sopralluogo"] { object-position: 50% 50%; }
 .pie .logo__simbolo { height: 64px; }
 @media (max-width: 640px) { .logo__simbolo { height: 42px; } }
 
-/* ---------- Fotografie reali: punti focali ---------- */
-img[src$="ritratto.jpg"] { object-position: 54% 25%; }
-img[src$="ritratto-primo-piano.jpg"] { object-position: 53% 30%; }
-img[src$="barcola.jpg"] { object-position: 40% 55%; }
+/* ---------- Fotografie reali ---------- */
 .ritratto__targhetta { bottom: -20px; }
 .bio__foto .ritratto__cornice { aspect-ratio: 347 / 288; }
 .bio__foto .ritratto__cornice img { object-position: 50% 35%; }
+img[src$="ritratto.jpg"] { object-position: 54% 25%; }
+img[src$="barcola.jpg"] { object-position: 40% 55%; }
