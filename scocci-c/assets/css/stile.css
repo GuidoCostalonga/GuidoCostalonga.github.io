@@ -433,3 +433,9 @@ h1, h2, h3, h4 { color: var(--inchiostro); }
 .campo input::placeholder, .ricerca input::placeholder { color: #6A86A3; }
 .interruttore-menu span, .interruttore-menu span::before, .interruttore-menu span::after { background: var(--inchiostro); }
 .interruttore-menu[aria-expanded="true"] span { background: transparent; }
+
+/* ---------- Notiziario da scaricare ---------- */
+.scheda--copertina .scheda__immagine { aspect-ratio: 210 / 297; }
+.scheda--copertina .scheda__immagine img { object-fit: cover; object-position: 50% 0; }
+.scarica__azioni { display: flex; flex-wrap: wrap; gap: 10px; margin-top: auto; padding-top: 8px; }
+.scarica__azioni .pulsante svg { width: 18px; height: 18px; }

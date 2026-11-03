@@ -633,3 +633,9 @@ img[src$="barcola.jpg"] { object-position: 40% 55%; }
 /* ---------- Immagine principale: foto in Vespa ---------- */
 .apertura .ritratto__cornice { background: #CCE1F4; }
 .apertura .ritratto__cornice img { object-fit: cover; object-position: 50% 100%; }
+
+/* ---------- Notiziario da scaricare ---------- */
+.scheda--copertina .scheda__immagine { aspect-ratio: 210 / 297; }
+.scheda--copertina .scheda__immagine img { object-fit: cover; object-position: 50% 0; }
+.scarica__azioni { display: flex; flex-wrap: wrap; gap: 10px; margin-top: auto; padding-top: 8px; }
+.scarica__azioni .pulsante svg { width: 18px; height: 18px; }
