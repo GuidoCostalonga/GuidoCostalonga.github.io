@@ -453,3 +453,6 @@ h1, h2, h3, h4 { color: var(--inchiostro); }
 .progetto__dato, .esito { border-left-color: #CFE0F2; }
 .pie { border-top-color: #CFE0F2; }
 .numeri { background: var(--nero); }
+
+/* Nome accanto al simbolo FdI in maiuscolo */
+.logo__nome { text-transform: uppercase; letter-spacing: .01em; }

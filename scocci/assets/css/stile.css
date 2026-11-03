@@ -653,3 +653,14 @@ img[src$="barcola.jpg"] { object-position: 40% 55%; }
 @media (min-width: 1025px) and (max-width: 1140px) {
   .barra__azioni .pulsante { display: none; }
 }
+
+/* Nome accanto al simbolo FdI in maiuscolo */
+.logo__nome { text-transform: uppercase; letter-spacing: .01em; }
+
+/* Nome su una riga anche sui telefoni più piccoli */
+.logo__nome { white-space: nowrap; }
+@media (max-width: 380px) {
+  .barra .logo__nome { font-size: .9rem; }
+  .barra .logo__ruolo { font-size: .72rem; line-height: 1.2; }
+  .barra .logo__simbolo { height: 38px; }
+}
