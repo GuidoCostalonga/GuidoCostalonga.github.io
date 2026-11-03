@@ -695,3 +695,17 @@ img[src$="barcola.jpg"] { object-position: 40% 55%; }
 .scheda--copertina .scheda__immagine img { object-fit: cover; object-position: 50% 0; }
 .scarica__azioni { display: flex; flex-wrap: wrap; gap: 10px; margin-top: auto; padding-top: 8px; }
 .scarica__azioni .pulsante svg { width: 18px; height: 18px; }
+
+/* ---------- Menu a sei voci: sempre su una riga ---------- */
+.menu a { white-space: nowrap; }
+.logo__ruolo { white-space: normal; }
+@media (min-width: 1025px) and (max-width: 1360px) {
+  .barra .contenitore { gap: 12px; }
+  .menu { gap: 2px; }
+  .menu a { padding-left: 10px; padding-right: 10px; font-size: .95rem; }
+  .logo__ruolo { display: none; }
+  .barra__azioni .pulsante { padding-left: 14px; padding-right: 14px; }
+}
+@media (min-width: 1025px) and (max-width: 1140px) {
+  .barra__azioni .pulsante { display: none; }
+}
