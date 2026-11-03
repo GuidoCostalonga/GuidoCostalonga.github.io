@@ -392,3 +392,29 @@ img[src$="barcola.jpg"] { object-position: 40% 55%; }
 .logo__ruolo { white-space: normal; }
 .pilastro__numero { margin-bottom: 4px; }
 @media (min-width: 1025px) and (max-width: 1240px) { .menu a { font-size: 13px; padding: 10px 8px; } .logo__ruolo { display: none; } }
+
+/* ---------- Immagine principale: Scoccimarro in Vespa ----------
+   Lo sfondo azzurro della foto (#CCE1F4) continua nella sezione,
+   così la foto resta intera a destra e il velo blu copre solo il testo. */
+.apertura { background: #CCE1F4; min-height: min(calc(100vh - 6px), 900px); }
+.apertura::before { left: 38%; background: url("../img/apertura-vespa.jpg") right bottom / contain no-repeat; opacity: 1; }
+.apertura::after { background: linear-gradient(100deg, rgba(var(--blu-velo), .97) 0%, rgba(var(--blu-velo), .92) 34%, rgba(var(--blu-velo), .35) 52%, rgba(var(--blu-velo), 0) 64%); }
+.apertura .contenitore > div:first-child { max-width: 640px; }
+.apertura .ritratto { right: auto; left: max(24px, calc((100vw - var(--larga)) / 2 + 24px)); }
+.apertura .ritratto__targhetta { text-align: left; }
+.apertura h1 { font-size: clamp(34px, 4.2vw, 60px); }
+@media (max-width: 820px) {
+  .apertura { display: block; min-height: 0; padding-bottom: min(112vw, 560px);
+    background: #CCE1F4 url("../img/apertura-vespa.jpg") center bottom / auto min(112vw, 560px) no-repeat; }
+  .apertura::before, .apertura::after { display: none; }
+  .apertura .contenitore { background: var(--blu); padding-top: 56px; padding-bottom: 40px; }
+  .apertura .ritratto { position: static; padding-top: 22px; }
+}
+@media (min-width: 821px) {
+  .apertura::before { top: calc(var(--altezza-barra) + 28px); }
+}
+@media (min-width: 821px) and (max-width: 1180px) {
+  .apertura::before { left: 50%; }
+  .apertura .contenitore > div:first-child { max-width: 52%; }
+  .apertura::after { background: linear-gradient(100deg, rgba(var(--blu-velo), .97) 0%, rgba(var(--blu-velo), .92) 44%, rgba(var(--blu-velo), .3) 56%, rgba(var(--blu-velo), 0) 66%); }
+}
