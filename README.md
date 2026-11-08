@@ -33,7 +33,7 @@ Microsoft Defender, prestazioni, programmi all'avvio e file temporanei, spiegand
 ogni intervento prima di farlo. È codice C# (.NET 8) che GitHub compila da solo e
 da cui esce l'eseguibile portatile. Le istruzioni stanno in `pc-check/README.md`.
 
-In `pandino/` c'è **Pandino**, il Sudoku dei panda: una sola pagina HTML senza
+In `pandino/` c'è **Pandino**, il rompicapo a zone con i panda: una sola pagina HTML senza
 dipendenze, copiata da `dist/index.html` del repository `GuidoCostalonga/Pandino`,
 dove stanno sorgenti, catalogo dei livelli e verifiche. Le modifiche si fanno lì.
 La pagina è volutamente **non indicizzata**: ha il meta tag `noindex, nofollow`,
