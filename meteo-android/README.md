@@ -20,6 +20,7 @@ Manrope, blu, giallo, schede bianche con la barra gialla a sinistra.
 | **Prossimi 7 giorni** | Minime, massime e probabilità di pioggia, con il dettaglio ora per ora del giorno scelto |
 | **Da sapere** | Tre indicazioni pratiche su pioggia, vento e temperatura |
 | **Allerta della Protezione Civile** | Il riquadro ufficiale pubblicato dalla Protezione Civile regionale per il Comune scelto |
+| **Avvisi sul telefono** | L'interruttore che fa avvisare il telefono quando compare un'allerta per il Comune scelto |
 
 I 215 Comuni sono raggruppati per provincia e si cercano scrivendo il nome.
 Roveredo in Piano, Pordenone e Trieste restano raggiungibili con un tocco.
@@ -36,6 +37,32 @@ con la seconda:
 3. **riquadro non raggiungibile**: il riquadro non si è caricato. L'app dice
    chiaramente che questo non significa assenza di allerte e rimanda al sito
    della Regione.
+
+### L'avviso sul telefono
+
+Nel riquadro **Avvisi sul telefono** c'è un interruttore, spento finché non lo
+si accende. Acceso, il telefono legge il riquadro ufficiale della Regione circa
+ogni ora, quando c'è rete, e manda una notifica **solo** quando compare
+un'allerta nuova per il Comune scelto, o quando quella in corso cambia testo.
+
+Le regole sono tre e valgono sempre:
+
+- l'avviso non si ripete finché resta lo stesso;
+- il riquadro vuoto non genera nessuna notifica: il silenzio della Regione non
+  è una notizia;
+- il riquadro non raggiungibile non genera nessuna notifica e non cancella
+  quello che l'app sapeva: si riprova al giro dopo. Un riquadro che non si
+  carica non è un'assenza di allerta.
+
+Il testo della notifica è quello pubblicato dalla Regione, accorciato alla
+prima frase ma non riscritto. Cambiando Comune, la memoria dell'avviso si
+azzera: quello che si sapeva riguardava un altro paese.
+
+Il controllo in sottofondo è affidato a WorkManager, la pianificazione
+standard di Android, che lo rimanda quando il telefono dorme e lo riprende
+dopo un riavvio. Da Android 13 le notifiche vanno concesse: se il permesso
+viene negato l'interruttore resta spento, perché accenderlo sarebbe una
+promessa che il telefono non può mantenere.
 
 ---
 
@@ -149,8 +176,14 @@ Trieste 6, Udine 134).
 ## Com'è fatta
 
 Applicazione Android nativa in Kotlin con Jetpack Compose. Nessun servizio
-terzo, nessuna raccolta di dati, nessuna pubblicità, nessun permesso oltre
-all'accesso a internet.
+terzo, nessuna raccolta di dati, nessuna pubblicità.
+
+I permessi sono questi e nessun altro: accesso a internet e lettura dello stato
+della rete; notifiche, chieste solo se si accendono gli avvisi di allerta.
+WorkManager, che pianifica il controllo in sottofondo, ne aggiunge altri tre di
+servizio che Android non mostra a chi installa e che l'app non usa mai
+direttamente: mantenimento della veglia, avvio dopo il riavvio del telefono e
+servizio in primo piano.
 
 ```
 meteo-android/
@@ -164,8 +197,14 @@ meteo-android/
 │   │   │   ├── MeteoApi.kt          indirizzi di Open-Meteo
 │   │   │   ├── MeteoRete.kt         le chiamate
 │   │   │   ├── Previsione.kt        lettura, attendibilità, consigli
-│   │   │   └── Preferenze.kt        Comune scelto e ultimo dato
-│   │   ├── ui/                      tema, schede, elenco, allerte
+│   │   │   └── Preferenze.kt        Comune scelto, ultimo dato, memoria avvisi
+│   │   ├── allerte/
+│   │   │   ├── Allerte.kt           la pagina del riquadro della Regione
+│   │   │   ├── LetturaAllerte.kt    la stessa lettura, senza mostrarla
+│   │   │   ├── Decisione.kt         quando avvisare e che cosa scrivere
+│   │   │   ├── Notifiche.kt         canale e notifica
+│   │   │   └── Guardia.kt           il controllo ogni ora
+│   │   ├── ui/                      tema, schede, elenco, allerte, avvisi
 │   │   └── widget/                  il widget e il suo disegno
 │   └── res/
 │       ├── drawable/                60 fotogrammi + icone (generati)
@@ -211,6 +250,7 @@ esiste una versione più nuova di una libreria.
 | `ComuniTest` | 215 Comuni, conteggi per provincia, nomi e codici ISTAT e indirizzi tutti distinti, coordinate dentro la regione, ogni Comune raggiungibile dal proprio indirizzo |
 | `CondizioniTest` | Ogni codice meteo ha una descrizione propria, giorno e notte cambiano disegno, sei fotogrammi distinti per condizione, nessun disegno usato due volte |
 | `PrevisioneTest` | Calcolo dell'attendibilità, buchi nei dati, soglie dei tre consigli, soglie del giudizio |
+| `DecisioneTest` | Quando l'avviso parte e quando tace, l'impronta che distingue un'allerta nuova da una già vista, il testo della notifica |
 
 ---
 

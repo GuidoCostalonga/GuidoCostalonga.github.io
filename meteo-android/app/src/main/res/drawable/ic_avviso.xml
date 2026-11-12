@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    L'icona della notifica: triangolo con il punto esclamativo.
+    Va disegnata in bianco pieno su fondo trasparente, perché Android la usa
+    come sagoma e la colora da sé nella barra di stato.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp" android:height="24dp"
+    android:viewportWidth="24" android:viewportHeight="24"
+    android:tint="#FFFFFFFF">
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M12,2.8L23,21.2H1zM11,9h2v6.4h-2zM11,16.8h2v2.2h-2z"
+        android:fillType="evenOdd" />
+</vector>
