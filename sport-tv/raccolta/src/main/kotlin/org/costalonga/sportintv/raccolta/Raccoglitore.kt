@@ -49,6 +49,24 @@ class Raccoglitore(
             else -> "Dati non leggibili (${e.javaClass.simpleName})"
         }
 
+        /**
+         * Completa un pacchetto (di solito quello del servizio) con le fonti
+         * raccolte altrove (di solito dal telefono): per ogni fonte presente
+         * in [aggiunta] e riuscita, i suoi dati sostituiscono quelli di [base].
+         */
+        fun integra(base: Pacchetto, aggiunta: Pacchetto, finestra: Finestra): Pacchetto {
+            val buone = aggiunta.fonti.filter { it.stato == StatoFonte.OK || it.stato == StatoFonte.VUOTA || it.stato == StatoFonte.PARZIALE }
+                .associateBy { it.id }
+            if (buone.isEmpty()) return base
+            val elementi = base.fonti.filter { it.id !in buone }.flatMap { Unione.elementiDi(it.id, base) } +
+                buone.keys.flatMap { Unione.elementiDi(it, aggiunta) }
+            return base.copy(
+                generato = minOf(base.generato, aggiunta.generato),
+                fonti = base.fonti.map { buone[it.id] ?: it },
+                eventi = Unione.unisci(elementi.filter { finestra.contiene(it.inizio) }, finestra),
+            )
+        }
+
         fun componi(esiti: List<Esito>, finestra: Finestra, precedente: Pacchetto?, adesso: Instant): Pacchetto {
             val elementi = mutableListOf<Elemento>()
             val fonti = esiti.map { (c, r, errore) ->
@@ -71,7 +89,7 @@ class Raccoglitore(
                     val conservati = precedente?.let { Unione.elementiDi(c.id, it) }
                         ?.filter { finestra.contiene(it.inizio) } ?: emptyList()
                     elementi += conservati
-                    val motivo = errore ?: "Nessuna richiesta riuscita"
+                    val motivo = errore ?: r?.messaggio ?: "Nessuna richiesta riuscita"
                     Fonte(
                         id = c.id, nome = c.nome, tipo = c.tipo, url = c.url, copertura = c.copertura, canali = c.canali,
                         stato = if (prima?.ultimoSuccesso != null) StatoFonte.DATI_PRECEDENTI else StatoFonte.ERRORE,

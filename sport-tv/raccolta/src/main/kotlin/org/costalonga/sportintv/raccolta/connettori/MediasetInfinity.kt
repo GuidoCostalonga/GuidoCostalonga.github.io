@@ -115,14 +115,15 @@ class MediasetInfinity : Connettore {
 
     override suspend fun raccogli(finestra: Finestra, http: Http): RisultatoFonte = coroutineScope {
         val esiti = CANALI.map { canale -> async { raccogliCanale(canale, finestra, http) } }.awaitAll()
-        RisultatoFonte(esiti.flatMap { it.first }, esiti.sumOf { it.second }, esiti.sumOf { it.third })
+        RisultatoFonte(esiti.flatMap { it.elementi }, esiti.sumOf { it.riuscite }, esiti.sumOf { it.fallite }, esiti.firstNotNullOfOrNull { it.messaggio })
     }
 
     /** Un giorno per richiesta (intervalli più lunghi tornano vuoti); ci si ferma al primo giorno vuoto. */
-    private suspend fun raccogliCanale(canale: Canale, finestra: Finestra, http: Http): Triple<List<Elemento>, Int, Int> {
+    private suspend fun raccogliCanale(canale: Canale, finestra: Finestra, http: Http): RisultatoFonte {
         val elementi = mutableListOf<Elemento>()
         var riuscite = 0
         var fallite = 0
+        var primoErrore: String? = null
         for (giorno in finestra.date) {
             val da = giorno.atStartOfDay(ROMA).toInstant().toEpochMilli()
             val a = giorno.plusDays(1).atStartOfDay(ROMA).toInstant().toEpochMilli()
@@ -137,8 +138,9 @@ class MediasetInfinity : Connettore {
                 throw e
             } catch (e: Exception) {
                 fallite++
+                if (primoErrore == null) primoErrore = org.costalonga.sportintv.raccolta.Raccoglitore.descrivi(e)
             }
         }
-        return Triple(elementi, riuscite, fallite)
+        return RisultatoFonte(elementi, riuscite, fallite, primoErrore)
     }
 }

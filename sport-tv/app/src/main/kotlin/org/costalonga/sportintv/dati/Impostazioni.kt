@@ -18,7 +18,7 @@ private val Context.datastore by preferencesDataStore(name = "impostazioni")
 enum class Tema(val etichetta: String) { SISTEMA("Come il telefono"), CHIARO("Chiaro"), SCURO("Scuro") }
 
 enum class Origine(val etichetta: String, val spiegazione: String) {
-    AUTOMATICA("Automatica", "Servizio online; se non risponde o è fermo da oltre 12 ore, l'app legge direttamente le fonti"),
+    AUTOMATICA("Automatica", "Servizio online, completato dal telefono per le fonti che il servizio non raggiunge; se il servizio non risponde o è fermo da oltre 12 ore, l'app legge direttamente le fonti"),
     SERVIZIO("Solo servizio online", "Meno traffico e batteria; senza servizio l'app mostra gli ultimi dati salvati"),
     DIRETTA("Solo fonti dirette", "L'app interroga da sé ogni fonte: circa cento richieste per aggiornamento"),
 }
