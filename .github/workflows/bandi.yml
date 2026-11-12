@@ -1,0 +1,66 @@
+name: Aggiorna bandi FVG
+
+on:
+  schedule:
+    # 06:00 e 16:00 ora di Roma in inverno (CET). In estate è un'ora dopo.
+    - cron: "0 5 * * *"
+    - cron: "0 15 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: bandi-fvg
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Codice del catalogo
+        uses: actions/checkout@v4
+        with:
+          repository: GuidoCostalonga/bandi_e_avvisi_fvg
+          ref: main
+          path: app
+          persist-credentials: false
+
+      - name: Sito
+        uses: actions/checkout@v4
+        with:
+          path: site
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      - name: Dipendenze
+        working-directory: app
+        run: npm ci --omit=dev
+
+      - name: Leggi il portale e ricostruisci la pagina
+        working-directory: app
+        run: npm run refresh:catalog && npm run build:pages
+
+      - name: Sostituisci la pagina pubblicata
+        run: |
+          rm -rf site/bandifvg
+          mkdir -p site/bandifvg
+          cp -a app/dist-pages/. site/bandifvg/
+          cp app/public/favicon.svg app/public/og.jpg site/bandifvg/
+
+      - name: Pubblica se l'elenco è cambiato
+        working-directory: site
+        run: |
+          git add bandifvg
+          if git diff --cached --quiet; then
+            echo "Nessun cambiamento."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Aggiorna i bandi FVG"
+          git push
