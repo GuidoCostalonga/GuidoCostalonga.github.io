@@ -938,8 +938,9 @@ async function getText(url, init) {
 		const response = await fetch(url, {
 			...init,
 			headers: {
-				"User-Agent": "BandiFVG/1.0 (catalogo di consultazione; costalonga.org/bandifvg)",
-				Accept: "text/html",
+				"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+				Accept: "text/html,application/xhtml+xml",
+				"Accept-Language": "it-IT,it;q=0.9",
 				...init?.headers ?? {}
 			},
 			signal: AbortSignal.timeout(2e4)
@@ -969,7 +970,7 @@ async function paged(firstUrl, pageUrl, list) {
 	const total = maxPage(first);
 	const drafts = parseListing(first, list);
 	if (total < 2) return drafts;
-	const rest = await pool(6, Array.from({ length: total - 1 }, (_, index) => () => getText(pageUrl(index + 2))));
+	const rest = await pool(3, Array.from({ length: total - 1 }, (_, index) => () => getText(pageUrl(index + 2))));
 	for (const html of rest) drafts.push(...parseListing(html, list));
 	return drafts;
 }
