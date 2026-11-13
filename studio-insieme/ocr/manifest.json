@@ -1,0 +1,25 @@
+{
+  "lingua": "ita",
+  "file": [
+    {
+      "file": "worker.min.js",
+      "bytes": 111307
+    },
+    {
+      "file": "tesseract-core-lstm.wasm.js",
+      "bytes": 3896484
+    },
+    {
+      "file": "tesseract-core-simd-lstm.wasm.js",
+      "bytes": 3899472
+    },
+    {
+      "file": "tesseract-core-relaxedsimd-lstm.wasm.js",
+      "bytes": 3905767
+    },
+    {
+      "file": "ita.traineddata.gz",
+      "bytes": 1660998
+    }
+  ]
+}

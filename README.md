@@ -44,3 +44,10 @@ Per collegare un dominio personalizzato basta aggiungere un file `CNAME` con
 dentro il dominio, e impostarlo in Settings → Pages.
 
 @ginopizza
+
+In `studio-insieme/` c'è la copia pubblicata di **StudioInsieme**, l'app web installabile per lo
+studio di studenti con DSA (disturbi specifici dell'apprendimento) e per i tutor, servita su
+[costalonga.org/studio-insieme](https://costalonga.org/studio-insieme/). Sono solo file compilati:
+sorgenti, prove e documentazione stanno nella cartella `studio-insieme/` del repository
+`GuidoCostalonga/Servizio`. La pagina è volutamente **non indicizzata**. Dettagli in
+`studio-insieme/LEGGIMI.md`.
